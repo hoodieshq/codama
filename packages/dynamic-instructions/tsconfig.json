@@ -1,0 +1,13 @@
+{
+    "$schema": "https://json.schemastore.org/tsconfig",
+    "compilerOptions": {
+        "lib": ["ESNext"],
+        "module": "ESNext",
+        "moduleResolution": "bundler",
+        "exactOptionalPropertyTypes": true,
+        "noUncheckedIndexedAccess": true
+    },
+    "display": "@codama/dynamic-instructions",
+    "extends": "../../tsconfig.json",
+    "include": ["src", "test", "scripts"]
+}
