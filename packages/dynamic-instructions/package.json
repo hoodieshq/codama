@@ -59,7 +59,7 @@
         "test:anchor:build": "cd test/anchor && anchor build",
         "test:treeshakability": "for file in dist/index.*.mjs; do agadoo $file; done",
         "test:types": "tsc --noEmit",
-        "test:unit": "vitest run --pool=threads",
+        "test:unit": "vitest run",
         "generate-idl-from-anchor": "node ./scripts/generate-idl-from-anchor.mjs",
         "generate-program-types": "for f in test/idls/*.json; do node ./bin/cli.cjs generate-client-types \"$f\" ./test/generated; done"
     },
