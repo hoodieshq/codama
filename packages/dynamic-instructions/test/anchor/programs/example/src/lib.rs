@@ -1,3 +1,4 @@
+#![allow(unexpected_cfgs)]
 use anchor_lang::prelude::*;
 
 use anchor_spl::{token::{Token, Mint, TokenAccount}, associated_token::AssociatedToken};
@@ -32,23 +33,23 @@ pub mod example {
         Ok(())
     }
 
-    pub fn no_arguments(ctx: Context<NoArguments>) -> Result<()> {
+    pub fn no_arguments(_ctx: Context<NoArguments>) -> Result<()> {
         Ok(())
     }
 
-    pub fn external_programs_with_pda(ctx: Context<ExternalProgramsWithPdaIx>) -> Result<()> {
+    pub fn external_programs_with_pda(_ctx: Context<ExternalProgramsWithPdaIx>) -> Result<()> {
         Ok(())
     }
 
-    pub fn four_level_pda(ctx: Context<FourLevelPda>) -> Result<()> {
+    pub fn four_level_pda(_ctx: Context<FourLevelPda>) -> Result<()> {
         Ok(())
     }
 
-    pub fn self_reference_pda(ctx: Context<SelfReferencePda>) -> Result<()> {
+    pub fn self_reference_pda(_ctx: Context<SelfReferencePda>) -> Result<()> {
         Ok(())
     }
 
-    pub fn two_node_cycle_pda(ctx: Context<TwoNodeCyclePda>) -> Result<()> {
+    pub fn two_node_cycle_pda(_ctx: Context<TwoNodeCyclePda>) -> Result<()> {
         Ok(())
     }
 
@@ -56,7 +57,7 @@ pub mod example {
         nested_example::handler(ctx, input)
     }
 
-    pub fn string_seed_pda(ctx: Context<StringSeedPda>, name: String, id: u64) -> Result<()> {
+    pub fn string_seed_pda(ctx: Context<StringSeedPda>, _name: String, id: u64) -> Result<()> {
         ctx.accounts.pda_account.input = id;
         ctx.accounts.pda_account.bump = ctx.bumps.pda_account;
         Ok(())
