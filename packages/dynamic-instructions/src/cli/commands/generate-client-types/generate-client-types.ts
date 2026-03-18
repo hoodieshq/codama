@@ -264,6 +264,7 @@ function codamaTypeToTS(type: TypeNode | undefined, definedTypes: DefinedTypeNod
             return codamaTypeToTS(def.type, definedTypes);
         }
         default:
+            type['kind'] satisfies never;
             return 'unknown';
     }
 }
