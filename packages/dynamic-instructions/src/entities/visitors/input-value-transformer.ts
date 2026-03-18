@@ -348,7 +348,7 @@ export function createInputValueTransformerVisitor(
                         `Expected tuple of length ${itemTransforms.length} for tupleTypeNode, but received array of length ${input.length}.`,
                     );
                 }
-                return input.map((value: unknown, index) => itemTransforms[index]!(value));
+                return input.map((value: unknown, index) => itemTransforms[index](value));
             };
         },
 

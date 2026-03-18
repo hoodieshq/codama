@@ -50,7 +50,7 @@ describe('SAS: changeSchemaVersion', () => {
 
         expect(ix.accounts?.length).toBe(6);
         expectedAccounts.forEach((expected, i) => {
-            expect(ix.accounts![i]!.address).eq(expected);
+            expect(ix.accounts?.[i].address).eq(expected);
         });
         ctx.sendInstruction(ix, [authority]);
 

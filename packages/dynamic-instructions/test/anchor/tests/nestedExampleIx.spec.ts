@@ -629,8 +629,8 @@ async function deriveNestedExamplePda(
         seeds: [
             'nested_example_account',
             getAddressEncoder().encode(pubkey),
-            new Uint8Array([index[seedEnum]!]),
-            new Uint8Array([index[innerSeedEnum]!]),
+            new Uint8Array([index[seedEnum]]),
+            new Uint8Array([index[innerSeedEnum]]),
         ],
     });
     return pda;

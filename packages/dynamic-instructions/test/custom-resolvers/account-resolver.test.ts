@@ -96,7 +96,7 @@ describe('Custom resolvers: accounts ResolverValueNode', () => {
                 resolveDestination: () => Promise.resolve(destination),
             })
             .instruction();
-        expect(ix.accounts![2]!.address).toBe(programClient.programAddress);
+        expect(ix.accounts?.[2].address).toBe(programClient.programAddress);
     });
 
     test('should bypass resolver when account is explicitly provided', async () => {
@@ -116,8 +116,8 @@ describe('Custom resolvers: accounts ResolverValueNode', () => {
             })
             .instruction();
 
-        expect(ix.accounts![1]!.address).toBe(destination);
-        expect(ix.accounts![2]!.address).toBe(treasury);
+        expect(ix.accounts?.[1].address).toBe(destination);
+        expect(ix.accounts?.[2].address).toBe(treasury);
     });
 
     test('should resolve to programId when resolver returns null', async () => {
@@ -130,7 +130,7 @@ describe('Custom resolvers: accounts ResolverValueNode', () => {
             })
             .instruction();
 
-        expect(ix.accounts![1]!.address).toBe(programClient.programAddress);
+        expect(ix.accounts?.[1].address).toBe(programClient.programAddress);
     });
 
     test('should throw AccountError when omitted required account conditional has no ifFalse and condition is falsy', async () => {

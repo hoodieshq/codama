@@ -75,7 +75,7 @@ describe('MPL Token Metadata: create', () => {
 
         expect(ix.accounts?.length).toBe(9);
         expectedAccounts.forEach((expected, i) => {
-            expect(expected, `Account mismatch at index ${i}`).toBe(ix.accounts![i]!.address);
+            expect(expected, `Account mismatch at index ${i}`).toBe(ix.accounts?.[i].address);
         });
 
         ctx.sendInstruction(ix, [payer, mintAuthority]);
@@ -192,7 +192,7 @@ describe('MPL Token Metadata: create', () => {
 
         expect(ix.accounts?.length).toBe(9);
         expectedAccounts.forEach((expected, i) => {
-            expect(expected, `Account mismatch at index ${i}`).toBe(ix.accounts![i]!.address);
+            expect(expected, `Account mismatch at index ${i}`).toBe(ix.accounts?.[i].address);
         });
 
         ctx.sendInstruction(ix, [payer, mintAuthority, mint]);

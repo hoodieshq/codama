@@ -82,7 +82,7 @@ describe('MPL Token Metadata: create with resolvers', () => {
 
         expect(ix.accounts?.length).toBe(9);
         expectedAccounts.forEach((expected, i) => {
-            expect(expected, `Account mismatch at index ${i}`).toBe(ix.accounts![i]!.address);
+            expect(expected, `Account mismatch at index ${i}`).toBe(ix.accounts?.[i].address);
         });
 
         ctx.sendInstruction(ix, [payer, mintAuthority, mint]);
@@ -116,7 +116,7 @@ describe('MPL Token Metadata: create with resolvers', () => {
         // resolver returns false -> ifFalse is undefined -> conditional returns null
         // optional optionalAccountStrategy=programId resolves to program ID
         expect(ix.accounts?.length).toBe(9);
-        expect(ix.accounts!.at(-1)!.address).toBe(programClient.programAddress);
+        expect(ix.accounts?.[ix.accounts.length - 1].address).toBe(programClient.programAddress);
 
         ctx.sendInstruction(ix, [payer, mintAuthority, mint]);
         const [metadataPda] = await findMetadataPda({ mint });
@@ -153,7 +153,7 @@ describe('MPL Token Metadata: create with resolvers', () => {
             })
             .instruction();
 
-        expect(ix.accounts!.at(-1)!.address).toBe(splTokenProgramMock);
+        expect(ix.accounts?.[ix.accounts.length - 1].address).toBe(splTokenProgramMock);
 
         ctx.sendInstruction(ix, [payer, mintAuthority, mint]);
         const [metadataPda] = await findMetadataPda({ mint });
@@ -183,7 +183,7 @@ describe('MPL Token Metadata: create with resolvers', () => {
 
         expect(ix.programAddress).toBe(programClient.programAddress);
         expect(ix.accounts?.length).toBe(9);
-        expect(ix.accounts!.at(-1)!.address).toBe(programClient.programAddress);
+        expect(ix.accounts?.[ix.accounts.length - 1].address).toBe(programClient.programAddress);
 
         ctx.sendInstruction(ix, [payer, mintAuthority, mint]);
         const [metadataPda] = await findMetadataPda({ mint });
@@ -215,7 +215,7 @@ describe('MPL Token Metadata: create with resolvers', () => {
             .instruction();
 
         expect(ix.accounts?.length).toBe(9);
-        expect(ix.accounts!.at(-1)!.address).toBe(programClient.programAddress);
+        expect(ix.accounts?.[ix.accounts.length - 1].address).toBe(programClient.programAddress);
 
         ctx.sendInstruction(ix, [payer, mintAuthority, mint]);
         const [metadataPda] = await findMetadataPda({ mint });

@@ -38,7 +38,7 @@ describe('SAS: createSchema', () => {
 
         expect(ix.accounts?.length).toBe(5);
         expectedAccounts.forEach((acc, idx) => {
-            expect(ix.accounts![idx]!.address).toBe(acc);
+            expect(ix.accounts?.[idx].address).toBe(acc);
         });
         ctx.sendInstruction(ix, [authority]);
 

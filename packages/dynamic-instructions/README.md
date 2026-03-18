@@ -98,12 +98,12 @@ Accepts any of:
 
 Accounts (pda, program ids) with `defaultValue` are resolved automatically, hence can be omitted.
 
-| Account scenario                                             | Type in `.accounts()`                 | Auto resolution                                                                              |
-| ------------------------------------------------------------ | ------------------------------------- | -------------------------------------------------------------------------------------------- |
-| Required account without `defaultValue`                      | ```{ system: Address }```          | No                                                                             |
-| Required account with `defaultValue`<br>(PDA, programId, etc.)  | ```{ system?: Address }```         | Auto-resolved to `defaultValue` if omitted                                                   |
-| Optional account (`isOptional: true`)<br>without `defaultValue` | ```{ system: Address \| null }```  | Resolved via `optionalAccountStrategy`,<br>if provided as `null`                              |
-| Optional account (`isOptional: true`)<br>with `defaultValue`    | ```{ system?: Address \| null }``` | - `null` resolves via `optionalAccountStrategy`<br>- `undefined` resolves via `defaultValue` |
+| Account scenario                                                | Type in `.accounts()`          | Auto resolution                                                                              |
+| --------------------------------------------------------------- | ------------------------------ | -------------------------------------------------------------------------------------------- |
+| Required account without `defaultValue`                         | `{ system: Address }`          | No                                                                                           |
+| Required account with `defaultValue`<br>(PDA, programId, etc.)  | `{ system?: Address }`         | Auto-resolved to `defaultValue` if omitted                                                   |
+| Optional account (`isOptional: true`)<br>without `defaultValue` | `{ system: Address \| null }`  | Resolved via `optionalAccountStrategy`,<br>if provided as `null`                             |
+| Optional account (`isOptional: true`)<br>with `defaultValue`    | `{ system?: Address \| null }` | - `null` resolves via `optionalAccountStrategy`<br>- `undefined` resolves via `defaultValue` |
 
 ### Auto-resolved account addresses
 

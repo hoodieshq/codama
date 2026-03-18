@@ -29,7 +29,7 @@ describe('SAS: createCredential', () => {
 
         expect(ix.accounts?.length).toBe(4);
         expectedAccounts.forEach((expected, i) => {
-            expect(ix.accounts![i]!.address).eq(expected);
+            expect(ix.accounts?.[i].address).eq(expected);
         });
         ctx.sendInstruction(ix, [authority]);
 

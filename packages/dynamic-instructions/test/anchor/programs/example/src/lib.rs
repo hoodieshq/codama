@@ -11,9 +11,6 @@ pub mod example {
     use super::*;
 
     pub fn pubkey_seed_ix(ctx: Context<PubkeySeedIx>, input: u64) -> Result<()> {
-        msg!("Input: {}", input);
-        msg!("bump seed: {}", ctx.bumps.new_account);
-        msg!("signer: {}", ctx.accounts.signer.key());
         ctx.accounts.new_account.input = input;
         ctx.accounts.new_account.bump = ctx.bumps.new_account;
         Ok(())
@@ -25,9 +22,7 @@ pub mod example {
         optional_input: Option<Pubkey>,
     ) -> Result<()> {
         ctx.accounts.existing_account.input = input;
-        msg!("Input: {}", input);
         ctx.accounts.existing_account.optional_input = optional_input;
-        msg!("Optional Input: {:?}", optional_input);
         Ok(())
     }
 
@@ -284,20 +279,3 @@ pub struct StringSeedPda<'info> {
     pub pda_account: Account<'info, DataAccount1>,
     pub system_program: Program<'info, System>,
 }
-
-// #[derive(Accounts)]
-// #[instruction(input: [u8; 8], id: u64)]
-// pub struct OptionalAccount<'info> {
-//     #[account(mut)]
-//     pub signer: Signer<'info>,
-//     #[account(
-//         init,
-//         seeds = [b"optional_acc", input.as_ref(), &id.to_le_bytes()],
-//         payer = signer,
-//         space = ResetAccount::INIT_SPACE,
-//         bump,
-//     )]
-//     pub reset_acc: Account<'info, ResetAccount>,
-//     pub optional_acc: Option<UncheckedAccount<'info>>,
-//     pub system_program: Program<'info, System>,
-// }

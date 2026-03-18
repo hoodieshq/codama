@@ -25,7 +25,7 @@ describe('SAS: changeSchemaDescription', () => {
 
         expect(ix.accounts?.length).toBe(5);
         expectedAccounts.forEach((expected, i) => {
-            expect(ix.accounts![i]!.address).eq(expected);
+            expect(ix.accounts?.[i].address).eq(expected);
         });
         ctx.sendInstruction(ix, [authority]);
 
