@@ -37,9 +37,6 @@ jobs:
       - name: Compile JS and types
         run: pnpm run build
 
-      - name: Generate program types for dynamic-instructions
-        run: pnpm --filter @codama/dynamic-instructions generate-program-types
-
       - name: Check linting
         run: pnpm run lint
 
