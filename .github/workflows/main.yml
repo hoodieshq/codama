@@ -52,24 +52,11 @@ jobs:
         with:
           version: ${{ env.SOLANA_VERSION }}
 
-      - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          toolchain: ${{ env.RUST_VERSION }}
-
-      - name: Cache Cargo and Anchor build
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            packages/dynamic-instructions/test/anchor/target
-          key: ${{ runner.os }}-anchor-build-${{ hashFiles('packages/dynamic-instructions/test/anchor/Cargo.lock') }}
-
       - name: Setup Anchor
         uses: ./.github/actions/setup-anchor
         with:
           anchor-version: ${{ env.ANCHOR_VERSION }}
+          rust-version: ${{ env.RUST_VERSION }}
 
       - name: Install pnpm
         uses: pnpm/action-setup@v3

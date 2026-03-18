@@ -1,23 +1,43 @@
 name: Setup Anchor CLI
-description: Install a pinned Anchor CLI version via AVM with caching for CI.
+description: Install Rust toolchain and a pinned Anchor CLI version via AVM with caching for CI.
 
 inputs:
   anchor-version:
     description: Anchor CLI version to install (e.g. 0.32.1)
     required: true
+  rust-version:
+    description: Rust toolchain version to install (e.g. 1.93.0)
+    required: true
+  cargo-lock-path:
+    description: Path to Cargo.lock for cache key hashing
+    required: false
+    default: packages/dynamic-instructions/test/anchor/Cargo.lock
+  build-target-path:
+    description: Path to the build target directory to cache
+    required: false
+    default: packages/dynamic-instructions/test/anchor/target
 
 runs:
   using: composite
   steps:
-    - name: Cache Anchor toolchain (AVM + Anchor versions)
+    - name: Setup Rust
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        toolchain: ${{ inputs.rust-version }}
+
+    - name: Cache Rust and Anchor toolchain
       uses: actions/cache@v4
       with:
         path: |
-          ~/.avm
+          ~/.cargo/registry
+          ~/.cargo/git
           ~/.cargo/bin/avm
-        key: ${{ runner.os }}-anchor-${{ inputs.anchor-version }}
+          ~/.avm
+          ${{ inputs.build-target-path }}
+        key: ${{ runner.os }}-rust-anchor-${{ inputs.rust-version }}-${{ inputs.anchor-version }}-${{ inputs.cargo-lock-path && hashFiles(inputs.cargo-lock-path) || 'no-lock' }}
         restore-keys: |
-          ${{ runner.os }}-anchor-
+          ${{ runner.os }}-rust-anchor-${{ inputs.rust-version }}-${{ inputs.anchor-version }}-
+          ${{ runner.os }}-rust-anchor-${{ inputs.rust-version }}-
 
     - name: Install Anchor (pinned)
       shell: bash
