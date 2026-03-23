@@ -130,6 +130,16 @@ describe('createAccountMeta: remaining accounts', () => {
             createAccountMeta(root, ix, { m: 2, signers: [ADDR_1, 123] }, { multisig: MULTISIG_ADDR }),
         ).rejects.toThrow('Remaining account argument "signers[1]" must be an address string or PublicKey, got number');
     });
+
+    test('should throw when required remaining account argument is not provided', async () => {
+        const root = loadRoot('token-idl.json');
+        const ix = getInstruction(root, 'initializeMultisig');
+
+        // signers is required:
+        await expect(
+            createAccountMeta(root, ix, { m: 2, signers: undefined }, { multisig: MULTISIG_ADDR }),
+        ).rejects.toThrow('Remaining account argument "signers" is required but was not provided');
+    });
 });
 
 function getInstruction(root: RootNode, name: string): InstructionNode {

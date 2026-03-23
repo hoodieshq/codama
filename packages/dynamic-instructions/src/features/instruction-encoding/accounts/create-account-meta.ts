@@ -78,7 +78,18 @@ export async function createAccountMeta(
             throw new AccountError(`Unsupported remaining accounts value kind: "${remainingNode.value.kind}"`);
         }
         const addresses = argumentsInput[remainingNode.value.name];
-        if (addresses === undefined) continue;
+
+        if (addresses === undefined) {
+            // Required remaining accounts must be provided.
+            if (!remainingNode.isOptional) {
+                throw new AccountError(
+                    `Remaining account argument "${remainingNode.value.name}" is required but was not provided`,
+                );
+            }
+            // Optional remaining accounts can be safely omitted.
+            continue;
+        }
+
         if (!Array.isArray(addresses)) {
             throw new AccountError(
                 `Remaining account argument "${remainingNode.value.name}" must be an array of addresses`,
