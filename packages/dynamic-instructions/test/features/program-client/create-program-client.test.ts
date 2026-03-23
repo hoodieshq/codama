@@ -10,14 +10,14 @@ describe('createProgramClient', () => {
     describe('methods', () => {
         const programClient = createTestProgramClient('system-program-idl.json');
 
-        test('throws when accessing a non-existent instruction', () => {
+        test('should throw when accessing a non-existent instruction', () => {
             expect(() => programClient.methods.nonExistentMethod).toThrow(DynamicInstructionsError);
             expect(() => programClient.methods.nonExistentMethod).toThrow(
                 /Instruction "nonExistentMethod" not found in IDL/,
             );
         });
 
-        test('error message lists available instructions', () => {
+        test('should list available instructions in error message', () => {
             try {
                 // eslint-disable-next-line @typescript-eslint/no-unused-expressions
                 programClient.methods.nonExistentMethod;
@@ -48,7 +48,7 @@ describe('createProgramClient', () => {
             }
         });
 
-        test('returns a builder for a valid instruction', () => {
+        test('should return a builder for a valid instruction', () => {
             const typedClient = createTestProgramClient<SystemProgramClient>('system-program-idl.json');
             const builder = typedClient.methods.transferSol({ amount: 1000 });
             expect(builder).toBeDefined();
@@ -56,7 +56,7 @@ describe('createProgramClient', () => {
             expect(typeof builder.instruction).toBe('function');
         });
 
-        test('supports "in" operator for existing instructions', () => {
+        test('should support "in" operator for existing instructions', () => {
             expect('transferSol' in programClient.methods).toBe(true);
             expect('nonExistentMethod' in programClient.methods).toBe(false);
         });
@@ -68,13 +68,22 @@ describe('createProgramClient', () => {
             expect('hasOwnProperty' in programClient.methods).toBe(true);
         });
 
-        test('does not throw when awaited directly', async () => {
+        test('should not throw when accessing standard prototype properties', () => {
+            expect(() => programClient.methods.constructor).not.toThrow();
+            // eslint-disable-next-line @typescript-eslint/unbound-method
+            expect(() => programClient.methods.hasOwnProperty).not.toThrow();
+            expect(programClient.methods.constructor).toBeUndefined();
+            // eslint-disable-next-line @typescript-eslint/unbound-method
+            expect(programClient.methods.hasOwnProperty).toBeUndefined();
+        });
+
+        test('should not throw when awaited directly', async () => {
             // eslint-disable-next-line @typescript-eslint/await-thenable
             const result = await programClient.methods;
             expect(result).toBeDefined();
         });
 
-        test('does not throw when serialized with JSON.stringify', () => {
+        test('should not throw when serialized with JSON.stringify', () => {
             expect(() => JSON.stringify(programClient.methods)).not.toThrow();
         });
     });
@@ -82,7 +91,7 @@ describe('createProgramClient', () => {
     describe('pdas', () => {
         const pdaClient = createTestProgramClient<MplTokenMetadataProgramClient>('mpl-token-metadata-idl.json');
 
-        test('throws when accessing a non-existent PDA', () => {
+        test('should throw when accessing a non-existent PDA', () => {
             // @ts-expect-error - testing error message for non-existent PDA
             // eslint-disable-next-line @typescript-eslint/no-unsafe-return
             expect(() => pdaClient.pdas.nonExistentPda).toThrow(DynamicInstructionsError);
@@ -91,13 +100,13 @@ describe('createProgramClient', () => {
             expect(() => pdaClient.pdas.nonExistentPda).toThrow(/PDA "nonExistentPda" not found in IDL/);
         });
 
-        test('error message lists available PDAs', () => {
+        test('should list available PDAs in error message', () => {
             // @ts-expect-error - testing error message for non-existent PDA
             // eslint-disable-next-line @typescript-eslint/no-unsafe-return
             expect(() => pdaClient.pdas.nonExistentPda).toThrow(/Available PDAs:/);
         });
 
-        test('supports "in" operator for existing PDAs', () => {
+        test('should support "in" operator for existing PDAs', () => {
             expect('metadata' in pdaClient.pdas).toBe(true);
             expect('nonExistentPda' in pdaClient.pdas).toBe(false);
         });
@@ -109,13 +118,31 @@ describe('createProgramClient', () => {
             expect('hasOwnProperty' in pdaClient.pdas).toBe(true);
         });
 
-        test('does not throw when awaited directly', async () => {
+        test('should return undefined pdas for IDL without PDAs', () => {
+            const noPdaClient = createTestProgramClient('system-program-idl.json');
+            expect(noPdaClient.pdas).toBeUndefined();
+        });
+
+        test('should return defined pdas for IDL with PDAs', () => {
+            expect(pdaClient.pdas).toBeDefined();
+        });
+
+        test('should not throw when accessing standard prototype properties', () => {
+            expect(() => pdaClient.pdas.constructor).not.toThrow();
+            // eslint-disable-next-line @typescript-eslint/unbound-method
+            expect(() => pdaClient.pdas.hasOwnProperty).not.toThrow();
+            expect(pdaClient.pdas.constructor).toBeUndefined();
+            // eslint-disable-next-line @typescript-eslint/unbound-method
+            expect(pdaClient.pdas.hasOwnProperty).toBeUndefined();
+        });
+
+        test('should not throw when awaited directly', async () => {
             // eslint-disable-next-line @typescript-eslint/await-thenable
             const result = await pdaClient.pdas;
             expect(result).toBeDefined();
         });
 
-        test('does not throw when serialized with JSON.stringify', () => {
+        test('should not throw when serialized with JSON.stringify', () => {
             expect(() => JSON.stringify(pdaClient.pdas)).not.toThrow();
         });
     });
@@ -123,13 +150,13 @@ describe('createProgramClient', () => {
     describe('programId override', () => {
         const OVERRIDE_ADDRESS = SvmTestContext.generateAddress();
 
-        test('programAddress reflects the override', () => {
+        test('should reflect the override in programAddress', () => {
             const idl = loadIdl('system-program-idl.json');
             const client = createProgramClient<SystemProgramClient>(idl, { programId: OVERRIDE_ADDRESS });
             expect(client.programAddress).toBe(OVERRIDE_ADDRESS);
         });
 
-        test('built instruction uses the overridden program address', async () => {
+        test('should use the overridden program address in built instruction', async () => {
             const idl = loadIdl('system-program-idl.json');
             const client = createProgramClient<SystemProgramClient>(idl, { programId: OVERRIDE_ADDRESS });
 

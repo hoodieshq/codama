@@ -79,6 +79,7 @@ export function createProgramClient<TClient = ProgramClient>(
 
                 const ixNode = instructions.get(prop);
                 if (!ixNode) {
+                    if (prop in Object.prototype) return undefined;
                     const available = [...instructions.keys()].join(', ');
                     throw new DynamicInstructionsError(
                         `Instruction "${prop}" not found in IDL. Available instructions: ${available}`,
@@ -95,25 +96,32 @@ export function createProgramClient<TClient = ProgramClient>(
 
     const pdaNodes = collectPdaNodes(root);
 
-    const pdas = new Proxy(
-        {},
-        {
-            get(_target, prop) {
-                if (typeof prop !== 'string' || PASSTHROUGH_PROPS.has(prop)) return undefined;
+    const pdas =
+        pdaNodes.size === 0
+            ? undefined
+            : (new Proxy(
+                  {},
+                  {
+                      get(_target, prop) {
+                          if (typeof prop !== 'string' || PASSTHROUGH_PROPS.has(prop)) return undefined;
 
-                const pdaNode = pdaNodes.get(prop);
-                if (!pdaNode) {
-                    const available = [...pdaNodes.keys()].join(', ');
-                    throw new DynamicInstructionsError(`PDA "${prop}" not found in IDL. Available PDAs: ${available}`);
-                }
+                          const pdaNode = pdaNodes.get(prop);
+                          if (!pdaNode) {
+                              if (prop in Object.prototype) return undefined;
+                              const available = [...pdaNodes.keys()].join(', ');
+                              throw new DynamicInstructionsError(
+                                  `PDA "${prop}" not found in IDL. Available PDAs: ${available}`,
+                              );
+                          }
 
-                return (seeds?: Record<string, unknown>) => deriveStandalonePDA(root, pdaNode, programAddress, seeds);
-            },
-            has(target, prop) {
-                return Reflect.has(target, prop) || (typeof prop === 'string' && pdaNodes.has(prop));
-            },
-        },
-    ) as ProgramClient['pdas'];
+                          return (seeds?: Record<string, unknown>) =>
+                              deriveStandalonePDA(root, pdaNode, programAddress, seeds);
+                      },
+                      has(target, prop) {
+                          return Reflect.has(target, prop) || (typeof prop === 'string' && pdaNodes.has(prop));
+                      },
+                  },
+              ) as ProgramClient['pdas']);
 
     return {
         instructions,
