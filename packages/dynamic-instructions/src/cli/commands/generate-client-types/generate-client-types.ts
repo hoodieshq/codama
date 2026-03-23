@@ -207,6 +207,8 @@ function codamaTypeToTS(type: TypeNode | undefined, definedTypes: DefinedTypeNod
         case 'hiddenPrefixTypeNode':
         case 'preOffsetTypeNode':
         case 'postOffsetTypeNode':
+        case 'hiddenSuffixTypeNode':
+        case 'sentinelTypeNode':
             return codamaTypeToTS(type.type, definedTypes);
         case 'amountTypeNode':
         case 'solAmountTypeNode':
@@ -262,6 +264,9 @@ function codamaTypeToTS(type: TypeNode | undefined, definedTypes: DefinedTypeNod
             const def = definedTypes.find(d => d.name === type.name);
             if (!def) return 'unknown';
             return codamaTypeToTS(def.type, definedTypes);
+        }
+        case 'dateTimeTypeNode': {
+            return codamaTypeToTS(type.number, definedTypes);
         }
         default:
             type['kind'] satisfies never;
