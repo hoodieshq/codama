@@ -20,7 +20,7 @@ export function generateClientTypesFromFile(codamaIdlPath: string, outputDirPath
     try {
         idlJson = readFileSync(idlPath, 'utf-8');
     } catch (err) {
-        console.error(`Error reading IDL file: ${(err as Error).message}`);
+        console.error(`Error reading IDL file: ${err instanceof Error ? err.message : String(err)}`);
         process.exit(1);
     }
 
@@ -28,7 +28,9 @@ export function generateClientTypesFromFile(codamaIdlPath: string, outputDirPath
     try {
         idl = createFromJson(idlJson).getRoot();
     } catch (err) {
-        console.error(`Error: ${idlPath} is not valid Codama JSON: ${(err as Error).message}`);
+        console.error(
+            `Error: ${idlPath} is not valid Codama JSON: ${err instanceof Error ? err.message : String(err)}`,
+        );
         process.exit(1);
     }
 
@@ -37,7 +39,7 @@ export function generateClientTypesFromFile(codamaIdlPath: string, outputDirPath
         console.log(`Generating types for program: ${idl.program.name}`);
         types = generateClientTypes(idl);
     } catch (err) {
-        console.error(`Error generating client types: ${(err as Error).message}`);
+        console.error(`Error generating client types: ${err instanceof Error ? err.message : String(err)}`);
         process.exit(1);
     }
 
@@ -51,7 +53,7 @@ export function generateClientTypesFromFile(codamaIdlPath: string, outputDirPath
         writeFileSync(outputPath, types, 'utf-8');
         console.log('Done!');
     } catch (err) {
-        console.error(`Error writing generated types: ${(err as Error).message}`);
+        console.error(`Error writing generated types: ${err instanceof Error ? err.message : String(err)}`);
         process.exit(1);
     }
 }

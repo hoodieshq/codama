@@ -52,7 +52,14 @@ function encodeOptionalArgument(
     ixArgumentNode: InstructionNode['arguments'][number],
 ): ReadonlyUint8Array {
     const nodeCodec = getNodeCodec([root, root.program, ix, ixArgumentNode]);
-    return nodeCodec.encode(null);
+    try {
+        return nodeCodec.encode(null);
+    } catch (error) {
+        throw new ArgumentError(
+            `Failed to encode optional argument "${ixArgumentNode.name}" of "${ix.name}" instruction`,
+            { cause: error },
+        );
+    }
 }
 
 function encodeRequiredArgument(
@@ -70,5 +77,11 @@ function encodeRequiredArgument(
         bytesEncoding: 'base16',
     });
     const transformedInput = transformer(input);
-    return nodeCodec.encode(transformedInput);
+    try {
+        return nodeCodec.encode(transformedInput);
+    } catch (error) {
+        throw new ArgumentError(`Failed to encode required argument "${ixArgumentNode.name}" of "${ix.name}" instruction`, {
+            cause: error,
+        });
+    }
 }

@@ -1,6 +1,12 @@
 import { describe, expect, expectTypeOf, test } from 'vitest';
 
-import { AccountError, ArgumentError, DynamicInstructionsError, ValidationError } from '../../src/shared/errors';
+import {
+    AccountError,
+    ArgumentError,
+    DynamicInstructionsError,
+    ResolverError,
+    ValidationError,
+} from '../../src/shared/errors';
 
 describe('DynamicInstructionsError', () => {
     test('should set name and message', () => {
@@ -56,10 +62,23 @@ describe('ArgumentError', () => {
     });
 });
 
+describe('ResolverError', () => {
+    test('should set name and message', () => {
+        const error = new ResolverError('resolver issue');
+        expect(error.name).toBe('ResolverError');
+        expect(error.message).toBe('resolver issue');
+    });
+
+    test('should be an instance of DynamicInstructionsError', () => {
+        expect(new ResolverError('test')).toBeInstanceOf(DynamicInstructionsError);
+    });
+});
+
 describe('error hierarchy types', () => {
     test('should have all errors extend DynamicInstructionsError', () => {
         expectTypeOf<ValidationError>().toExtend<DynamicInstructionsError>();
         expectTypeOf<AccountError>().toExtend<DynamicInstructionsError>();
         expectTypeOf<ArgumentError>().toExtend<DynamicInstructionsError>();
+        expectTypeOf<ResolverError>().toExtend<DynamicInstructionsError>();
     });
 });

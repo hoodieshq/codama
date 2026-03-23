@@ -3,6 +3,7 @@ import { assert, StructError } from 'superstruct';
 
 import { AccountError } from '../../../shared/errors';
 import type { AccountsInput } from '../../../shared/types';
+import { safeStringify } from '../../../shared/util';
 import { createIxAccountsValidator } from '../validators';
 /**
  * Validates the accountsInput against the instruction's account definitions.
@@ -21,7 +22,7 @@ export function validateAccountsInput(ixNode: InstructionNode, accountsInput: Ac
             if (value == null) {
                 throw new AccountError(`Missing required account: ${key}. Expected a valid Solana address`);
             } else {
-                throw new AccountError(`Invalid address of "${key}" account: ${value as string}`);
+                throw new AccountError(`Invalid address of "${key}" account: ${safeStringify(value)}`);
             }
         }
         throw new AccountError(`Unexpected account validation error`, { cause: error });

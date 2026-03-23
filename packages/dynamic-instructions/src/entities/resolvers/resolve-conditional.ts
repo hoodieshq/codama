@@ -58,7 +58,11 @@ export async function resolveConditionalValueNodeCondition({
                 `Cannot resolve required value node: ${valueNode.kind} in account ${ixAccountNode.name}`,
             );
         });
-        // FIXME: Deep equality check for complex types, like maps, structs, arrays, etc.
+        if (typeof requiredValue.value === 'object' || typeof providedValue === 'object') {
+            throw new AccountError(
+                `Deep equality comparison not yet supported for conditional value in account "${ixAccountNode.name}" of "${ixNode.name}" instruction`,
+            );
+        }
         return requiredValue.value === providedValue ? ifTrue : ifFalse;
     } else {
         return providedValue ? ifTrue : ifFalse;
