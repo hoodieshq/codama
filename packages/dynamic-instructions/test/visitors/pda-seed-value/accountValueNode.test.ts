@@ -1,14 +1,12 @@
 import { address, getAddressEncoder } from '@solana/addresses';
-import type { InstructionNode } from 'codama';
-import { accountValueNode, instructionAccountNode } from 'codama';
+import { accountValueNode, instructionAccountNode, instructionNode } from 'codama';
 import { describe, expect, test } from 'vitest';
 
 import { SvmTestContext } from '../../svm-test-context';
-import { ixNodeStub, makeVisitor } from './pda-seed-value-test-utils';
+import { makeVisitor } from './pda-seed-value-test-utils';
 
 describe('pda-seed-value: visitAccountValue', () => {
-    const ixNodeWithAccount: InstructionNode = {
-        ...ixNodeStub,
+    const ixNodeWithAccount = instructionNode({
         accounts: [
             instructionAccountNode({
                 isSigner: false,
@@ -16,7 +14,8 @@ describe('pda-seed-value: visitAccountValue', () => {
                 name: 'authority',
             }),
         ],
-    };
+        name: 'testInstruction',
+    });
 
     test('should encode provided account address', async () => {
         const randomAddress = new SvmTestContext().createAccount();
@@ -41,8 +40,7 @@ describe('pda-seed-value: visitAccountValue', () => {
     });
 
     test('should throw when resolved address is null', async () => {
-        const ixNodeWithOptionalAccount: InstructionNode = {
-            ...ixNodeStub,
+        const ixNodeWithOptionalAccount = instructionNode({
             accounts: [
                 instructionAccountNode({
                     isOptional: true,
@@ -51,8 +49,9 @@ describe('pda-seed-value: visitAccountValue', () => {
                     name: 'authority',
                 }),
             ],
+            name: 'testInstruction',
             optionalAccountStrategy: 'omitted',
-        };
+        });
         const visitor = makeVisitor({
             accountsInput: { authority: null },
             ixNode: ixNodeWithOptionalAccount,

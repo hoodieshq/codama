@@ -1,27 +1,20 @@
 import { address } from '@solana/addresses';
-import type { InstructionNode } from 'codama';
-import { camelCase, programNode, rootNode } from 'codama';
+import { instructionNode, programNode, rootNode } from 'codama';
 
 import { createPdaSeedValueVisitor } from '../../../src/entities/visitors/pda-seed-value';
 
-export const DEFAULT_PUBLIC_KEY = '11111111111111111111111111111111';
+const PROGRAM_PUBLIC_KEY = '11111111111111111111111111111111';
 
-export const rootNodeMock = rootNode(programNode({ name: 'test', publicKey: DEFAULT_PUBLIC_KEY }));
+export const rootNodeMock = rootNode(programNode({ name: 'test', publicKey: PROGRAM_PUBLIC_KEY }));
 
-export const ixNodeStub: InstructionNode = {
-    accounts: [],
-    arguments: [],
-    docs: [],
-    kind: 'instructionNode',
-    name: camelCase('test_instruction'),
-};
+export const ixNodeStub = instructionNode({ name: 'testInstruction' });
 
 export function makeVisitor(overrides?: Partial<Parameters<typeof createPdaSeedValueVisitor>[0]>) {
     return createPdaSeedValueVisitor({
         accountsInput: undefined,
         argumentsInput: undefined,
         ixNode: ixNodeStub,
-        programId: address(DEFAULT_PUBLIC_KEY),
+        programId: address(PROGRAM_PUBLIC_KEY),
         resolutionPath: [],
         resolversInput: undefined,
         root: rootNodeMock,

@@ -1,5 +1,5 @@
-import type { InstructionAccountNode, InstructionNode } from 'codama';
-import { camelCase, instructionAccountNode, programNode, rootNode } from 'codama';
+import type { InstructionAccountNode } from 'codama';
+import { instructionAccountNode, instructionNode, programNode, rootNode } from 'codama';
 
 import { createAccountDefaultValueVisitor } from '../../../src/entities/visitors/account-default-value';
 import { SvmTestContext } from '../../svm-test-context';
@@ -7,13 +7,7 @@ import { SvmTestContext } from '../../svm-test-context';
 export const programAddress = SvmTestContext.generateAddress();
 export const rootNodeMock = rootNode(programNode({ name: 'test', publicKey: programAddress }));
 
-export const ixNodeStub: InstructionNode = {
-    accounts: [],
-    arguments: [],
-    docs: [],
-    kind: 'instructionNode',
-    name: camelCase('test_instruction'),
-};
+export const ixNodeStub = instructionNode({ name: 'testInstruction' });
 
 export const ixAccountNodeStub: InstructionAccountNode = instructionAccountNode({
     isOptional: false,

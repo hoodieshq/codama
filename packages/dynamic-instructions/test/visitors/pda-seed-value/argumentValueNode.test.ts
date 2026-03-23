@@ -1,8 +1,8 @@
 import { getUtf8Codec } from '@solana/codecs';
-import type { InstructionNode } from 'codama';
 import {
     argumentValueNode,
     instructionArgumentNode,
+    instructionNode,
     numberTypeNode,
     publicKeyTypeNode,
     remainderOptionTypeNode,
@@ -12,13 +12,13 @@ import {
 import { describe, expect, test } from 'vitest';
 
 import { SvmTestContext } from '../../svm-test-context';
-import { ixNodeStub, makeVisitor } from './pda-seed-value-test-utils';
+import { makeVisitor } from './pda-seed-value-test-utils';
 
 describe('pda-seed-value: visitArgumentValue', () => {
-    const ixNodeWithArg: InstructionNode = {
-        ...ixNodeStub,
+    const ixNodeWithArg = instructionNode({
         arguments: [instructionArgumentNode({ name: 'title', type: stringTypeNode('utf8') })],
-    };
+        name: 'testInstruction',
+    });
 
     test('should encode argument value using its codec', async () => {
         const visitor = makeVisitor({
@@ -35,10 +35,10 @@ describe('pda-seed-value: visitArgumentValue', () => {
         // This mirrors how on-chain PDA derivation uses raw string bytes as seeds,
         // even when the instruction argument is serialized with a length prefix.
         const sizePrefixedArgType = sizePrefixTypeNode(stringTypeNode('utf8'), numberTypeNode('u32'));
-        const ixNodeWithSizePrefixedArg: InstructionNode = {
-            ...ixNodeStub,
+        const ixNodeWithSizePrefixedArg = instructionNode({
             arguments: [instructionArgumentNode({ name: 'name', type: sizePrefixedArgType })],
-        };
+            name: 'testInstruction',
+        });
 
         const visitor = makeVisitor({
             argumentsInput: { name: 'hello' },
@@ -83,15 +83,15 @@ describe('pda-seed-value: visitArgumentValue', () => {
     describe('remainderOptionTypeNode seeds', () => {
         // Mirrors the pmp IDL's metadata PDA:
         // the "authority" seed is remainderOptionTypeNode(publicKeyTypeNode) — null is canonical.
-        const ixNodeWithOptionalSeed: InstructionNode = {
-            ...ixNodeStub,
+        const ixNodeWithOptionalSeed = instructionNode({
             arguments: [
                 instructionArgumentNode({
                     name: 'authority',
                     type: remainderOptionTypeNode(publicKeyTypeNode()),
                 }),
             ],
-        };
+            name: 'testInstruction',
+        });
 
         test('should return empty bytes when argument is undefined', async () => {
             const visitor = makeVisitor({
@@ -122,10 +122,10 @@ describe('pda-seed-value: visitArgumentValue', () => {
         });
 
         test('should return empty bytes when seedTypeNode override is remainderOptionTypeNode and argument is null', async () => {
-            const ixNodeWithRequiredArg: InstructionNode = {
-                ...ixNodeStub,
+            const ixNodeWithRequiredArg = instructionNode({
                 arguments: [instructionArgumentNode({ name: 'authority', type: publicKeyTypeNode() })],
-            };
+                name: 'testInstruction',
+            });
             const visitor = makeVisitor({
                 argumentsInput: { authority: null },
                 ixNode: ixNodeWithRequiredArg,

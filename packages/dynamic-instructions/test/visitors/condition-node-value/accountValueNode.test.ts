@@ -1,12 +1,11 @@
-import type { InstructionNode } from 'codama';
-import { accountValueNode, camelCase, instructionAccountNode } from 'codama';
+import { accountValueNode, instructionAccountNode, instructionNode } from 'codama';
 import { describe, expect, test } from 'vitest';
 
 import { SvmTestContext } from '../../svm-test-context';
 import { makeVisitor } from './condition-node-value-test-utils';
 
 describe('condition-node-value: visitAccountValue', () => {
-    const ixNodeWithAccount: InstructionNode = {
+    const ixNodeWithAccount = instructionNode({
         accounts: [
             instructionAccountNode({
                 isOptional: true,
@@ -15,11 +14,8 @@ describe('condition-node-value: visitAccountValue', () => {
                 name: 'myAccount',
             }),
         ],
-        arguments: [],
-        docs: [],
-        kind: 'instructionNode',
-        name: camelCase('test_instruction'),
-    };
+        name: 'testInstruction',
+    });
 
     test('should return null when user provides null', async () => {
         const visitor = makeVisitor({

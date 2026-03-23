@@ -1,14 +1,12 @@
-import type { InstructionNode } from 'codama';
-import { accountValueNode, instructionAccountNode, publicKeyValueNode } from 'codama';
+import { accountValueNode, instructionAccountNode, instructionNode, publicKeyValueNode } from 'codama';
 import { describe, expect, test } from 'vitest';
 
 import { SvmTestContext } from '../../svm-test-context';
-import { ixNodeStub, makeVisitor } from './account-default-value-test-utils';
+import { makeVisitor } from './account-default-value-test-utils';
 
 describe('account-default-value: visitAccountValue', () => {
     const refAddress = SvmTestContext.generateAddress();
-    const ixNodeWithAccount: InstructionNode = {
-        ...ixNodeStub,
+    const ixNodeWithAccount = instructionNode({
         accounts: [
             instructionAccountNode({
                 isOptional: false,
@@ -17,7 +15,8 @@ describe('account-default-value: visitAccountValue', () => {
                 name: 'refAccount',
             }),
         ],
-    };
+        name: 'testInstruction',
+    });
 
     test('should return address when user provides address in accountsInput', async () => {
         const visitor = makeVisitor({
@@ -29,8 +28,7 @@ describe('account-default-value: visitAccountValue', () => {
     });
 
     test('should return null for optional account with null input and omitted strategy', async () => {
-        const ixNodeWithOptional: InstructionNode = {
-            ...ixNodeStub,
+        const ixNodeWithOptional = instructionNode({
             accounts: [
                 instructionAccountNode({
                     isOptional: true,
@@ -39,8 +37,9 @@ describe('account-default-value: visitAccountValue', () => {
                     name: 'refAccount',
                 }),
             ],
+            name: 'testInstruction',
             optionalAccountStrategy: 'omitted',
-        };
+        });
         const visitor = makeVisitor({
             accountsInput: { refAccount: null },
             ixNode: ixNodeWithOptional,
@@ -51,8 +50,7 @@ describe('account-default-value: visitAccountValue', () => {
 
     test('should resolve referenced account defaultValue', async () => {
         const expectedDefaultAddress = SvmTestContext.generateAddress();
-        const ixNodeWithDefault: InstructionNode = {
-            ...ixNodeStub,
+        const ixNodeWithDefault = instructionNode({
             accounts: [
                 instructionAccountNode({
                     defaultValue: publicKeyValueNode(expectedDefaultAddress),
@@ -62,7 +60,8 @@ describe('account-default-value: visitAccountValue', () => {
                     name: 'refAccount',
                 }),
             ],
-        };
+            name: 'testInstruction',
+        });
         const visitor = makeVisitor({ ixNode: ixNodeWithDefault });
         const result = await visitor.visitAccountValue(accountValueNode('refAccount'));
         expect(result).toBe(expectedDefaultAddress);
