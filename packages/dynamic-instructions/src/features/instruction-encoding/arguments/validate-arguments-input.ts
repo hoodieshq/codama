@@ -1,6 +1,6 @@
 import type { InstructionNode, RootNode } from 'codama';
-import type { Failure, StructError } from 'superstruct';
-import { assert } from 'superstruct';
+import type { Failure } from 'superstruct';
+import { assert, StructError } from 'superstruct';
 
 import { ValidationError } from '../../../shared/errors';
 import type { ArgumentsInput } from '../../../shared/types';
@@ -27,8 +27,10 @@ export function validateArgumentsInput(root: RootNode, ixNode: InstructionNode, 
     try {
         assert(filteredInput, ArgumentsInputValidator);
     } catch (error) {
-        const { failures } = error as StructError;
-        const message = failures().map(failure => {
+        if (!(error instanceof StructError)) {
+            throw new ValidationError('Unexpected validation error', { cause: error });
+        }
+        const message = error.failures().map(failure => {
             const fieldPath = formatFailurePath(failure);
             const value = formatFailureValue(failure.value);
             return `Invalid argument "${fieldPath}", value: ${value}. ${failure.message}\n`;
