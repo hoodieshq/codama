@@ -43,6 +43,7 @@ describe('Token 2022 Program: updateRateInterestBearingMint', () => {
         const updateIx = await token2022Client.methods
             .updateRateInterestBearingMint({ rate: 1000 })
             .accounts({ mint, rateAuthority })
+            .signers(['rateAuthority'])
             .instruction();
 
         ctx.sendInstruction(updateIx, [payer, rateAuthority]);

@@ -108,6 +108,7 @@ describe('Token 2022 Program: transferFee', () => {
         const setFeeIx = await token2022Client.methods
             .setTransferFee({ maximumFee: 2_000_000, transferFeeBasisPoints: 200 })
             .accounts({ mint, transferFeeConfigAuthority: feeAuthority })
+            .signers(['transferFeeConfigAuthority'])
             .instruction();
         ctx.sendInstruction(setFeeIx, [payer, feeAuthority]);
 

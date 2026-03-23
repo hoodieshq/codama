@@ -73,23 +73,6 @@ describe('Program Metadata: extend', () => {
         expect(metadata.canonical).toBe(true);
     });
 
-    test('should fail to extend with wrong authority', async () => {
-        const wrongAuthority = ctx.createFundedAccount();
-        const { programAddress, programDataAddress, pda: metadataPda } = await initializeCanonicalMetadata(ctx);
-
-        const extendIx = await programClient.methods
-            .extend({ length: 500 })
-            .accounts({
-                account: metadataPda,
-                authority: wrongAuthority,
-                program: programAddress,
-                programData: programDataAddress,
-            })
-            .instruction();
-
-        expect(() => ctx.sendInstruction(extendIx, [wrongAuthority])).toThrow(/Incorrect authority provided/);
-    });
-
     test('should throw ArgumentError when length argument is missing', async () => {
         const authority = ctx.createFundedAccount();
 

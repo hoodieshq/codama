@@ -39,6 +39,7 @@ describe('Token 2022 Program: updateDefaultAccountState', () => {
         const updateIx = await token2022Client.methods
             .updateDefaultAccountState({ state: 'initialized' })
             .accounts({ freezeAuthority, mint })
+            .signers(['freezeAuthority'])
             .instruction();
         ctx.sendInstruction(updateIx, [payer, freezeAuthority]);
 

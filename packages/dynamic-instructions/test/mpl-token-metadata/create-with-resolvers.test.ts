@@ -108,6 +108,7 @@ describe('MPL Token Metadata: create with resolvers', () => {
                 mint,
                 payer,
             })
+            .signers(['mint'])
             .resolvers({
                 resolveIsNonFungibleOrIsMintSigner: async () => await Promise.resolve(false),
             })
@@ -143,6 +144,7 @@ describe('MPL Token Metadata: create with resolvers', () => {
                 payer,
                 splTokenProgram: splTokenProgramMock,
             })
+            .signers(['mint'])
             .resolvers({
                 // This resolver should not be called since splTokenProgram is explicitly provided
                 resolveIsNonFungibleOrIsMintSigner: async () => {
@@ -179,6 +181,7 @@ describe('MPL Token Metadata: create with resolvers', () => {
                 payer,
                 splTokenProgram: null, // auto resolution via optionalAccountStrategy into programId
             })
+            .signers(['mint'])
             .instruction();
 
         expect(ix.programAddress).toBe(programClient.programAddress);
@@ -212,6 +215,7 @@ describe('MPL Token Metadata: create with resolvers', () => {
                 mint,
                 payer,
             })
+            .signers(['mint'])
             .instruction();
 
         expect(ix.accounts?.length).toBe(9);

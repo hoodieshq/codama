@@ -66,7 +66,7 @@ describe('Token 2022 Program: approve', () => {
             .accounts({ multisig: multisigOwner })
             .instruction();
 
-        ctx.sendInstructions([createAccountIx, initMultisigIx], [payer, multisigOwner, signer1, signer2, signer3]);
+        ctx.sendInstructions([createAccountIx, initMultisigIx], [payer, multisigOwner]);
 
         const ix = await token2022Client.methods
             .approve({ amount: 500_000, multiSigners: [signer1, signer2] })

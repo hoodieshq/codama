@@ -44,6 +44,7 @@ describe('Token 2022 Program: withdrawWithheldTokens', () => {
         const withdrawIx = await token2022Client.methods
             .withdrawWithheldTokensFromMint()
             .accounts({ feeReceiver, mint, withdrawWithheldAuthority: withdrawAuthority })
+            .signers(['withdrawWithheldAuthority'])
             .instruction();
         ctx.sendInstruction(withdrawIx, [payer, withdrawAuthority]);
 
@@ -76,6 +77,7 @@ describe('Token 2022 Program: withdrawWithheldTokens', () => {
         const withdrawIx = await token2022Client.methods
             .withdrawWithheldTokensFromAccounts({ numTokenAccounts: 1, sources: [destination] })
             .accounts({ feeReceiver, mint, withdrawWithheldAuthority: withdrawAuthority })
+            .signers(['withdrawWithheldAuthority'])
             .instruction();
         ctx.sendInstruction(withdrawIx, [payer, withdrawAuthority]);
 

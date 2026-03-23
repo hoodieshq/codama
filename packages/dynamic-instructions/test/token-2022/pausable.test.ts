@@ -39,6 +39,7 @@ describe('Token 2022 Program: pausable', () => {
         const pauseIx = await token2022Client.methods
             .pause()
             .accounts({ authority: pauseAuthority, mint })
+            .signers(['authority'])
             .instruction();
         ctx.sendInstruction(pauseIx, [payer, pauseAuthority]);
 
@@ -76,6 +77,7 @@ describe('Token 2022 Program: pausable', () => {
         const pauseIx = await token2022Client.methods
             .pause()
             .accounts({ authority: pauseAuthority, mint })
+            .signers(['authority'])
             .instruction();
         ctx.sendInstruction(pauseIx, [payer, pauseAuthority]);
 
@@ -87,6 +89,7 @@ describe('Token 2022 Program: pausable', () => {
         const resumeIx = await token2022Client.methods
             .resume()
             .accounts({ authority: pauseAuthority, mint })
+            .signers(['authority'])
             .instruction();
         ctx.sendInstruction(resumeIx, [payer, pauseAuthority]);
 

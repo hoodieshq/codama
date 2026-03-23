@@ -29,7 +29,7 @@ describe('Token 2022 Program: initializeMultisig2', () => {
             .accounts({ multisig: multisigAccount })
             .instruction();
 
-        ctx.sendInstructions([createAccountIx, initMultisigIx], [payer, multisigAccount, signer1, signer2, signer3]);
+        ctx.sendInstructions([createAccountIx, initMultisigIx], [payer, multisigAccount]);
 
         const decoder = getMultisigDecoder();
         const multisigData = decoder.decode(ctx.requireEncodedAccount(multisigAccount).data);

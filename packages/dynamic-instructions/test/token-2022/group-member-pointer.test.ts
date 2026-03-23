@@ -83,6 +83,7 @@ describe('Token 2022 Program: groupMemberPointer', () => {
         const updateIx = await token2022Client.methods
             .updateGroupMemberPointer({ memberAddress: newMemberAddress })
             .accounts({ groupMemberPointerAuthority: memberPointerAuthority, mint })
+            .signers(['groupMemberPointerAuthority'])
             .instruction();
         ctx.sendInstruction(updateIx, [payer, memberPointerAuthority]);
 

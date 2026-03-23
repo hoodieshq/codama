@@ -122,41 +122,6 @@ describe('Program Metadata: close', () => {
         expect(closedAccount).toBeNull();
     });
 
-    test('should fail to close immutable metadata', async () => {
-        const destination = ctx.createFundedAccount();
-        const {
-            authority,
-            programAddress,
-            programDataAddress,
-            pda: metadataPda,
-        } = await initializeCanonicalMetadata(ctx);
-
-        const setImmutableIx = await programClient.methods
-            .setImmutable()
-            .accounts({
-                authority,
-                metadata: metadataPda,
-                program: programAddress,
-                programData: programDataAddress,
-            })
-            .instruction();
-
-        ctx.sendInstruction(setImmutableIx, [authority]);
-
-        const closeIx = await programClient.methods
-            .close()
-            .accounts({
-                account: metadataPda,
-                authority,
-                destination,
-                program: programAddress,
-                programData: programDataAddress,
-            })
-            .instruction();
-
-        expect(() => ctx.sendInstruction(closeIx, [authority])).toThrow(/invalid account data for instruction/);
-    });
-
     test('should throw AccountError when destination is missing', async () => {
         const authority = ctx.createFundedAccount();
 

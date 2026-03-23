@@ -29,11 +29,13 @@ describe('Token 2022 Program: initializeAccount2', () => {
         const reallocateIx = await token2022Client.methods
             .reallocate({ newExtensionTypes: ['memoTransfer'] })
             .accounts({ owner, payer, token: tokenAccount })
+            .signers(['owner'])
             .instruction();
 
         const enableMemoTransfersIx = await token2022Client.methods
             .enableMemoTransfers()
             .accounts({ owner, token: tokenAccount })
+            .signers(['owner'])
             .instruction();
 
         ctx.sendInstructions(

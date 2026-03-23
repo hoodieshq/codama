@@ -82,6 +82,7 @@ describe('Token 2022 Program: metadataPointer', () => {
         const updateIx = await token2022Client.methods
             .updateMetadataPointer({ metadataAddress: newMetadataAddress })
             .accounts({ metadataPointerAuthority, mint })
+            .signers(['metadataPointerAuthority'])
             .instruction();
         ctx.sendInstruction(updateIx, [payer, metadataPointerAuthority]);
 

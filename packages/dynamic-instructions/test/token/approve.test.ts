@@ -71,7 +71,7 @@ describe('Token Program: approve', () => {
             .accounts({ multisig: multisigOwner })
             .instruction();
 
-        ctx.sendInstructions([createAccountIx, initMultisigIx], [payer, multisigOwner, signer1, signer2, signer3]);
+        ctx.sendInstructions([createAccountIx, initMultisigIx], [payer, multisigOwner]);
 
         // Approve delegate with multisig owner,
         // providing signer1 and signer2 without signing by multisigOwner

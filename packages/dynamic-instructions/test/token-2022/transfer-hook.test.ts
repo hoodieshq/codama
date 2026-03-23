@@ -83,6 +83,7 @@ describe('Token 2022 Program: transferHook', () => {
         const updateIx = await token2022Client.methods
             .updateTransferHook({ programId: newHookProgramId })
             .accounts({ authority: transferHookAuthority, mint })
+            .signers(['authority'])
             .instruction();
         ctx.sendInstruction(updateIx, [payer, transferHookAuthority]);
 

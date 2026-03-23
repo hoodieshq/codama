@@ -60,6 +60,7 @@ describe('Associated Token Account: recoverNested', () => {
         const mintToIx = await tokenClient.methods
             .mintTo({ amount })
             .accounts({ mint: nestedMint, mintAuthority, token: nestedAta })
+            .signers(['mintAuthority'])
             .instruction();
         ctx.sendInstruction(mintToIx, [payer, mintAuthority]);
 
@@ -91,6 +92,7 @@ describe('Associated Token Account: recoverNested', () => {
                 ownerTokenMintAddress: ownerMint,
                 walletAddress: wallet,
             })
+            .signers(['walletAddress'])
             .instruction();
         ctx.sendInstruction(recoverIx, [payer, wallet]);
 
