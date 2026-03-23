@@ -8,6 +8,8 @@ import type {
     TypeNode,
 } from 'codama';
 
+import { OPTIONAL_NODE_KINDS } from '../../../shared/nodes';
+
 /**
  * Generate TypeScript type for program client.
  */
@@ -62,7 +64,7 @@ export type MethodBuilder<TAccounts, TSigners extends string[], TResolvers = Rec
             output += `export type ${argsInterfaceName} = {\n`;
             for (const arg of args) {
                 const tsType = codamaTypeToTS(arg.type, definedTypes);
-                const isOptional = arg.type.kind === 'optionTypeNode';
+                const isOptional = OPTIONAL_NODE_KINDS.includes(arg.type.kind);
                 const sep = isOptional ? '?:' : ':';
                 output += `    ${arg.name}${sep} ${tsType};\n`;
             }
@@ -86,7 +88,8 @@ export type MethodBuilder<TAccounts, TSigners extends string[], TResolvers = Rec
             output += `export type ${accountsInterfaceName} = {\n`;
             for (const acc of ix.accounts) {
                 // Omittable accounts have a defaultValue that can be auto-resolved, so they can be omitted from .accounts().
-                // When null: resolved via optionalAccountStrategy. When undefined: resolved via defaultValue.
+                // When null: resolved via optionalAccountStrategy.
+                // When undefined: resolved via defaultValue.
                 const omittable = isAccAutoResolvable(acc) ? '?' : '';
                 const type = acc.isOptional ? 'Address | null' : 'Address';
                 output += `    ${acc.name}${omittable}: ${type};\n`;
@@ -116,7 +119,7 @@ export type MethodBuilder<TAccounts, TSigners extends string[], TResolvers = Rec
         }
 
         // Generate method type
-        const hasRequiredArgs = args.some(arg => arg.type.kind !== 'optionTypeNode');
+        const hasRequiredArgs = args.some(arg => !OPTIONAL_NODE_KINDS.includes(arg.type.kind));
         const hasRequiredRemainingAccounts = remainingAccountArgs.some(ra => !ra.isOptional);
         const allArgsOptional = !hasRequiredArgs && !hasRequiredRemainingAccounts;
         const argsParam = argsRef === 'void' ? '' : allArgsOptional ? `args?: ${argsRef}` : `args: ${argsRef}`;

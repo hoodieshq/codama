@@ -10,10 +10,12 @@ import type {
     ResolverFn,
 } from '../generated/custom-resolvers-test-idl-types';
 import type {
+    AllocateArgs,
     CanonicalPdaSeeds,
     NonCanonicalPdaSeeds,
     ProgramMetadataPdas,
     ProgramMetadataProgramClient,
+    WriteArgs,
 } from '../generated/pmp-idl-types';
 import type {
     CreateAccountAccounts,
@@ -22,6 +24,7 @@ import type {
     SystemMethods,
     SystemProgramClient,
 } from '../generated/system-program-idl-types';
+import type { InitializeConfidentialTransferMintArgs } from '../generated/token-2022-idl-types';
 
 describe('generated program client types', () => {
     describe('program client without PDAs (SystemProgramClient)', () => {
@@ -121,6 +124,26 @@ describe('generated program client types', () => {
 
             expectTypeOf<NonCanonicalPdaSeeds>().toHaveProperty('seed');
             expectTypeOf<NonCanonicalPdaSeeds['seed']>().toEqualTypeOf<string>();
+        });
+    });
+
+    describe('remainderOptionTypeNode optional args (pmp-idl)', () => {
+        test('should have optional data in write args', () => {
+            expectTypeOf<WriteArgs>().toMatchObjectType<{ data?: Uint8Array | null; offset: number }>();
+        });
+
+        test('should have optional seed in allocate args', () => {
+            expectTypeOf<AllocateArgs>().toMatchObjectType<{ seed?: string | null }>();
+        });
+    });
+
+    describe('zeroableOptionTypeNode optional args (token-2022)', () => {
+        test('should have optional auditorElgamalPubkey in InitializeConfidentialTransferMintArgs', () => {
+            expectTypeOf<InitializeConfidentialTransferMintArgs>().toMatchObjectType<{
+                auditorElgamalPubkey?: Address | null;
+                authority?: Address | null;
+                autoApproveNewAccounts: boolean;
+            }>();
         });
     });
 
