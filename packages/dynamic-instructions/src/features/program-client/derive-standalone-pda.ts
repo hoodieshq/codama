@@ -2,13 +2,24 @@ import { getNodeCodec } from '@codama/dynamic-codecs';
 import type { Address, ProgramDerivedAddress } from '@solana/addresses';
 import { getProgramDerivedAddress } from '@solana/addresses';
 import type { ReadonlyUint8Array } from '@solana/codecs';
-import type { PdaNode, RegisteredPdaSeedNode, RootNode, VariablePdaSeedNode } from 'codama';
+import type { InstructionNode, PdaNode, RegisteredPdaSeedNode, RootNode, VariablePdaSeedNode } from 'codama';
 import { isNode, visitOrElse } from 'codama';
 
 import { createInputValueTransformer, createPdaSeedValueVisitor } from '../../entities/visitors';
 import { getMemoizedUtf8Encoder } from '../../shared/codecs';
 import { AccountError } from '../../shared/errors';
 import { formatValueType } from '../../shared/util';
+
+/**
+ * Mininal InstructionNode stub to satisfy constant PDA seeds requirements.
+ * Constant seeds only use programIdValue / publicKeyValue / bytesValue / stringValue, none of which reference instruction arguments or accounts
+ */
+const STANDALONE_IX_NODE: InstructionNode = {
+    accounts: [],
+    arguments: [],
+    kind: 'instructionNode',
+    name: '__standalone__' as InstructionNode['name'],
+};
 
 /**
  * Derives a PDA from a standalone `PdaNode` and user-supplied seed values,
@@ -48,15 +59,7 @@ function resolveStandaloneConstantSeed(
     const visitor = createPdaSeedValueVisitor({
         accountsInput: undefined,
         argumentsInput: undefined,
-        // Constant seeds only use programIdValue / publicKeyValue / bytesValue / stringValue,
-        // none of which reference instruction arguments or accounts — so a
-        // minimal stub satisfies the context requirement.
-        ixNode: {
-            accounts: [],
-            arguments: [],
-            kind: 'instructionNode',
-            name: '__standalone__',
-        } as unknown as import('codama').InstructionNode,
+        ixNode: STANDALONE_IX_NODE,
         programId: programAddress,
         resolutionPath: [],
         resolversInput: undefined,
@@ -91,17 +94,20 @@ function resolveStandaloneVariableSeed(
         return Promise.resolve(getMemoizedUtf8Encoder().encode(input));
     }
 
-    // For all other types use the Codama codec infrastructure.
-    // We create a synthetic instructionArgumentNode so getNodeCodec can resolve
-    // the type.  The seed's declared type is used directly (no size-prefix wrapper).
-    const syntheticArgNode = {
-        docs: [] as string[],
-        kind: 'instructionArgumentNode' as const,
-        name: seedNode.name,
-        type: typeNode,
-    };
+    // Create a synthetic instructionArgumentNode so getNodeCodec can resolve the type.
+    // The seed's declared type is used directly (no size-prefix wrapper).
+    const syntheticArgNode = createSyntheticArgNode(seedNode);
     const codec = getNodeCodec([root, root.program, syntheticArgNode]);
     const transformer = createInputValueTransformer(typeNode, root, { bytesEncoding: 'base16' });
     const transformedInput = transformer(input);
     return Promise.resolve(codec.encode(transformedInput));
+}
+
+function createSyntheticArgNode(seedNode: VariablePdaSeedNode) {
+    return {
+        docs: [] as string[],
+        kind: 'instructionArgumentNode' as const,
+        name: seedNode.name,
+        type: seedNode.type,
+    };
 }
