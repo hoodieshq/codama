@@ -1,8 +1,17 @@
 import { getUtf8Codec } from '@solana/codecs';
 import type { InstructionNode } from 'codama';
-import { argumentValueNode, instructionArgumentNode, numberTypeNode, sizePrefixTypeNode, stringTypeNode } from 'codama';
+import {
+    argumentValueNode,
+    instructionArgumentNode,
+    numberTypeNode,
+    publicKeyTypeNode,
+    remainderOptionTypeNode,
+    sizePrefixTypeNode,
+    stringTypeNode,
+} from 'codama';
 import { describe, expect, test } from 'vitest';
 
+import { SvmTestContext } from '../../svm-test-context';
 import { ixNodeStub, makeVisitor } from './pda-seed-value-test-utils';
 
 describe('pda-seed-value: visitArgumentValue', () => {
@@ -51,7 +60,7 @@ describe('pda-seed-value: visitArgumentValue', () => {
         );
     });
 
-    test('should throw when argument value is undefined', async () => {
+    test('should throw when required argument value is undefined', async () => {
         const visitor = makeVisitor({
             argumentsInput: {},
             ixNode: ixNodeWithArg,
@@ -61,7 +70,7 @@ describe('pda-seed-value: visitArgumentValue', () => {
         );
     });
 
-    test('should throw when argument value is null', async () => {
+    test('should throw when required argument value is null', async () => {
         const visitor = makeVisitor({
             argumentsInput: { title: null },
             ixNode: ixNodeWithArg,
@@ -69,5 +78,61 @@ describe('pda-seed-value: visitArgumentValue', () => {
         await expect(visitor.visitArgumentValue(argumentValueNode('title'))).rejects.toThrow(
             /Missing argument for PDA seed/,
         );
+    });
+
+    describe('remainderOptionTypeNode seeds', () => {
+        // Mirrors the pmp IDL's metadata PDA:
+        // the "authority" seed is remainderOptionTypeNode(publicKeyTypeNode) — null is canonical.
+        const ixNodeWithOptionalSeed: InstructionNode = {
+            ...ixNodeStub,
+            arguments: [
+                instructionArgumentNode({
+                    name: 'authority',
+                    type: remainderOptionTypeNode(publicKeyTypeNode()),
+                }),
+            ],
+        };
+
+        test('should return empty bytes when argument is undefined', async () => {
+            const visitor = makeVisitor({
+                argumentsInput: {},
+                ixNode: ixNodeWithOptionalSeed,
+            });
+            const result = await visitor.visitArgumentValue(argumentValueNode('authority'));
+            expect(result).toEqual(new Uint8Array(0));
+        });
+
+        test('should return empty bytes when argument is null', async () => {
+            const visitor = makeVisitor({
+                argumentsInput: { authority: null },
+                ixNode: ixNodeWithOptionalSeed,
+            });
+            const result = await visitor.visitArgumentValue(argumentValueNode('authority'));
+            expect(result).toEqual(new Uint8Array(0));
+        });
+
+        test('should encode value when argument is provided', async () => {
+            const authority = SvmTestContext.generateAddress();
+            const visitor = makeVisitor({
+                argumentsInput: { authority },
+                ixNode: ixNodeWithOptionalSeed,
+            });
+            const result = await visitor.visitArgumentValue(argumentValueNode('authority'));
+            expect(result.length).toBe(32);
+        });
+
+        test('should return empty bytes when seedTypeNode override is remainderOptionTypeNode and argument is null', async () => {
+            const ixNodeWithRequiredArg: InstructionNode = {
+                ...ixNodeStub,
+                arguments: [instructionArgumentNode({ name: 'authority', type: publicKeyTypeNode() })],
+            };
+            const visitor = makeVisitor({
+                argumentsInput: { authority: null },
+                ixNode: ixNodeWithRequiredArg,
+                seedTypeNode: remainderOptionTypeNode(publicKeyTypeNode()),
+            });
+            const result = await visitor.visitArgumentValue(argumentValueNode('authority'));
+            expect(result).toEqual(new Uint8Array(0));
+        });
     });
 });

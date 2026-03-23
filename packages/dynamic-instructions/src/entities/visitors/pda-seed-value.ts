@@ -16,7 +16,7 @@ import type {
     TypeNode,
     Visitor,
 } from 'codama';
-import { visitOrElse } from 'codama';
+import { isNode, visitOrElse } from 'codama';
 
 import { isConvertibleAddress } from '../../shared/address';
 import { getCodecFromBytesEncoding } from '../../shared/bytes-encoding';
@@ -86,14 +86,19 @@ export function createPdaSeedValueVisitor(
                 throw new AccountError(`Missing instruction argument node for PDA seed: ${node.name}`);
             }
             const argInput = argumentsInput[node.name];
-            if (argInput === undefined || argInput === null) {
-                throw new AccountError(`Missing argument for PDA seed ${node.name} in ${ixNode.name} instruction`);
-            }
 
             // Use the PDA seed's declared type (e.g. plain stringTypeNode) rather than
             // the instruction argument's type (e.g. sizePrefixTypeNode) so the seed
             // bytes match what the on-chain program derives.
             const typeNode = seedTypeNode ?? ixArgumentNode.type;
+
+            if (argInput === undefined || argInput === null) {
+                // optional remainderOptionTypeNode seeds encodes to zero bytes.
+                if (isNode(typeNode, 'remainderOptionTypeNode')) {
+                    return new Uint8Array(0);
+                }
+                throw new AccountError(`Missing argument for PDA seed ${node.name} in ${ixNode.name} instruction`);
+            }
             const codec = getNodeCodec([root, root.program, ixNode, { ...ixArgumentNode, type: typeNode }]);
             const transformer = createInputValueTransformer(typeNode, root, {
                 bytesEncoding: 'base16',

@@ -4,9 +4,10 @@ import { AccountRole } from '@solana/instructions';
 import type { InstructionAccountNode, InstructionNode, RootNode } from 'codama';
 
 import { resolveAccountAddress } from '../../../entities/resolvers/resolve-account-address';
-import { isPublicKeyLike, toAddress } from '../../../shared/address';
+import { isConvertibleAddress, toAddress } from '../../../shared/address';
 import { AccountError } from '../../../shared/errors';
 import type { AccountsInput, ArgumentsInput, EitherSigners, ResolversInput } from '../../../shared/types';
+import { formatValueType } from '../../../shared/util';
 
 type ResolvedAccount = {
     address: Address | null;
@@ -98,9 +99,9 @@ export async function createAccountMeta(
         const role = getRemainingAccountRole(remainingNode.isSigner, remainingNode.isWritable);
         for (let i = 0; i < addresses.length; i++) {
             const addr: unknown = addresses[i];
-            if (typeof addr !== 'string' && !isPublicKeyLike(addr)) {
+            if (!isConvertibleAddress(addr)) {
                 throw new AccountError(
-                    `Remaining account argument "${remainingNode.value.name}[${i}]" must be an address string or PublicKey, got ${typeof addr}`,
+                    `Remaining account argument "${remainingNode.value.name}[${i}]" must be an address string or PublicKey, got ${formatValueType(addr)}`,
                 );
             }
             accountMetas.push({ address: toAddress(addr), role });

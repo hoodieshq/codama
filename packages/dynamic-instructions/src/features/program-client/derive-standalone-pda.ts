@@ -11,7 +11,7 @@ import { AccountError } from '../../shared/errors';
 import { formatValueType } from '../../shared/util';
 
 /**
- * Mininal InstructionNode stub to satisfy constant PDA seeds requirements.
+ * Minimal InstructionNode stub to satisfy constant PDA seeds requirements.
  * Constant seeds only use programIdValue / publicKeyValue / bytesValue / stringValue, none of which reference instruction arguments or accounts
  */
 const STANDALONE_IX_NODE: InstructionNode = {
