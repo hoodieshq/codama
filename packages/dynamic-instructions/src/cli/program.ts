@@ -5,10 +5,7 @@ import { registerCommands } from './commands';
 export function createProgram(): Command {
     const program = new Command();
 
-    program
-        .name('dynamic-instructions')
-        .description('CLI for @hoodieshq/dynamic-instructions')
-        .showHelpAfterError(true);
+    program.name('dynamic-instructions').description('CLI for @codama/dynamic-instructions').showHelpAfterError(true);
 
     registerCommands(program);
     return program;

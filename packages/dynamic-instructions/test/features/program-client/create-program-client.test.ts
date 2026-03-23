@@ -1,9 +1,10 @@
 import { describe, expect, test } from 'vitest';
 
+import { createProgramClient } from '../../../src';
 import { DynamicInstructionsError } from '../../../src/shared/errors';
 import type { MplTokenMetadataProgramClient } from '../../generated/mpl-token-metadata-idl-types';
 import type { SystemProgramClient } from '../../generated/system-program-idl-types';
-import { createTestProgramClient } from '../../test-utils';
+import { createTestProgramClient, loadIdl, SvmTestContext } from '../../test-utils';
 
 describe('createProgramClient', () => {
     describe('methods', () => {
@@ -116,6 +117,29 @@ describe('createProgramClient', () => {
 
         test('does not throw when serialized with JSON.stringify', () => {
             expect(() => JSON.stringify(pdaClient.pdas)).not.toThrow();
+        });
+    });
+
+    describe('programId override', () => {
+        const OVERRIDE_ADDRESS = SvmTestContext.generateAddress();
+
+        test('programAddress reflects the override', () => {
+            const idl = loadIdl('system-program-idl.json');
+            const client = createProgramClient<SystemProgramClient>(idl, { programId: OVERRIDE_ADDRESS });
+            expect(client.programAddress).toBe(OVERRIDE_ADDRESS);
+        });
+
+        test('built instruction uses the overridden program address', async () => {
+            const idl = loadIdl('system-program-idl.json');
+            const client = createProgramClient<SystemProgramClient>(idl, { programId: OVERRIDE_ADDRESS });
+
+            const sourceAndDest = SvmTestContext.generateAddress();
+            const ix = await client.methods
+                .transferSol({ amount: 1000 })
+                .accounts({ destination: sourceAndDest, source: sourceAndDest })
+                .instruction();
+
+            expect(ix.programAddress).toBe(OVERRIDE_ADDRESS);
         });
     });
 });

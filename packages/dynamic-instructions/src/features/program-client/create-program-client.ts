@@ -1,7 +1,7 @@
 import { type Address, address, type ProgramDerivedAddress } from '@solana/addresses';
 import type { Instruction } from '@solana/instructions';
 import type { InstructionNode, RootNode } from 'codama';
-import { createFromJson } from 'codama';
+import { createFromJson, updateProgramsVisitor } from 'codama';
 
 import type { AddressInput } from '../../shared/address';
 import { toAddress } from '../../shared/address';
@@ -44,20 +44,27 @@ export type ProgramMethodBuilder = {
 /**
  * Creates a program client from a Codama IDL.
  *
- * For type safety, generate types with `pnpm generate-program-types` and pass as a generic:
- * ```typescript
- * import type { MyProgramClient } from './generated/my-program-types';
- * const client = createProgramClient<MyProgramClient>(idl);
- * ```
+ * For type safety, generate types and pass as a generic. See the README.md for details.
  */
 export function createProgramClient<TClient = ProgramClient>(
     idl: IdlInput,
     options: CreateProgramClientOptions = {},
 ): TClient {
     const json = typeof idl === 'string' ? idl : JSON.stringify(idl);
-    const root = createFromJson(json).getRoot();
+    const codama = createFromJson(json);
+    let root = codama.getRoot();
 
-    const programAddress = options.programId ? toAddress(options.programId) : address(root.program.publicKey);
+    if (options.programId) {
+        codama.update(
+            updateProgramsVisitor({
+                [root.program.name]: {
+                    publicKey: toAddress(options.programId),
+                },
+            }),
+        );
+        root = codama.getRoot();
+    }
+    const programAddress = address(root.program.publicKey);
 
     const instructions = new Map<string, InstructionNode>();
     for (const ix of root.program.instructions) {

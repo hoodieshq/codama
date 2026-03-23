@@ -66,7 +66,7 @@ type AccountName = CamelCaseString;
 
 type ProgramClient = {
     methods: Record<InstructionName, (args?) => ProgramMethodBuilder>;
-    pdas: Record<AccountName, (seeds?) => Promise<ProgramDerivedAddress>>;
+    pdas?: Record<AccountName, (seeds?) => Promise<ProgramDerivedAddress>>;
     programAddress: Address;
     instructions: Map<InstructionName, InstructionNode>;
     root: RootNode;
