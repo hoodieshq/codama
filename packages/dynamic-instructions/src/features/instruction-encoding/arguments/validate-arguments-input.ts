@@ -8,6 +8,12 @@ import { safeStringify } from '../../../shared/util';
 import { createIxArgumentsValidator } from '../validators';
 import { isOmittedArgument } from './shared';
 
+/**
+ * Creates validator for each argument in the ArgumentsInput and validates it.
+ * Skips "omitted" arguments.
+ * Arguments with resolverValueNode defaults are expected to use optionTypeNode and NOT filtered out here.
+ * Optional validation allows undefined so custom resolvers will fill default values after validation.
+ */
 export function validateArgumentsInput(root: RootNode, ixNode: InstructionNode, argumentsInput: ArgumentsInput = {}) {
     const requiredArguments = getRequiredIxArguments(ixNode);
 

@@ -238,6 +238,7 @@ function createValidatorForTypeNode(nodeName: string, node: TypeNode, definedTyp
             return AmountTypeValidator(nodeName);
         }
         default: {
+            node['kind'] satisfies never;
             throw new Error(
                 `Validator for TypeNode "${nodeName}" kind: ${(node as { kind: string })?.kind} is not implemented!`,
             );

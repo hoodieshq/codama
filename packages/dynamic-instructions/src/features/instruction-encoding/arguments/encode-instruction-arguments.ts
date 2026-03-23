@@ -80,8 +80,11 @@ function encodeRequiredArgument(
     try {
         return nodeCodec.encode(transformedInput);
     } catch (error) {
-        throw new ArgumentError(`Failed to encode required argument "${ixArgumentNode.name}" of "${ix.name}" instruction`, {
-            cause: error,
-        });
+        throw new ArgumentError(
+            `Failed to encode required argument "${ixArgumentNode.name}" of "${ix.name}" instruction`,
+            {
+                cause: error,
+            },
+        );
     }
 }
