@@ -1,6 +1,7 @@
 import type { Visitor } from 'codama';
 import type { AccountValueNode, ArgumentValueNode, ResolverValueNode } from 'codama';
 
+import { ResolverError } from '../../shared/errors';
 import { resolveAccountValueNodeAddress } from '../resolvers/resolve-account-value-node-address';
 import type { BaseResolutionContext } from '../resolvers/types';
 
@@ -40,10 +41,17 @@ export function createConditionNodeValueVisitor(
         visitResolverValue: async (node: ResolverValueNode) => {
             const resolverFn = resolversInput?.[node.name];
             if (!resolverFn) {
-                // undefined directs to ifFalse branch
+                // ConditionalValueNode evaluates condition and based on result it chooses to take either ifTrue or ifFalse branch.
+                // If resolver is not provided, we assume condition is false and return undefined instead of throwing an error to take ifFalse branch.
                 return undefined;
             }
-            return await resolverFn(argumentsInput ?? {}, accountsInput ?? {});
+            try {
+                return await resolverFn(argumentsInput ?? {}, accountsInput ?? {});
+            } catch (error) {
+                throw new ResolverError(`Resolver "${node.name}" threw an error while evaluating condition`, {
+                    cause: error,
+                });
+            }
         },
     };
 }

@@ -1,6 +1,7 @@
 import type { InstructionNode } from 'codama';
 import { isNode } from 'codama';
 
+import { ResolverError } from '../../../shared/errors';
 import type { AccountsInput, ArgumentsInput, ResolversInput } from '../../../shared/types';
 import { isOmittedArgument } from './shared';
 
@@ -29,7 +30,14 @@ export async function resolveArgumentDefaultsFromCustomResolvers(
         // Required arguments will emit error
         if (!resolverFn) continue;
 
-        resolvedArgumentsInput[argumentNode.name] = await resolverFn(resolvedArgumentsInput, accountsInput);
+        try {
+            resolvedArgumentsInput[argumentNode.name] = await resolverFn(resolvedArgumentsInput, accountsInput);
+        } catch (error) {
+            throw new ResolverError(
+                `Resolver "${argumentNode.defaultValue.name}" threw an error while resolving argument "${argumentNode.name}"`,
+                { cause: error },
+            );
+        }
     }
 
     return resolvedArgumentsInput;

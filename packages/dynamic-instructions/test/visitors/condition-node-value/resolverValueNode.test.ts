@@ -24,6 +24,19 @@ describe('condition-node-value: visitResolverValue', () => {
         expect(result).toBe(999);
     });
 
+    test('should throw ResolverError when resolver throws', async () => {
+        const visitor = makeVisitor({
+            resolversInput: {
+                myResolver: () => {
+                    throw new Error('some error');
+                },
+            },
+        });
+        await expect(visitor.visitResolverValue(resolverValueNode('myResolver'))).rejects.toThrow(
+            /Resolver "myResolver" threw an error while evaluating condition/,
+        );
+    });
+
     test('should pass arguments and accounts to resolver', async () => {
         const resolverSpy = vi.fn().mockReturnValue('resolved');
         const argumentsInput = { amount: 100 };

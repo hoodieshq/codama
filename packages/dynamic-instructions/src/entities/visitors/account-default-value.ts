@@ -18,7 +18,7 @@ import { visitOrElse } from 'codama';
 
 import type { AddressInput } from '../../shared/address';
 import { isConvertibleAddress, toAddress } from '../../shared/address';
-import { AccountError } from '../../shared/errors';
+import { AccountError, ResolverError } from '../../shared/errors';
 import { formatValueType, safeStringify } from '../../shared/util';
 import { resolveAccountValueNodeAddress } from '../resolvers/resolve-account-value-node-address';
 import { resolveConditionalValueNodeCondition } from '../resolvers/resolve-conditional';
@@ -190,7 +190,16 @@ export function createAccountDefaultValueVisitor(
                         `Provide via .resolvers({ ${node.name}: async (args, accounts) => ... })`,
                 );
             }
-            const result = await resolverFn(argumentsInput ?? {}, accountsInput ?? {});
+            let result: unknown;
+            try {
+                result = await resolverFn(argumentsInput ?? {}, accountsInput ?? {});
+            } catch (error) {
+                throw new ResolverError(
+                    `Resolver "${node.name}" threw an error while resolving account "${ixAccountNode.name}"`,
+                    { cause: error },
+                );
+            }
+
             if (!isConvertibleAddress(result)) {
                 throw new AccountError(
                     `Resolver "${node.name}" returned invalid address ${safeStringify(result)} for account "${ixAccountNode.name}"`,

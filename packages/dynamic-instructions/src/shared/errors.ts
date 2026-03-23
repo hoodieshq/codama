@@ -25,3 +25,10 @@ export class ArgumentError extends DynamicInstructionsError {
         this.name = 'ArgumentError';
     }
 }
+
+export class ResolverError extends DynamicInstructionsError {
+    constructor(message: string, options?: ErrorOptions) {
+        super(message, options);
+        this.name = 'ResolverError';
+    }
+}

@@ -72,7 +72,7 @@ describe('Custom resolvers: accounts ResolverValueNode', () => {
                     resolveTreasury: () => Promise.resolve(ctx.SYSTEM_PROGRAM_ADDRESS),
                 })
                 .instruction(),
-        ).rejects.toThrow('resolver failed');
+        ).rejects.toThrow(/Resolver "resolveDestination" threw an error while resolving account "destination"/);
     });
 
     test('should throw when resolver missing for optional undefined account with direct resolverValueNode', async () => {
