@@ -8,6 +8,14 @@ import { ArgumentError } from '../../../shared/errors';
 import type { ArgumentsInput } from '../../../shared/types';
 import { isOmittedArgument, isOptionalArgument } from './shared';
 
+/**
+ * Encodes all instruction arguments into a single byte array.
+ * Iterates over each InstructionArgumentNode and encodes based on its category:
+ *
+ * Omitted arguments use their default value.
+ * Optional arguments are encoded as null.
+ * Required arguments are transformed from user input and then encoded.
+ */
 export function encodeInstructionArguments(
     root: RootNode,
     ix: InstructionNode,

@@ -20,6 +20,10 @@ export type ResolvePDAAddressContext = BaseResolutionContext & {
     pdaValueNode: PdaValueNode;
 };
 
+/**
+ * Derives a PDA from a PdaValueNode.
+ * Encodes each seed (ConstantPdaSeedNode and VariablePdaSeedNode) into bytes and computes the address.
+ */
 export async function resolvePDAAddress({
     root,
     ixNode,
@@ -51,7 +55,6 @@ export async function resolvePDAAddress({
                     seedNode,
                 });
             } else if (seedNode.kind === 'variablePdaSeedNode') {
-                // Variable seeds depend on instruction arguments or accounts
                 const variableSeedValueNodes = pdaValueNode.seeds;
                 const seedName = seedNode.name;
                 const variableSeedValueNode = variableSeedValueNodes.find(node => node.name === seedName);

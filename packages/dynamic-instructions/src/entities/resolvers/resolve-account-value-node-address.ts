@@ -10,10 +10,9 @@ import type { BaseResolutionContext, ResolutionPath } from './types';
  * Resolves an AccountValueNode reference to an Address.
  *
  * Shared logic for resolving account references across visitors:
- * 1. Checks if the user provided the account address in accountsInput.
- * 2. Finds the referenced InstructionAccountNode.
- * 3. Detects circular dependencies.
- * 4. Delegates to resolveAccountAddress for default value resolution.
+ * Checks if the user provided the account address in accountsInput.
+ * Finds the referenced InstructionAccountNode.
+ * Delegates to resolveAccountAddress for default value resolution.
  */
 export async function resolveAccountValueNodeAddress(
     node: AccountValueNode,
@@ -21,19 +20,19 @@ export async function resolveAccountValueNodeAddress(
 ): Promise<Address | null> {
     const { accountsInput, ixNode, resolutionPath } = ctx;
 
-    // Check if user provided the account address
+    // Check if user provided the account address.
     const providedAddress = accountsInput?.[node.name];
     if (providedAddress !== undefined && providedAddress !== null) {
         return toAddress(providedAddress);
     }
 
-    // Find the referenced account in the instruction
+    // Find the referenced account in the instruction.
     const referencedIxAccountNode = ixNode.accounts.find(acc => acc.name === node.name);
     if (!referencedIxAccountNode) {
         throw new AccountError(`Referenced account "${node.name}" not found in instruction "${ixNode.name}"`);
     }
 
-    // Detect circular dependencies before recursing
+    // Detect circular dependencies before recursing.
     detectCircularDependency(node.name, resolutionPath);
 
     return await resolveAccountAddress({

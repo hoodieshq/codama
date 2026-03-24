@@ -10,12 +10,7 @@ import {
 } from './arguments';
 
 /**
- * Creates an instruction builder for a given instruction node.
- *
- * @example
- * // Usage with @solana/kit
- * const buildIx = createIxBuilder(root, root.program.instructions[0]);
- * const ix = await buildIx({ id: 1, input: [1,2,3,4,5,6,7,8] }, { signer: signerPubkey });
+ * Creates an instruction builder for a given InstructionNode.
  */
 export function createIxBuilder(root: RootNode, ixNode: InstructionNode): BuildIxFn {
     const programAddress = address(root.program.publicKey);
@@ -46,14 +41,13 @@ export async function resolveInstructionData(
     signers?: EitherSigners,
     resolversInput?: ResolversInput,
 ) {
-    // Validate arguments according to Codama schema
+    // Validate arguments according to Codama schema.
     validateArgumentsInput(root, instructionNode, argumentsInput);
 
-    // Ensure required accounts are present
-    // Validate provided pubkey addresses
+    // Ensure required accounts are present and validate provided pubkey addresses.
     validateAccountsInput(instructionNode, accountsInput);
 
-    // Resolve arguments that depend on custom resolvers
+    // Resolve arguments that depend on custom resolvers.
     const enrichedArgumentsInput = await resolveArgumentDefaultsFromCustomResolvers(
         instructionNode,
         argumentsInput,
@@ -61,7 +55,7 @@ export async function resolveInstructionData(
         resolversInput,
     );
 
-    // Encode arguments into buffer
+    // Encode arguments into buffer.
     const argumentsData = encodeInstructionArguments(root, instructionNode, enrichedArgumentsInput);
 
     const accountsData = await createAccountMeta(

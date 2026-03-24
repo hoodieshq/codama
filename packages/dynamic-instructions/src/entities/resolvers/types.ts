@@ -2,7 +2,7 @@ import type { InstructionNode, RootNode } from 'codama';
 
 import type { AccountsInput, ArgumentsInput, ResolversInput } from '../../shared/types';
 
-// Array of node names being resolved to detect circular dependencies
+// Array of node names being resolved to detect circular dependencies.
 export type ResolutionPath = readonly string[];
 
 /**

@@ -8,7 +8,7 @@ export class MethodsBuilder {
     private _accounts?: AccountsInput;
     // "either" signers Account names
     private _signers?: EitherSigners;
-    // Custom resolver functions for [ResolverValueNode.md](https://github.com/codama-idl/codama/blob/main/packages/nodes/docs/contextualValueNodes/ResolverValueNode.md)
+    // Custom resolver functions for ResolverValueNode
     private _resolvers?: ResolversInput;
 
     constructor(

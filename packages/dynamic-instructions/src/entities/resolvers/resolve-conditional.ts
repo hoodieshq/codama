@@ -12,9 +12,8 @@ export type ResolveConditionalContext = BaseResolutionContext & {
 };
 
 /**
- * Evaluates a ConditionalValueNode's condition and returns the
- * matching branch (ifTrue or ifFalse) as an InstructionInputValueNode,
- * or undefined if no branch matches.
+ * Evaluates a ConditionalValueNode's condition.
+ * Returns the matching branch (ifTrue or ifFalse) as an InstructionInputValueNode or undefined if no branch matches.
  */
 export async function resolveConditionalValueNodeCondition({
     root,
@@ -35,7 +34,7 @@ export async function resolveConditionalValueNodeCondition({
         throw new AccountError('Invalid conditionalValueNode: missing value and branches');
     }
 
-    // Resolve the condition value of ConditionalValueNode
+    // Resolve the condition value of ConditionalValueNode.
     const conditionVisitor = createConditionNodeValueVisitor({
         accountsInput,
         argumentsInput,
@@ -51,7 +50,7 @@ export async function resolveConditionalValueNodeCondition({
     });
 
     if (requiredValueNode) {
-        // If provided, the condition must be equal to required value
+        // If provided, the condition must be equal to required value.
         const valueVisitor = createValueNodeVisitor();
         const requiredValue = visitOrElse(requiredValueNode, valueVisitor, valueNode => {
             throw new AccountError(

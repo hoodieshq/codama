@@ -24,20 +24,28 @@ import {
 } from 'superstruct';
 
 import { isPublicKeyLike } from '../../shared/address';
+import { getMemoizedTextEncoder } from '../../shared/codecs';
 import { formatValueType, safeStringify } from '../../shared/util';
 
 type StructUnknown = Struct<unknown, unknown>;
 
+/**
+ * Creates a superstruct validator for InstructionAccountNodes.
+ *
+ * if node is optional, then validate only if it's provided.
+ * if node has defaultValue, then consider it as optional and validate only if it's provided because it will be resolved from defaultValue.
+ */
 export function createIxAccountsValidator(ixAccountNodes: InstructionAccountNode[]): StructUnknown {
     const shape = ixAccountNodes.reduce<Record<string, StructUnknown>>((acc, node) => {
-        // if node is optional, then validate only if it's provided
-        // if node has default value, then consider it as optional and validate only if it's provided. Otherwise it will be resolved from default value
         acc[node.name] = node.isOptional || node.defaultValue ? OptionalSolanaAddressValidator : SolanaAddressValidator;
         return acc;
     }, {});
     return object(shape) as StructUnknown;
 }
 
+/**
+ * Creates a superstruct validator for instruction InstructionArgumentNodes.
+ */
 export function createIxArgumentsValidator(
     ixNodeName: string,
     ixArgumentNodes: InstructionArgumentNode[],
@@ -57,50 +65,6 @@ export function createIxArgumentsValidator(
     return object(shape) as StructUnknown;
 }
 
-/**
- * Creates a permissive validator for remainderOptionTypeNode items.
- * This is needed because remainder options have special encoding semantics:
- * - None is encoded as absence of bytes (no data)
- * - Some(value) is encoded as the value itself
- */
-function createValidatorForRemainderOptionTypeItem(
-    nodeName: string,
-    itemNode: TypeNode,
-    definedTypes: DefinedTypeNode[],
-): StructUnknown {
-    if (itemNode.kind === 'fixedSizeTypeNode' && itemNode.type.kind === 'stringTypeNode') {
-        // For fixed-size strings in remainder options, accept any string
-        return StringValidatorForFixedSize(itemNode.size);
-    }
-
-    if (itemNode.kind === 'definedTypeLinkNode') {
-        const definedType = definedTypes.find(d => d.name === itemNode.name);
-        if (definedType?.type.kind === 'fixedSizeTypeNode' && definedType.type.type.kind === 'stringTypeNode') {
-            return StringValidatorForFixedSize(definedType.type.size);
-        }
-    }
-
-    return createValidatorForTypeNode(nodeName, itemNode, definedTypes);
-}
-
-/**
- * Validator for strings that will be encoded as fixed-size.
- * More permissive than strict size checking because the codec handles padding.
- */
-function StringValidatorForFixedSize(maxSize: number): StructUnknown {
-    return define(`StringForFixedSize_max_${maxSize}`, (value: unknown) => {
-        if (typeof value !== 'string') {
-            return `Expected a string, received: ${formatValueType(value)}`;
-        }
-        const encoder = new TextEncoder();
-        const bytes = encoder.encode(value);
-        return (
-            bytes.length <= maxSize ||
-            `String exceeds max size: ${bytes.length} bytes (UTF-8), limit is ${maxSize} bytes`
-        );
-    }) as StructUnknown;
-}
-
 function createValidatorForTypeNode(nodeName: string, node: TypeNode, definedTypes: DefinedTypeNode[]): StructUnknown {
     if (!node) {
         throw new Error(
@@ -109,7 +73,7 @@ function createValidatorForTypeNode(nodeName: string, node: TypeNode, definedTyp
     }
     switch (node.kind) {
         case 'arrayTypeNode': {
-            return arrayValidator(`${nodeName}_array`, node, definedTypes);
+            return ArrayValidator(`${nodeName}_array`, node, definedTypes);
         }
         case 'booleanTypeNode': {
             return boolean() as StructUnknown;
@@ -128,7 +92,7 @@ function createValidatorForTypeNode(nodeName: string, node: TypeNode, definedTyp
             // array of unique items
             return intersection([
                 UniqueItemsValidator,
-                arrayValidator(`${nodeName}_set`, node, definedTypes),
+                ArrayValidator(`${nodeName}_set`, node, definedTypes),
             ]) as StructUnknown;
         }
         case 'stringTypeNode': {
@@ -136,7 +100,6 @@ function createValidatorForTypeNode(nodeName: string, node: TypeNode, definedTyp
         }
         case 'fixedSizeTypeNode': {
             // fixedSizeTypeNode wraps an inner type and constrains its byte size
-            // It does NOT represent an array - it's a size constraint on serialization
             if (node.type.kind === 'stringTypeNode') {
                 // For fixed-size strings, validate that UTF-8 bytes fit within the size
                 return StringValidatorForFixedSize(node.size);
@@ -150,14 +113,12 @@ function createValidatorForTypeNode(nodeName: string, node: TypeNode, definedTyp
             return createValidatorForTypeNode(`${nodeName}_fixed_size`, node.type, definedTypes);
         }
         case 'bytesTypeNode': {
-            // Codama bytes can be provided as `Uint8Array` (recommended) or `number[]`.
             return BytesLikeValidator;
         }
         case 'dateTimeTypeNode': {
             return createValidatorForTypeNode(`${nodeName}_date_time`, node.number, definedTypes);
         }
         case 'definedTypeLinkNode': {
-            // Reference to common defined type
             const definedType = definedTypes.find(d => d.name === node.name);
             if (!definedType) {
                 throw new Error(`Undefined type: ${node.name} ${node.kind}`);
@@ -208,12 +169,12 @@ function createValidatorForTypeNode(nodeName: string, node: TypeNode, definedTyp
             return ZeroableOptionValidator(`${nodeName}_zeroable_option`, innerValidator);
         }
         case 'optionTypeNode': {
-            // TODO: Check and add handling node.fixed and node.prefix if necessary https://github.com/codama-idl/codama/blob/main/packages/nodes/docs/typeNodes/OptionTypeNode.md#attributes
+            // TODO: Do we need to validate node.fixed and node.prefix of OptionTypeNode?
             const SomeValueValidator = createValidatorForTypeNode(`${nodeName}_option_item`, node.item, definedTypes);
             return OptionValueValidator(`${nodeName}_option`, SomeValueValidator);
         }
         case 'remainderOptionTypeNode': {
-            const innerValidator = createValidatorForRemainderOptionTypeItem(
+            const innerValidator = RemainderOptionTypeItemValidator(
                 `${nodeName}_remainder_option_item`,
                 node.item,
                 definedTypes,
@@ -246,9 +207,43 @@ function createValidatorForTypeNode(nodeName: string, node: TypeNode, definedTyp
     }
 }
 
+function RemainderOptionTypeItemValidator(
+    nodeName: string,
+    itemNode: TypeNode,
+    definedTypes: DefinedTypeNode[],
+): StructUnknown {
+    if (itemNode.kind === 'fixedSizeTypeNode' && itemNode.type.kind === 'stringTypeNode') {
+        // For fixed-size strings in remainder options, accept any string
+        return StringValidatorForFixedSize(itemNode.size);
+    }
+
+    if (itemNode.kind === 'definedTypeLinkNode') {
+        const definedType = definedTypes.find(d => d.name === itemNode.name);
+        if (definedType?.type.kind === 'fixedSizeTypeNode' && definedType.type.type.kind === 'stringTypeNode') {
+            return StringValidatorForFixedSize(definedType.type.size);
+        }
+    }
+
+    return createValidatorForTypeNode(nodeName, itemNode, definedTypes);
+}
+
+function StringValidatorForFixedSize(maxSize: number): StructUnknown {
+    return define(`StringForFixedSize_max_${maxSize}`, (value: unknown) => {
+        if (typeof value !== 'string') {
+            return `Expected a string, received: ${formatValueType(value)}`;
+        }
+        const encoder = getMemoizedTextEncoder();
+        const bytes = encoder.encode(value);
+        return (
+            bytes.length <= maxSize ||
+            `String exceeds max size: ${bytes.length} bytes (UTF-8), limit is ${maxSize} bytes`
+        );
+    }) as StructUnknown;
+}
+
 /**
- * Validator for enum variants. Handles both scalar enums (where the value is just the variant name as a string)
- * and enums with data (e.g. enum Command { Start, Continue { reason: String }})
+ * Validator for enum variants.
+ * Handles both scalar enums and enums with data.
  */
 function EnumVariantValidator(
     nodeName: string,
@@ -274,7 +269,7 @@ function EnumVariantValidator(
     }
 
     return define(`${nodeName}_EnumVariant`, (value: unknown) => {
-        // Scalar enum: plain string variant name (e.g. 'arm', 'bar')
+        // Scalar enum: plain string variant name (e.g. 'foo', 'bar')
         if (typeof value === 'string')
             return (
                 variantNames.includes(value) ||
@@ -350,7 +345,6 @@ const OptionalSolanaAddressValidator: StructUnknown = /* @__PURE__ */ define(
     },
 );
 
-/** Accepts both number and bigint for u64/u128/i64/i128 instruction args. */
 const NumberOrBigintValidator: StructUnknown = /* @__PURE__ */ define('NumberOrBigint', (value: unknown) => {
     if (typeof value === 'number') {
         return Number.isSafeInteger(value) || `Expected a safe integer, received unsafe number: ${value}`;
@@ -394,8 +388,8 @@ function BytesWithSizeValidator(exactSize: number): StructUnknown {
     }) as StructUnknown;
 }
 
-// Validates value only if it is not null or undefined (i.e. if it's provided)
-// SomeValueValidator validates the provided value (i.e. Some(value))
+// Validates value only if it is not null or undefined (i.e. if it's provided).
+// SomeValueValidator validates the provided value (i.e. Some(value)).
 function OptionValueValidator(name: string, SomeValueValidator: StructUnknown): StructUnknown {
     return define(`${name}_OptionValueValidator`, (value: unknown) => {
         if (value === null || value === undefined) return true;
@@ -405,7 +399,7 @@ function OptionValueValidator(name: string, SomeValueValidator: StructUnknown): 
     }) as StructUnknown;
 }
 
-// Validates zeroable option: null is valid, otherwise validates the inner validator
+// Validates zeroable option: null is valid, otherwise validates the inner validator.
 function ZeroableOptionValidator(name: string, innerValidator: StructUnknown): StructUnknown {
     return define(name, (value: unknown) => {
         if (value == null) return true;
@@ -415,7 +409,7 @@ function ZeroableOptionValidator(name: string, innerValidator: StructUnknown): S
     }) as StructUnknown;
 }
 
-// Checks that all items in the array are unique
+// Checks that all items in the array are unique.
 const UniqueItemsValidator: StructUnknown = /* @__PURE__ */ define('UniqueItems', (value: unknown) => {
     if (!Array.isArray(value)) {
         return `Expected an array with unique items, received: ${formatValueType(value)}`;
@@ -433,10 +427,9 @@ const UniqueItemsValidator: StructUnknown = /* @__PURE__ */ define('UniqueItems'
     return true;
 }) as StructUnknown;
 
-// Validates every key of an object according to KeyValidator
-// Validates every value of an object according to ValueValidator
-// Used in MapTypeNode, where the keys and values are of the same type
-// DOCS: https://github.com/codama-idl/codama/blob/main/packages/nodes/docs/typeNodes/MapTypeNode.md
+// Validates every key of an object according to KeyValidator.
+// Validates every value of an object according to ValueValidator.
+// Used in MapTypeNode, where the keys and values are of the same type.
 function KeyValueValidator(name: string, KeyValidator: StructUnknown, ValueValidator: StructUnknown): StructUnknown {
     return define(`${name}_KeyValueValidator`, (value: unknown) => {
         if (typeof value !== 'object' || value === null) {
@@ -473,12 +466,12 @@ function KeysLengthValidator(count: number): StructUnknown {
             return `Expected a map with exactly ${count} entries, received: ${formatValueType(value)}`;
         }
         const actual = Object.keys(value).length;
-        return Object.keys(value).length === count || `Expected exactly ${count} map entries, received ${actual}`;
+        return actual === count || `Expected exactly ${count} map entries, received ${actual}`;
     }) as StructUnknown;
 }
 
 // Handles both fixed-size and variable-size arrays
-function arrayValidator(
+function ArrayValidator(
     nodeName: string,
     node: ArrayTypeNode | SetTypeNode,
     definedTypes: DefinedTypeNode[],

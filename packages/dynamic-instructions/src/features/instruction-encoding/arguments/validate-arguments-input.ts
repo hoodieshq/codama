@@ -17,7 +17,7 @@ import { isOmittedArgument } from './shared';
 export function validateArgumentsInput(root: RootNode, ixNode: InstructionNode, argumentsInput: ArgumentsInput = {}) {
     const requiredArguments = getRequiredIxArguments(ixNode);
 
-    // Ensure arguments with "omitted" defaultValueStrategy are not provided in argumentsInput
+    // Ensure arguments with "omitted" defaultValueStrategy are not provided in argumentsInput.
     validateOmittedArguments(ixNode, argumentsInput);
 
     if (!requiredArguments.length) return;
@@ -45,7 +45,9 @@ export function validateArgumentsInput(root: RootNode, ixNode: InstructionNode, 
     }
 }
 
-/** Formats a full dotted path from failure, e.g. "command", "innerStruct.pubkey", "enumsArray[1]" */
+/**
+ * Formats a full dotted path from failure, e.g. "command", "innerStruct.pubkey", "enumsArray[1]"
+ */
 function formatFailurePath(failure: Failure): string {
     const path = failure.path;
     if (!path || path.length === 0) return String(failure.key ?? '');
@@ -65,16 +67,19 @@ function formatFailurePath(failure: Failure): string {
 const MAX_VALUE_LENGTH = 120;
 function formatFailureValue(value: unknown): string {
     const raw = typeof value === 'object' ? safeStringify(value) : String(value as unknown);
-    return raw.length > MAX_VALUE_LENGTH ? `${raw.slice(0, MAX_VALUE_LENGTH)}…` : raw;
+    return raw.length > MAX_VALUE_LENGTH ? `${raw.slice(0, MAX_VALUE_LENGTH)}...` : raw;
 }
 
-// Required arguments that should be validated and provided or be null/undefined if optional
+/**
+ * Returns required arguments that should be validated and provided by the user (i.e. everything except omitted).
+ */
 function getRequiredIxArguments(ixNode: InstructionNode) {
     return ixNode.arguments.filter(arg => arg?.defaultValueStrategy !== 'omitted');
 }
 
-// Arguments with "omitted" defaultValueStrategy must not be provided (e.g. discriminator)
-// https://github.com/codama-idl/codama/blob/main/packages/nodes/docs/InstructionArgumentNode.md#data
+/**
+ * Ensures that arguments with "omitted" defaultValueStrategy are not provided by the user (e.g. discriminator).
+ */
 function validateOmittedArguments(ixNode: InstructionNode, argumentsInput: ArgumentsInput = {}) {
     ixNode.arguments.filter(isOmittedArgument).forEach(ixArgumentNode => {
         if (Object.hasOwn(argumentsInput, ixArgumentNode.name)) {

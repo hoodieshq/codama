@@ -48,10 +48,7 @@ export type InputTransformer = (input: unknown) => unknown;
 
 /**
  * Creates a visitor that returns transformer functions for each type node kind.
- *
- * @param root - Root node for resolving definedTypeLinkNode references
- * @param options - Configuration options (encoding preference)
- * @returns Visitor that transforms type nodes to input transformers
+ * Returns transformer function to convert user input to the format expected by @codama/dynamic-codecs.
  */
 export function createInputValueTransformerVisitor(
     root: RootNode,
@@ -90,7 +87,7 @@ export function createInputValueTransformerVisitor(
                 if (isUint8Array(input)) {
                     return [bytesEncoding, uint8ArrayToEncodedString(input, bytesEncoding)];
                 }
-                // Accept number[] by coercing to Uint8Array
+                // Accept number[] by coercing to Uint8Array.
                 if (Array.isArray(input) && input.every(item => typeof item === 'number')) {
                     return [bytesEncoding, uint8ArrayToEncodedString(new Uint8Array(input), bytesEncoding)];
                 }
@@ -121,7 +118,7 @@ export function createInputValueTransformerVisitor(
             // Scalar enums pass through (just numbers/strings)
             // Data enums need variant transformation with PascalCase __kind
             // Because @codama/dynamic-codecs applies pascalCase() to variant names when building discriminated union codecs:
-            // https://github.com/codama-idl/codama/blob/main/packages/dynamic-codecs/src/codecs.ts#L199
+            // @see https://github.com/codama-idl/codama/blob/main/packages/dynamic-codecs/src/codecs.ts#L199
             return (input: unknown) => {
                 if (typeof input === 'number' || typeof input === 'string') {
                     return input;

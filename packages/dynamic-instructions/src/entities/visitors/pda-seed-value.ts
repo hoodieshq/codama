@@ -33,13 +33,11 @@ type PdaSeedValueVisitorContext = BaseResolutionContext & {
 };
 
 /**
- * Visitor used to resolve PDA seed *values* to raw bytes.
+ * Visitor for resolving PdaSeedValueNode value to raw bytes.
  * Supports recursive resolution of dependent PDAs (accounts that are themselves auto-derived PDAs).
  * This is used for both:
  * - Variable seeds (e.g. seeds based on instruction accounts/arguments), and
  * - Constant seeds (e.g. bytes/string/programId/publicKey constants).
- * Doc: https://github.com/codama-idl/codama/blob/main/packages/nodes/docs/contextualValueNodes/PdaSeedValueNode.md
- * Visit AccountValueNode, ArgumentValueNode, ValueNode, ProgramIdValueNode
  */
 export function createPdaSeedValueVisitor(
     ctx: PdaSeedValueVisitorContext,

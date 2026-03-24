@@ -31,8 +31,7 @@ type AccountDefaultValueVisitorContext = BaseResolutionContext & {
 };
 
 /**
- * Visitor for resolving InstructionInputValueNode types to Address values
- * for account resolution.
+ * Visitor for resolving InstructionInputValueNode types to Address values for account resolution.
  */
 export function createAccountDefaultValueVisitor(
     ctx: AccountDefaultValueVisitorContext,
@@ -82,7 +81,6 @@ export function createAccountDefaultValueVisitor(
         },
 
         visitArgumentValue: async (node: ArgumentValueNode) => {
-            // Reference to an instruction argument - should be an address
             const argValue = argumentsInput?.[node.name];
             if (argValue === undefined || argValue === null) {
                 throw new AccountError(
@@ -107,7 +105,7 @@ export function createAccountDefaultValueVisitor(
         },
 
         visitConditionalValue: async (conditionalValueNode: ConditionalValueNode) => {
-            // ifTrue or ifFalse branch of ConditionalValueNode
+            // ifTrue or ifFalse branch of ConditionalValueNode.
             const resolvedInputValueNode = await resolveConditionalValueNodeCondition({
                 accountsInput,
                 argumentsInput,
@@ -129,7 +127,7 @@ export function createAccountDefaultValueVisitor(
                     `Conditional branch resolved to undefined in account "${ixAccountNode.name}" of "${ixNode.name}" instruction`,
                 );
             }
-            // Recursively resolve the chosen branch
+            // Recursively resolve the chosen branch.
             const visitor = createAccountDefaultValueVisitor(ctx);
             const addressValue = await visitOrElse(resolvedInputValueNode, visitor, (innerNode: { kind: string }) => {
                 throw new AccountError(

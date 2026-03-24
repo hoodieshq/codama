@@ -7,7 +7,7 @@ import { isOmittedArgument } from './shared';
 
 /**
  * Resolves argument defaults from user-provided resolvers.
- * For each argument that has a resolverValueNode and is not provided by argumentsInput,
+ * For each argument that has a ResolverValueNode and is not provided by argumentsInput,
  * try to invoke the corresponding resolver function and fill ArgumentsInput with the resolved values.
  */
 export async function resolveArgumentDefaultsFromCustomResolvers(

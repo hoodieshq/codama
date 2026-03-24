@@ -5,6 +5,7 @@ import { AccountError } from '../../../shared/errors';
 import type { AccountsInput } from '../../../shared/types';
 import { safeStringify } from '../../../shared/util';
 import { createIxAccountsValidator } from '../validators';
+
 /**
  * Validates the accountsInput against the instruction's account definitions.
  * Ensures all required accounts are provided and have valid addresses.

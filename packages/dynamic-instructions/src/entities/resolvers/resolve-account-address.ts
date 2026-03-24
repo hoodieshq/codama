@@ -13,8 +13,7 @@ type ResolveAccountAddressContext = BaseResolutionContext & {
 };
 
 /**
- * Resolves the address of an instruction account node by evaluating its default value
- * using the AccountDefaultValueVisitor.
+ * Resolves the address of an instruction account node via either defaultValue or optionalAccountStrategy.
  */
 export async function resolveAccountAddress({
     root,
@@ -65,8 +64,8 @@ export async function resolveAccountAddress({
 
 /**
  * Optional account resolution via instruction strategy.
- * With "programId" strategy, optional accounts are resolved to programId
- * With "omitted" strategy, optional accounts must be excluded from accounts list
+ * With "programId" strategy, optional accounts are resolved to programId.
+ * With "omitted" strategy, optional accounts must be excluded from accounts list.
  */
 function resolveOptionalAccountWithStrategy(
     root: RootNode,

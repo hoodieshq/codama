@@ -10,7 +10,7 @@ import type {
 } from 'codama';
 
 /**
- * Visitor used to encode default (omitted) values for instruction arguments.
+ * Visitor for encoding default (omitted) values for instruction arguments.
  *
  * Today, Anchor/Codama primarily uses omitted defaults for discriminators
  * (`bytesValueNode`), but this visitor is intentionally extensible as we
