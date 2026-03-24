@@ -250,7 +250,8 @@ function EnumVariantValidator(
     variants: EnumVariantTypeNode[],
     definedTypes: DefinedTypeNode[],
 ): StructUnknown {
-    const variantNames: string[] = variants.map(v => v.name);
+    const variantMap = new Map<string, EnumVariantTypeNode>(variants.map(v => [v.name, v]));
+    const variantNames = Array.from(variantMap.keys());
 
     // Eagerly build per-variant payload validators for struct and tuple variants
     const variantValidators = new Map<string, StructUnknown>();
@@ -272,8 +273,7 @@ function EnumVariantValidator(
         // Scalar enum: plain string variant name (e.g. 'foo', 'bar')
         if (typeof value === 'string')
             return (
-                variantNames.includes(value) ||
-                `Invalid enum value "${value}". Expected one of: ${variantNames.join(', ')}`
+                variantMap.has(value) || `Invalid enum value "${value}". Expected one of: ${variantNames.join(', ')}`
             );
 
         // Data enum variant: object with __kind (e.g. { __kind: 'tokenTransfer', amount: 1000 })
@@ -282,11 +282,10 @@ function EnumVariantValidator(
             if (typeof kind !== 'string') {
                 return `Expected __kind to be a string, received: ${formatValueType(kind)}`;
             }
-            if (!variantNames.includes(kind)) {
+            const variant = variantMap.get(kind);
+            if (!variant) {
                 return `Invalid enum variant "${kind}". Expected one of: ${variantNames.join(', ')}`;
             }
-
-            const variant = variants.find(v => v.name.toString() === kind)!;
 
             if (variant.kind === 'enumEmptyVariantTypeNode') {
                 return true;
@@ -436,8 +435,12 @@ function KeyValueValidator(name: string, KeyValidator: StructUnknown, ValueValid
             return `Expected a map (object), received: ${formatValueType(value)}`;
         }
         const record = value as Record<string, unknown>;
-        const invalidKeys = Object.keys(record).filter(key => KeyValidator.validate(key)[0]);
-        const invalidValues = Object.keys(record).filter(key => ValueValidator.validate(record[key])[0]);
+        const invalidKeys: string[] = [];
+        const invalidValues: string[] = [];
+        for (const key of Object.keys(record)) {
+            if (KeyValidator.validate(key)[0]) invalidKeys.push(key);
+            if (ValueValidator.validate(record[key])[0]) invalidValues.push(key);
+        }
         if (!invalidKeys.length && !invalidValues.length) return true;
         const parts: string[] = [];
         if (invalidKeys.length) parts.push(`invalid keys: ${invalidKeys.join(', ')}`);
