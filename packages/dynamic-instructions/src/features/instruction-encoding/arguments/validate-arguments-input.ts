@@ -9,40 +9,40 @@ import { createIxArgumentsValidator } from '../validators';
 import { isOmittedArgument } from './shared';
 
 /**
- * Creates validator for each argument in the ArgumentsInput and validates it.
+ * Creates a cached validation function for InstructionArgumentNodes.
+ *
  * Skips "omitted" arguments.
  * Arguments with resolverValueNode defaults are expected to use optionTypeNode and NOT filtered out here.
  * Optional validation allows undefined so custom resolvers will fill default values after validation.
  */
-export function validateArgumentsInput(root: RootNode, ixNode: InstructionNode, argumentsInput: ArgumentsInput = {}) {
-    const requiredArguments = getRequiredIxArguments(ixNode);
+export function createArgumentsInputValidator(root: RootNode, ixNode: InstructionNode) {
+    const requiredArguments = ixNode.arguments.filter(arg => arg?.defaultValueStrategy !== 'omitted');
+    const validator = requiredArguments.length
+        ? createIxArgumentsValidator(ixNode.name, requiredArguments, root.program.definedTypes)
+        : null;
 
-    // Ensure arguments with "omitted" defaultValueStrategy are not provided in argumentsInput.
-    validateOmittedArguments(ixNode, argumentsInput);
+    return (argumentsInput: ArgumentsInput = {}) => {
+        // Ensure arguments with "omitted" defaultValueStrategy are not provided in argumentsInput.
+        validateOmittedArguments(ixNode, argumentsInput);
 
-    if (!requiredArguments.length) return;
+        if (!validator) return;
 
-    const filteredInput = filterRemainingAccountArguments(ixNode, argumentsInput);
+        const filteredInput = filterRemainingAccountArguments(ixNode, argumentsInput);
 
-    const ArgumentsInputValidator = createIxArgumentsValidator(
-        ixNode.name,
-        requiredArguments,
-        root.program.definedTypes,
-    );
-
-    try {
-        assert(filteredInput, ArgumentsInputValidator);
-    } catch (error) {
-        if (!(error instanceof StructError)) {
-            throw new ValidationError('Unexpected validation error', { cause: error });
+        try {
+            assert(filteredInput, validator);
+        } catch (error) {
+            if (!(error instanceof StructError)) {
+                throw new ValidationError('Unexpected validation error', { cause: error });
+            }
+            const message = error.failures().map(failure => {
+                const fieldPath = formatFailurePath(failure);
+                const value = formatFailureValue(failure.value);
+                return `Invalid argument "${fieldPath}", value: ${value}. ${failure.message}\n`;
+            });
+            throw new ValidationError(message.join(''));
         }
-        const message = error.failures().map(failure => {
-            const fieldPath = formatFailurePath(failure);
-            const value = formatFailureValue(failure.value);
-            return `Invalid argument "${fieldPath}", value: ${value}. ${failure.message}\n`;
-        });
-        throw new ValidationError(message.join(''));
-    }
+    };
 }
 
 /**
@@ -68,13 +68,6 @@ const MAX_VALUE_LENGTH = 120;
 function formatFailureValue(value: unknown): string {
     const raw = typeof value === 'object' ? safeStringify(value) : String(value as unknown);
     return raw.length > MAX_VALUE_LENGTH ? `${raw.slice(0, MAX_VALUE_LENGTH)}...` : raw;
-}
-
-/**
- * Returns required arguments that should be validated and provided by the user (i.e. everything except omitted).
- */
-function getRequiredIxArguments(ixNode: InstructionNode) {
-    return ixNode.arguments.filter(arg => arg?.defaultValueStrategy !== 'omitted');
 }
 
 /**
