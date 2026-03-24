@@ -6,6 +6,7 @@ import type { InstructionNode, PdaNode, RegisteredPdaSeedNode, RootNode, Variabl
 import { isNode, visitOrElse } from 'codama';
 
 import { createInputValueTransformer, createPdaSeedValueVisitor } from '../instruction-encoding';
+import { toAddress } from '../shared/address';
 import { getMemoizedUtf8Encoder } from '../shared/codecs';
 import { AccountError } from '../shared/errors';
 import { formatValueType } from '../shared/util';
@@ -28,9 +29,9 @@ const STANDALONE_IX_NODE: InstructionNode = {
 export async function deriveStandalonePDA(
     root: RootNode,
     pdaNode: PdaNode,
-    programAddress: Address,
     seedInputs: Record<string, unknown> = {},
 ): Promise<ProgramDerivedAddress> {
+    const programAddress = toAddress(pdaNode.programId || root.program.publicKey);
     const seedValues = await Promise.all(
         pdaNode.seeds.map(async (seedNode): Promise<ReadonlyUint8Array> => {
             if (seedNode.kind === 'constantPdaSeedNode') {

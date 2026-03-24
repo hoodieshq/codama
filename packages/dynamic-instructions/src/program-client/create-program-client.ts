@@ -114,8 +114,7 @@ export function createProgramClient<TClient = ProgramClient>(
                               );
                           }
 
-                          return (seeds?: Record<string, unknown>) =>
-                              deriveStandalonePDA(root, pdaNode, programAddress, seeds);
+                          return (seeds?: Record<string, unknown>) => deriveStandalonePDA(root, pdaNode, seeds);
                       },
                       has(target, prop) {
                           return Reflect.has(target, prop) || (typeof prop === 'string' && pdaNodes.has(prop));
