@@ -1,4 +1,4 @@
 dist/
-test/.anchor/
-test/target/
-test/generated/
+test/programs/anchor/.anchor/
+test/programs/anchor/target/
+test/programs/generated/

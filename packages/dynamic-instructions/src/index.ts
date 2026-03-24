@@ -7,12 +7,12 @@ export { DynamicInstructionsError, ValidationError, AccountError, ArgumentError,
 
 export type { AccountsInput, ArgumentsInput } from './shared/types';
 
-export { createProgramClient } from './features/program-client/create-program-client';
+export { createProgramClient } from './program-client/create-program-client';
 export type {
     CreateProgramClientOptions,
     IdlInput,
     ProgramClient,
     ProgramMethodBuilder,
-} from './features/program-client/create-program-client';
+} from './program-client/create-program-client';
 
 export { generateClientTypes } from './cli/commands/generate-client-types/generate-client-types';
