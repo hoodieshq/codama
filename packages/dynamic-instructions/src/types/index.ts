@@ -5,4 +5,4 @@ export type {
     IdlInput,
     ProgramClient,
     ProgramMethodBuilder,
-} from '../features/program-client/create-program-client';
+} from '../program-client/create-program-client';
