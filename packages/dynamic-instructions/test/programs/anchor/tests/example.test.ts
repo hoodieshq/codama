@@ -4,8 +4,10 @@ import { getU64Encoder, type Option, unwrapOption } from '@solana/codecs';
 import type { RootNode } from 'codama';
 import { beforeEach, describe, expect, test } from 'vitest';
 
+import { createProgramClient } from '../../../../src';
+import type { ExampleProgramClient } from '../../generated/example-idl-types';
 import { SvmTestContext } from '../../test-utils';
-import { createTestContext, programClient } from './helpers';
+import { createTestContext, idl, programClient } from './helpers';
 
 describe('anchor-example: commonIxs', () => {
     let ctx: SvmTestContext;
@@ -249,6 +251,54 @@ describe('anchor-example: commonIxs', () => {
             await expect(
                 programClient.methods.twoNodeCyclePda().accounts({ signer: payer }).instruction(),
             ).rejects.toThrow(/Circular dependency detected: pda[AB] -> pda[AB] -> pda[AB]/);
+        });
+    });
+
+    describe('Standalone PDA derivation — pdaNode.programId', () => {
+        const addressEncoder = getAddressEncoder();
+
+        test('should derive cross-program PDA using pdaNode.programId, not root program', async () => {
+            const signer = SvmTestContext.generateAddress();
+            const mint = SvmTestContext.generateAddress();
+
+            const [actualPda] = await programClient.pdas.tokenAccount({ mint, signer });
+
+            const [expectedPda] = await getProgramDerivedAddress({
+                programAddress: ctx.ASSOCIATED_TOKEN_PROGRAM_ADDRESS,
+                seeds: [
+                    addressEncoder.encode(signer),
+                    addressEncoder.encode(ctx.TOKEN_PROGRAM_ADDRESS),
+                    addressEncoder.encode(mint),
+                ],
+            });
+            expect(actualPda).toBe(expectedPda);
+        });
+
+        test('should not be affected by programId option override and still use pdaNode.programId', async () => {
+            const signer = SvmTestContext.generateAddress();
+            const mint = SvmTestContext.generateAddress();
+
+            const overrideProgramId = SvmTestContext.generateAddress();
+            const overrideClient = createProgramClient<ExampleProgramClient>(idl, { programId: overrideProgramId });
+            // double-check that the override took effect
+            expect(overrideClient.programAddress).toBe(overrideProgramId);
+
+            const [pdaFromOriginal] = await programClient.pdas.tokenAccount({ mint, signer });
+            const [pdaFromOverride] = await overrideClient.pdas.tokenAccount({ mint, signer });
+
+            expect(pdaFromOverride).toBe(pdaFromOriginal);
+        });
+
+        test('should fall back to root program when pdaNode has no programId', async () => {
+            const signer = SvmTestContext.generateAddress();
+
+            const [actualPda] = await programClient.pdas.level1({ signer });
+
+            const [expectedPda] = await getProgramDerivedAddress({
+                programAddress: programClient.programAddress,
+                seeds: ['level1', addressEncoder.encode(signer)],
+            });
+            expect(actualPda).toBe(expectedPda);
         });
     });
 });

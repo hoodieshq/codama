@@ -1,7 +1,7 @@
 import path from 'node:path';
 
 import { getNodeCodec } from '@codama/dynamic-codecs';
-import { type Address } from '@solana/addresses';
+import { type Address, getProgramDerivedAddress } from '@solana/addresses';
 import { beforeEach, describe, expect, test } from 'vitest';
 
 import { createProgramClient } from '../../../../src';
@@ -346,6 +346,18 @@ describe('blog', () => {
             const decoded = decodeAccount('bookmarkList', listPda);
             expect(decoded.owner).toBe(payer);
             expect(decoded.bookmarks).toEqual([]);
+        });
+    });
+
+    describe('category PDA — matches manual derivation with root program', () => {
+        test('should derive PDA using root program address when no pdaNode.programId', async () => {
+            const [categoryPda] = await programClient.pdas.category({ name: 'my-category' });
+
+            const [expectedPda] = await getProgramDerivedAddress({
+                programAddress: programClient.programAddress,
+                seeds: ['category', 'my-category'],
+            });
+            expect(categoryPda).toBe(expectedPda);
         });
     });
 
