@@ -5,8 +5,8 @@ import type { InstructionNode, RootNode } from 'codama';
 import { describe, expect, test } from 'vitest';
 
 import {
+    createArgumentsInputValidator,
     encodeInstructionArguments,
-    validateArgumentsInput,
 } from '../../../src/features/instruction-encoding/arguments';
 import { concatBytes, getCodecFromBytesEncoding } from '../../../src/shared/bytes-encoding';
 import { ArgumentError, ValidationError } from '../../../src/shared/errors';
@@ -110,8 +110,9 @@ describe('Instruction encoding: encodeInstructionArguments', () => {
         const ix = getInstruction(root, 'write');
 
         // discriminator should be omitted due to strategy
+        const validate = createArgumentsInputValidator(root, ix);
         expect(() =>
-            validateArgumentsInput(root, ix, {
+            validate({
                 data: null,
                 discriminator: 99,
                 offset: 0,
@@ -139,7 +140,8 @@ describe('Instruction validation: remaining account arguments', () => {
         const root = loadRoot('token-idl.json');
         const ix = getInstruction(root, 'initializeMultisig');
 
-        expect(() => validateArgumentsInput(root, ix, { m: 2, signers: [ADDR_1, ADDR_2] })).not.toThrow();
+        const validate = createArgumentsInputValidator(root, ix);
+        expect(() => validate({ m: 2, signers: [ADDR_1, ADDR_2] })).not.toThrow();
     });
 
     test('should still validate regular arguments when remaining account args are present', () => {
@@ -147,7 +149,8 @@ describe('Instruction validation: remaining account arguments', () => {
         const ix = getInstruction(root, 'initializeMultisig');
 
         // m is a required number argument — passing a string should fail validation
-        expect(() => validateArgumentsInput(root, ix, { m: 'invalid', signers: [ADDR_1] })).toThrow(ValidationError);
+        const validate = createArgumentsInputValidator(root, ix);
+        expect(() => validate({ m: 'invalid', signers: [ADDR_1] })).toThrow(ValidationError);
     });
 
     test('should not reject optional remaining account args when omitted', () => {
@@ -155,14 +158,16 @@ describe('Instruction validation: remaining account arguments', () => {
         const root = loadRoot('token-idl.json');
         const ix = getInstruction(root, 'transfer');
 
-        expect(() => validateArgumentsInput(root, ix, { amount: 100 })).not.toThrow();
+        const validate = createArgumentsInputValidator(root, ix);
+        expect(() => validate({ amount: 100 })).not.toThrow();
     });
 
     test('should not reject optional remaining account args when provided', () => {
         const root = loadRoot('token-idl.json');
         const ix = getInstruction(root, 'transfer');
 
-        expect(() => validateArgumentsInput(root, ix, { amount: 100, multiSigners: [ADDR_1] })).not.toThrow();
+        const validate = createArgumentsInputValidator(root, ix);
+        expect(() => validate({ amount: 100, multiSigners: [ADDR_1] })).not.toThrow();
     });
 
     test('should not encode remaining account args as instruction data', () => {

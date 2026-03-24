@@ -1,12 +1,12 @@
 import { address } from '@solana/addresses';
 import type { InstructionNode, RootNode } from 'codama';
 
-import type { AccountsInput, ArgumentsInput, BuildIxFn, EitherSigners, ResolversInput } from '../../shared/types';
-import { createAccountMeta, validateAccountsInput } from './accounts';
+import type { BuildIxFn } from '../../shared/types';
+import { createAccountMeta, createAccountsInputValidator } from './accounts';
 import {
+    createArgumentsInputValidator,
     encodeInstructionArguments,
     resolveArgumentDefaultsFromCustomResolvers,
-    validateArgumentsInput,
 } from './arguments';
 
 /**
@@ -14,12 +14,31 @@ import {
  */
 export function createIxBuilder(root: RootNode, ixNode: InstructionNode): BuildIxFn {
     const programAddress = address(root.program.publicKey);
+    const validateArguments = createArgumentsInputValidator(root, ixNode);
+    const validateAccounts = createAccountsInputValidator(ixNode);
 
     return async (argumentsInput, accountsInput, signers, resolversInput) => {
-        const { argumentsData, accountsData } = await resolveInstructionData(
-            root,
+        // Validate arguments according to Codama schema.
+        validateArguments(argumentsInput);
+
+        // Ensure required accounts are present and validate provided pubkey addresses.
+        validateAccounts(accountsInput);
+
+        // Resolve arguments that depend on custom resolvers.
+        const enrichedArgumentsInput = await resolveArgumentDefaultsFromCustomResolvers(
             ixNode,
             argumentsInput,
+            accountsInput,
+            resolversInput,
+        );
+
+        // Encode arguments into buffer.
+        const argumentsData = encodeInstructionArguments(root, ixNode, enrichedArgumentsInput);
+
+        const accountsData = await createAccountMeta(
+            root,
+            ixNode,
+            enrichedArgumentsInput,
             accountsInput,
             signers,
             resolversInput,
@@ -31,41 +50,4 @@ export function createIxBuilder(root: RootNode, ixNode: InstructionNode): BuildI
             programAddress,
         };
     };
-}
-
-export async function resolveInstructionData(
-    root: RootNode,
-    instructionNode: InstructionNode,
-    argumentsInput?: ArgumentsInput,
-    accountsInput?: AccountsInput,
-    signers?: EitherSigners,
-    resolversInput?: ResolversInput,
-) {
-    // Validate arguments according to Codama schema.
-    validateArgumentsInput(root, instructionNode, argumentsInput);
-
-    // Ensure required accounts are present and validate provided pubkey addresses.
-    validateAccountsInput(instructionNode, accountsInput);
-
-    // Resolve arguments that depend on custom resolvers.
-    const enrichedArgumentsInput = await resolveArgumentDefaultsFromCustomResolvers(
-        instructionNode,
-        argumentsInput,
-        accountsInput,
-        resolversInput,
-    );
-
-    // Encode arguments into buffer.
-    const argumentsData = encodeInstructionArguments(root, instructionNode, enrichedArgumentsInput);
-
-    const accountsData = await createAccountMeta(
-        root,
-        instructionNode,
-        enrichedArgumentsInput,
-        accountsInput,
-        signers,
-        resolversInput,
-    );
-
-    return { accountsData, argumentsData };
 }
