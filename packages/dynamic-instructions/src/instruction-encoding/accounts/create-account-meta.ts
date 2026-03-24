@@ -37,7 +37,7 @@ export async function createAccountMeta(
             // Double check required account is provided
             const isAccountProvided = accountAddressInput !== undefined && accountAddressInput !== null;
             if (!isAccountProvided && isIxAccountRequired(ixAccountNode)) {
-                throw new AccountError(`Account not provided: ${ixAccountNode.name}`);
+                throw new AccountError(`Missing required account: ${ixAccountNode.name}`);
             }
 
             let resolvedAccountAddress: Address | null = null;

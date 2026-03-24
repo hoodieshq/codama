@@ -10,6 +10,7 @@ import type {
     ConstantValueNode,
     NoneValueNode,
     NumberValueNode,
+    ProgramIdValueNode,
     PublicKeyValueNode,
     SomeValueNode,
     StringValueNode,
@@ -78,6 +79,7 @@ export function createPdaSeedValueVisitor(
 
             return getMemoizedAddressEncoder().encode(resolvedAddress);
         },
+
         visitArgumentValue: async (node: ArgumentValueNode) => {
             const ixArgumentNode = ixNode.arguments.find(arg => arg.name === node.name);
             if (!ixArgumentNode) {
@@ -132,7 +134,7 @@ export function createPdaSeedValueVisitor(
             return await Promise.resolve(new Uint8Array([node.number]));
         },
 
-        visitProgramIdValue: async () => {
+        visitProgramIdValue: async (_node: ProgramIdValueNode) => {
             if (!isConvertibleAddress(programId)) {
                 throw new AccountError(
                     `Expected base58-encoded Address for programId, got: ${safeStringify(programId)}`,
