@@ -15,6 +15,7 @@ function execCli(args: string[]) {
         const stdout = execFileSync('node', [CLI_PATH, ...args], {
             cwd: path.resolve('.'),
             encoding: 'utf-8',
+            stdio: 'pipe',
         });
         return { exitCode: 0, stderr: '', stdout };
     } catch (error: unknown) {
