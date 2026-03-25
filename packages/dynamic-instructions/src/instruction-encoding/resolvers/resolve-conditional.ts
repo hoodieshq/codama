@@ -28,9 +28,9 @@ export async function resolveConditionalValueNodeCondition({
     if (!isNode(conditionalValueNode, 'conditionalValueNode')) {
         throw new AccountError(`Expected conditionalValueNode in account ${ixAccountNode.name}`);
     }
-    const { condition, value: requiredValueNode, ifTrue, ifFalse } = conditionalValueNode;
+    const { condition, value: expectedValueNode, ifTrue, ifFalse } = conditionalValueNode;
 
-    if (!requiredValueNode && !ifTrue && !ifFalse) {
+    if (!expectedValueNode && !ifTrue && !ifFalse) {
         throw new AccountError('Invalid conditionalValueNode: missing value and branches');
     }
 
@@ -43,27 +43,29 @@ export async function resolveConditionalValueNodeCondition({
         resolversInput,
         root,
     });
-    const providedValue = await visitOrElse(condition, conditionVisitor, condNode => {
+    const actualProvidedValue = await visitOrElse(condition, conditionVisitor, condNode => {
         throw new AccountError(
             `Cannot resolve condition node: ${condNode.kind} in account ${ixAccountNode.name} of ${ixNode.name} instruction`,
         );
     });
 
-    if (requiredValueNode) {
-        // If provided, the condition must be equal to required value.
-        const valueVisitor = createValueNodeVisitor();
-        const requiredValue = visitOrElse(requiredValueNode, valueVisitor, valueNode => {
-            throw new AccountError(
-                `Cannot resolve required value node: ${valueNode.kind} in account ${ixAccountNode.name}`,
-            );
-        });
-        if (typeof requiredValue.value === 'object' || typeof providedValue === 'object') {
-            throw new AccountError(
-                `Deep equality comparison not yet supported for conditional value in account "${ixAccountNode.name}" of "${ixNode.name}" instruction`,
-            );
-        }
-        return requiredValue.value === providedValue ? ifTrue : ifFalse;
-    } else {
-        return providedValue ? ifTrue : ifFalse;
+    if (!expectedValueNode) {
+        return actualProvidedValue ? ifTrue : ifFalse;
     }
+
+    // If expectedValueNode exists, the condition must be equal to expected value.
+    const valueVisitor = createValueNodeVisitor();
+    const expectedValue = visitOrElse(expectedValueNode, valueVisitor, valueNode => {
+        throw new AccountError(
+            `Cannot resolve required value node: ${valueNode.kind} in account ${ixAccountNode.name}`,
+        );
+    });
+
+    if (typeof expectedValue.value === 'object' || typeof actualProvidedValue === 'object') {
+        throw new AccountError(
+            `Deep equality comparison not yet supported for conditional value in account "${ixAccountNode.name}" of "${ixNode.name}" instruction`,
+        );
+    }
+
+    return actualProvidedValue === expectedValue.value ? ifTrue : ifFalse;
 }

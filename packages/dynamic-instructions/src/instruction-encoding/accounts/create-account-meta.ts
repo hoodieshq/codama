@@ -34,9 +34,9 @@ export async function createAccountMeta(
         ixNode.accounts.map<Promise<ResolvedAccount>>(async ixAccountNode => {
             const accountAddressInput = accountsInput?.[ixAccountNode.name];
 
-            // Double check required account is provided
             const isAccountProvided = accountAddressInput !== undefined && accountAddressInput !== null;
-            if (!isAccountProvided && isIxAccountRequired(ixAccountNode)) {
+            // Accounts with default values can be omitted, as they can be resolved from default value
+            if (!isAccountProvided && !ixAccountNode.isOptional && !ixAccountNode.defaultValue) {
                 throw new AccountError(`Missing required account: ${ixAccountNode.name}`);
             }
 
@@ -55,8 +55,6 @@ export async function createAccountMeta(
             }
 
             return {
-                // Important: treat `null` the same as "not provided" so the IDL's
-                // optionalAccountStrategy can decide whether to omit or substitute programId.
                 address: isAccountProvided ? toAddress(accountAddressInput) : resolvedAccountAddress,
                 optional: Boolean(ixAccountNode.isOptional),
                 role: getAccountRole(ixAccountNode, signers),
@@ -65,7 +63,7 @@ export async function createAccountMeta(
     );
 
     const accountMetas: AccountMeta[] = resolvedAccounts
-        // omitted optional accounts
+        // Filter out optional accounts with "omitted" strategy (nulls).
         .filter((acc): acc is ResolvedAccountWithAddress => acc.address !== null)
         .map(acc => ({
             address: acc.address,
@@ -109,12 +107,6 @@ export async function createAccountMeta(
     }
 
     return accountMetas;
-}
-
-// Optional accounts can be omitted
-// Accounts with default values can be omitted, as they can be resolved from default value
-function isIxAccountRequired(ixAccountNode: InstructionAccountNode) {
-    return !ixAccountNode.isOptional && !ixAccountNode.defaultValue;
 }
 
 // TODO: 'either' is treated as signer — this works for Token Program multisig signers,

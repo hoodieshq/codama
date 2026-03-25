@@ -1,4 +1,5 @@
 import { getNodeCodec, type ReadonlyUint8Array } from '@codama/dynamic-codecs';
+import { Codec } from '@solana/codecs';
 import type { InstructionNode, RootNode } from 'codama';
 import { visitOrElse } from 'codama';
 
@@ -23,12 +24,13 @@ export function encodeInstructionArguments(
 ): ReadonlyUint8Array {
     const chunks = ix.arguments.map(ixArgumentNode => {
         const input = argumentsInput?.[ixArgumentNode.name];
+        const nodeCodec = getNodeCodec([root, root.program, ix, ixArgumentNode]);
         if (isOmittedArgument(ixArgumentNode)) {
-            return encodeOmittedArgument(root, ix, ixArgumentNode);
+            return encodeOmittedArgument(ixArgumentNode, nodeCodec);
         } else if (isOptionalArgument(ixArgumentNode, input)) {
-            return encodeOptionalArgument(root, ix, ixArgumentNode);
+            return encodeOptionalArgument(ix, ixArgumentNode, nodeCodec);
         } else {
-            return encodeRequiredArgument(root, ix, ixArgumentNode, input);
+            return encodeRequiredArgument(root, ix, ixArgumentNode, input, nodeCodec);
         }
     });
 
@@ -36,11 +38,9 @@ export function encodeInstructionArguments(
 }
 
 function encodeOmittedArgument(
-    root: RootNode,
-    ix: InstructionNode,
     ixArgumentNode: InstructionNode['arguments'][number],
+    nodeCodec: Codec<unknown>,
 ): ReadonlyUint8Array {
-    const nodeCodec = getNodeCodec([root, root.program, ix, ixArgumentNode]);
     const defaultValue = ixArgumentNode.defaultValue;
     if (defaultValue === undefined) {
         throw new ArgumentError(`Omitted argument ${ixArgumentNode.name} has no default value`);
@@ -55,11 +55,10 @@ function encodeOmittedArgument(
 }
 
 function encodeOptionalArgument(
-    root: RootNode,
     ix: InstructionNode,
     ixArgumentNode: InstructionNode['arguments'][number],
+    nodeCodec: Codec<unknown>,
 ): ReadonlyUint8Array {
-    const nodeCodec = getNodeCodec([root, root.program, ix, ixArgumentNode]);
     try {
         return nodeCodec.encode(null);
     } catch (error) {
@@ -75,12 +74,12 @@ function encodeRequiredArgument(
     ix: InstructionNode,
     ixArgumentNode: InstructionNode['arguments'][number],
     input: ArgumentsInput[string],
+    nodeCodec: Codec<unknown>,
 ): ReadonlyUint8Array {
     if (input === undefined) {
         throw new ArgumentError(`Missing required argument: ${ixArgumentNode.name}`);
     }
 
-    const nodeCodec = getNodeCodec([root, root.program, ix, ixArgumentNode]);
     const transformer = createInputValueTransformer(ixArgumentNode.type, root, {
         bytesEncoding: 'base16',
     });
