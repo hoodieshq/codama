@@ -54,15 +54,19 @@ export async function resolvePDAAddress({
                     root,
                     seedNode,
                 });
-            } else if (seedNode.kind === 'variablePdaSeedNode') {
+            }
+
+            if (seedNode.kind === 'variablePdaSeedNode') {
                 const variableSeedValueNodes = pdaValueNode.seeds;
                 const seedName = seedNode.name;
                 const variableSeedValueNode = variableSeedValueNodes.find(node => node.name === seedName);
+
                 if (!variableSeedValueNode) {
                     throw new AccountError(
                         `PDA Node ${pdaNode.name}. Variable PDA SeedValueNode ${seedName} was not found for ${ixAccountNode.name} account`,
                     );
                 }
+
                 return await resolveVariablePdaSeed({
                     accountsInput,
                     argumentsInput,
@@ -96,9 +100,11 @@ function resolvePdaNode(pdaDefaultValue: PdaValueNode, pdas: PdaNode[]): PdaNode
         }
         return linkedPda;
     }
+
     if (isNode(pdaDefaultValue.pda, 'pdaNode')) {
         return pdaDefaultValue.pda;
     }
+
     throw new AccountError(`Unsupported PDA node kind: ${(pdaDefaultValue.pda as { kind: string }).kind}`);
 }
 
@@ -121,6 +127,7 @@ function resolveVariablePdaSeed({
     if (!isNode(variableSeedValueNode, 'pdaSeedValueNode')) {
         throw new AccountError(`Not a PDA seed value node: ${(variableSeedValueNode as { kind?: string }).kind}`);
     }
+
     if (seedNode.name !== variableSeedValueNode.name) {
         throw new AccountError(`Mismatched PDA seed: ${seedNode.name} vs ${variableSeedValueNode.name}`);
     }
@@ -158,6 +165,7 @@ function resolveConstantPdaSeed({
     if (!isNode(seedNode, 'constantPdaSeedNode')) {
         throw new AccountError(`Not a constant PDA seed node: ${seedNode.kind}`);
     }
+
     const visitor = createPdaSeedValueVisitor({
         accountsInput,
         argumentsInput,
