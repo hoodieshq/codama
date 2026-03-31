@@ -1,11 +1,11 @@
 import { address } from '@solana/addresses';
-import { getU32Encoder, getU64Encoder } from '@solana/codecs';
+import { getU32Encoder, getU64Encoder, mergeBytes } from '@solana/codecs';
 import { getInitializeInstructionDataDecoder } from '@solana-program/program-metadata';
 import type { InstructionNode, RootNode } from 'codama';
 import { describe, expect, test } from 'vitest';
 
 import { createArgumentsInputValidator, encodeInstructionArguments } from '../../../src/instruction-encoding/arguments';
-import { concatBytes, getCodecFromBytesEncoding } from '../../../src/shared/bytes-encoding';
+import { getCodecFromBytesEncoding } from '../../../src/shared/bytes-encoding';
 import { ArgumentError, ValidationError } from '../../../src/shared/errors';
 import { loadRoot } from '../../programs/test-utils';
 
@@ -43,7 +43,7 @@ describe('Instruction encoding: encodeInstructionArguments', () => {
         const expectedDiscriminator = getCodecFromBytesEncoding('base16').encode('1f094566b31b79c7');
         const expectedInput = getU64Encoder().encode(42n);
         const expectedOptionalInput = new Uint8Array([0]);
-        expect(encoded).toEqual(concatBytes([expectedDiscriminator, expectedInput, expectedOptionalInput]));
+        expect(encoded).toEqual(mergeBytes([expectedDiscriminator, expectedInput, expectedOptionalInput]));
     });
 
     test('should transform Uint8Array in remainderOptionTypeNode argument', () => {
@@ -56,7 +56,7 @@ describe('Instruction encoding: encodeInstructionArguments', () => {
             offset: 10,
         });
 
-        const expected = concatBytes([new Uint8Array([0]), getU32Encoder().encode(10), testData]);
+        const expected = mergeBytes([new Uint8Array([0]), getU32Encoder().encode(10), testData]);
         expect(encoded).toEqual(expected);
     });
 
