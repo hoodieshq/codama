@@ -43,7 +43,13 @@ describe('Instruction encoding: encodeInstructionArguments', () => {
         const expectedDiscriminator = getCodecFromBytesEncoding('base16').encode('1f094566b31b79c7');
         const expectedInput = getU64Encoder().encode(42n);
         const expectedOptionalInput = new Uint8Array([0]);
-        expect(encoded).toEqual(mergeBytes([expectedDiscriminator, expectedInput, expectedOptionalInput]));
+        expect(encoded).toEqual(
+            mergeBytes([
+                expectedDiscriminator as Uint8Array,
+                expectedInput as Uint8Array,
+                expectedOptionalInput as Uint8Array,
+            ]),
+        );
     });
 
     test('should transform Uint8Array in remainderOptionTypeNode argument', () => {
@@ -56,7 +62,7 @@ describe('Instruction encoding: encodeInstructionArguments', () => {
             offset: 10,
         });
 
-        const expected = mergeBytes([new Uint8Array([0]), getU32Encoder().encode(10), testData]);
+        const expected = mergeBytes([new Uint8Array([0]), getU32Encoder().encode(10) as Uint8Array, testData]);
         expect(encoded).toEqual(expected);
     });
 
