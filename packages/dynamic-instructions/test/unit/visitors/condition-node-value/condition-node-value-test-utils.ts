@@ -10,7 +10,7 @@ export function makeVisitor(overrides?: Partial<Parameters<typeof createConditio
         accountsInput: undefined,
         argumentsInput: undefined,
         ixNode: ixNodeStub,
-        resolutionPath: [],
+        resolvedAddresses: new Map(),
         resolversInput: undefined,
         root: rootNodeMock,
         ...overrides,

@@ -56,7 +56,7 @@ export function createAccountDefaultValueVisitor(
         argumentsInput,
         accountsInput,
         resolversInput,
-        resolutionPath,
+        resolvedAddresses,
     } = ctx;
 
     return {
@@ -70,14 +70,16 @@ export function createAccountDefaultValueVisitor(
         },
 
         visitAccountValue: async (node: AccountValueNode) => {
-            return await resolveAccountValueNodeAddress(node, {
-                accountsInput,
-                argumentsInput,
-                ixNode,
-                resolutionPath,
-                resolversInput,
-                root,
-            });
+            return await Promise.resolve(
+                resolveAccountValueNodeAddress(node, {
+                    accountsInput,
+                    argumentsInput,
+                    ixNode,
+                    resolvedAddresses,
+                    resolversInput,
+                    root,
+                }),
+            );
         },
 
         visitArgumentValue: async (node: ArgumentValueNode) => {
@@ -112,7 +114,7 @@ export function createAccountDefaultValueVisitor(
                 conditionalValueNode,
                 ixAccountNode,
                 ixNode,
-                resolutionPath,
+                resolvedAddresses,
                 resolversInput,
                 root,
             });
@@ -162,7 +164,7 @@ export function createAccountDefaultValueVisitor(
                 ixAccountNode,
                 ixNode,
                 pdaValueNode: node,
-                resolutionPath,
+                resolvedAddresses,
                 resolversInput,
                 root,
             });

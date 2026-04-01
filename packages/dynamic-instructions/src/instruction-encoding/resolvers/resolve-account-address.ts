@@ -21,7 +21,7 @@ export async function resolveAccountAddress({
     ixAccountNode,
     argumentsInput,
     accountsInput,
-    resolutionPath,
+    resolvedAddresses,
     resolversInput,
     accountAddressInput,
 }: ResolveAccountAddressContext): Promise<Address | null> {
@@ -37,7 +37,7 @@ export async function resolveAccountAddress({
             argumentsInput,
             ixAccountNode,
             ixNode,
-            resolutionPath,
+            resolvedAddresses,
             resolversInput,
             root,
         });

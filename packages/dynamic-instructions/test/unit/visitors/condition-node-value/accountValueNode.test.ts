@@ -42,14 +42,4 @@ describe('condition-node-value: visitAccountValue', () => {
             /Referenced account "unknown" not found in instruction "testInstruction"/,
         );
     });
-
-    test('should throw on circular dependency', async () => {
-        const visitor = makeVisitor({
-            ixNode: ixNodeWithAccount,
-            resolutionPath: ['myAccount'],
-        });
-        await expect(visitor.visitAccountValue(accountValueNode('myAccount'))).rejects.toThrow(
-            /Circular dependency detected/,
-        );
-    });
 });

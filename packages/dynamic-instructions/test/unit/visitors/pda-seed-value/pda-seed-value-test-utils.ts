@@ -15,7 +15,7 @@ export function makeVisitor(overrides?: Partial<Parameters<typeof createPdaSeedV
         argumentsInput: undefined,
         ixNode: ixNodeStub,
         programId: address(PROGRAM_PUBLIC_KEY),
-        resolutionPath: [],
+        resolvedAddresses: new Map(),
         resolversInput: undefined,
         root: rootNodeMock,
         ...overrides,

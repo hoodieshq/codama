@@ -2,23 +2,19 @@ import type { Address } from '@solana/addresses';
 import type { AccountValueNode } from 'codama';
 
 import { toAddress } from '../../shared/address';
-import { AccountError } from '../../shared/errors';
-import { resolveAccountAddress } from './resolve-account-address';
-import type { BaseResolutionContext, ResolutionPath } from './types';
+import { AccountError, DependencyNotResolvedError } from '../../shared/errors';
+import type { BaseResolutionContext } from './types';
 
 /**
  * Resolves an AccountValueNode reference to an Address.
  *
- * Shared logic for resolving account references across visitors:
- * Checks if the user provided the account address in accountsInput.
- * Finds the referenced InstructionAccountNode.
- * Delegates to resolveAccountAddress for default value resolution.
+ * Looks up the referenced account in accountsInput (user-provided).
+ * Or in the resolvedAddresses map (populated by prior resolution).
+ * Throws DependencyNotResolvedError if the dependency exists but hasn't been resolved yet
+ * To allow for custom resolutiion retry.
  */
-export async function resolveAccountValueNodeAddress(
-    node: AccountValueNode,
-    ctx: BaseResolutionContext,
-): Promise<Address | null> {
-    const { accountsInput, ixNode, resolutionPath } = ctx;
+export function resolveAccountValueNodeAddress(node: AccountValueNode, ctx: BaseResolutionContext): Address | null {
+    const { accountsInput, ixNode, resolvedAddresses } = ctx;
 
     // Check if user provided the account address.
     const providedAddress = accountsInput?.[node.name];
@@ -26,29 +22,18 @@ export async function resolveAccountValueNodeAddress(
         return toAddress(providedAddress);
     }
 
-    // Find the referenced account in the instruction.
+    // Look up from already-resolved addresses.
+    const resolved = resolvedAddresses.get(node.name);
+    if (resolved !== undefined) {
+        return resolved;
+    }
+
+    // Check if the account exists in the instruction.
     const referencedIxAccountNode = ixNode.accounts.find(acc => acc.name === node.name);
     if (!referencedIxAccountNode) {
         throw new AccountError(`Referenced account "${node.name}" not found in instruction "${ixNode.name}"`);
     }
 
-    // Detect circular dependencies before recursing.
-    detectCircularDependency(node.name, resolutionPath);
-
-    return await resolveAccountAddress({
-        accountAddressInput: providedAddress,
-        accountsInput: ctx.accountsInput,
-        argumentsInput: ctx.argumentsInput,
-        ixAccountNode: referencedIxAccountNode,
-        ixNode,
-        resolutionPath: [...resolutionPath, node.name],
-        resolversInput: ctx.resolversInput,
-        root: ctx.root,
-    });
-}
-
-export function detectCircularDependency(nodeName: string, resolutionPath: ResolutionPath) {
-    if (resolutionPath.includes(nodeName)) {
-        throw new AccountError(`Circular dependency detected: ${[...resolutionPath, nodeName].join(' -> ')}`);
-    }
+    // Account exists but hasn't been resolved yet — signal to multi-pass loop to retry.
+    throw new DependencyNotResolvedError(node.name, ixNode.name);
 }
