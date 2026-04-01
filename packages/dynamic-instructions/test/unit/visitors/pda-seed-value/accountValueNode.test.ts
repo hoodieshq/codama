@@ -27,15 +27,15 @@ describe('pda-seed-value: visitAccountValue', () => {
         expect(result).toEqual(getAddressEncoder().encode(address(randomAddress)));
     });
 
-    test('should fall through to resolution when provided address is null', async () => {
+    test('should fall through to map lookup when provided address is null', async () => {
         const visitor = makeVisitor({
             accountsInput: { authority: null },
             ixNode: ixNodeWithAccount,
         });
-        // null is not treated as a provided address — it falls through to resolveAccountAddress,
-        // which throws because the account has no default value
+        // null is not treated as a provided address — it falls through to resolvedAddresses map lookup,
+        // which throws because the account has not been resolved yet (empty map in unit test)
         await expect(visitor.visitAccountValue(accountValueNode('authority'))).rejects.toThrow(
-            /Account doesn't have default value or was not provided/,
+            /Account "authority" has not been resolved yet/,
         );
     });
 
@@ -52,9 +52,12 @@ describe('pda-seed-value: visitAccountValue', () => {
             name: 'testInstruction',
             optionalAccountStrategy: 'omitted',
         });
+        // Pre-populate resolvedAddresses with null to simulate an omitted optional account
+        const resolvedAddresses = new Map<string, null>([['authority', null]]);
         const visitor = makeVisitor({
             accountsInput: { authority: null },
             ixNode: ixNodeWithOptionalAccount,
+            resolvedAddresses,
         });
         await expect(visitor.visitAccountValue(accountValueNode('authority'))).rejects.toThrow(
             /Cannot resolve dependent account for PDA seed/,
@@ -65,16 +68,6 @@ describe('pda-seed-value: visitAccountValue', () => {
         const visitor = makeVisitor({ ixNode: ixNodeWithAccount });
         await expect(visitor.visitAccountValue(accountValueNode('nonexistent'))).rejects.toThrow(
             /Referenced account "nonexistent" not found in instruction "testInstruction"/,
-        );
-    });
-
-    test('should throw on circular dependency', async () => {
-        const visitor = makeVisitor({
-            ixNode: ixNodeWithAccount,
-            resolutionPath: ['authority'],
-        });
-        await expect(visitor.visitAccountValue(accountValueNode('authority'))).rejects.toThrow(
-            /Circular dependency detected/,
         );
     });
 });

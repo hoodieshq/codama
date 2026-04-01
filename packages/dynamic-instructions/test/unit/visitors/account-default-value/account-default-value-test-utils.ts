@@ -23,7 +23,7 @@ export function makeVisitor(overrides?: Partial<Parameters<typeof createAccountD
         argumentsInput: undefined,
         ixAccountNode: ixAccountNodeStub,
         ixNode: ixNodeStub,
-        resolutionPath: [],
+        resolvedAddresses: new Map(),
         resolversInput: undefined,
         root: rootNodeMock,
         ...overrides,

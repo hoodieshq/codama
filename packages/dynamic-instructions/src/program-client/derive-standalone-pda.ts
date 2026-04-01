@@ -62,7 +62,7 @@ function resolveStandaloneConstantSeed(
         argumentsInput: undefined,
         ixNode: STANDALONE_IX_NODE,
         programId: programAddress,
-        resolutionPath: [],
+        resolvedAddresses: new Map(),
         resolversInput: undefined,
         root,
     });

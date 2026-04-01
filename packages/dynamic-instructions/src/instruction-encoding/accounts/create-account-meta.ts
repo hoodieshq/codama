@@ -1,26 +1,32 @@
 import type { Address } from '@solana/addresses';
 import type { AccountMeta } from '@solana/instructions';
 import { AccountRole } from '@solana/instructions';
-import type { InstructionAccountNode, InstructionNode, RootNode } from 'codama';
+import type { InstructionAccountNode, InstructionNode, ResolvedInstructionAccount, RootNode } from 'codama';
+import { CodamaError, getResolvedInstructionInputsVisitor, isNode, visit } from 'codama';
 
 import { isConvertibleAddress, toAddress } from '../../shared/address';
 import { AccountError } from '../../shared/errors';
 import type { AccountsInput, ArgumentsInput, EitherSigners, ResolversInput } from '../../shared/types';
 import { formatValueType } from '../../shared/util';
 import { resolveAccountAddress } from '../resolvers/resolve-account-address';
+import { resolveAccountsFallback } from './resolve-accounts-fallback';
 
+// type ResolvedAccountWithAddress = { address: Address; role: AccountRole };
 type ResolvedAccount = {
     address: Address | null;
     optional: boolean;
     role: AccountRole;
 };
-
 type ResolvedAccountWithAddress = ResolvedAccount & { address: Address };
 
 /**
- * Resolves account addresses and creates AccountMeta for each account in the instruction by evaluating their default values.
- * Handles optional accounts based on the instruction's optionalAccountStrategy.
- * Throws errors if required accounts are missing or cannot be resolved.
+ * Resolves account addresses and creates AccountMeta for each account in the instruction.
+ *
+ * Uses two resolution strategies:
+ * 1. PRIMARY: Topological sort via getResolvedInstructionInputsVisitor — resolves accounts
+ *    sequentially in dependency order. Works for well-formed IDLs without circular deps.
+ * 2. FALLBACK: Multi-pass loop — handles circular deps broken by user input, nested argument
+ *    dependencies in resolverValueNode.dependsOn, and other cases the static visitor can't handle.
  */
 export async function createAccountMeta(
     root: RootNode,
@@ -29,59 +35,115 @@ export async function createAccountMeta(
     accountsInput: AccountsInput = {},
     signers: EitherSigners = [],
     resolversInput: ResolversInput = {},
-): Promise<AccountMeta[]> {
+) {
+    let resolvedAddresses: Map<string, Address | null>;
     const programAddress = toAddress(root.program.publicKey);
-    const resolvedAccounts = await Promise.all(
-        ixNode.accounts.map<Promise<ResolvedAccount>>(async ixAccountNode => {
-            const accountAddressInput = accountsInput?.[ixAccountNode.name];
 
-            const isAccountProvided = accountAddressInput !== undefined && accountAddressInput !== null;
-            // Accounts with default values can be omitted, as they can be resolved from default value
-            if (!isAccountProvided && !ixAccountNode.isOptional && !ixAccountNode.defaultValue) {
-                throw new AccountError(`Missing required account: ${ixAccountNode.name}`);
-            }
+    try {
+        resolvedAddresses = await resolveAccountsTopological(
+            root,
+            ixNode,
+            argumentsInput,
+            accountsInput,
+            resolversInput,
+        );
+    } catch (error) {
+        if (error instanceof CodamaError) {
+            // Topological sort failed (circular deps, invalid deps, etc.) - fallback.
+            resolvedAddresses = await resolveAccountsFallback(
+                root,
+                ixNode,
+                argumentsInput,
+                accountsInput,
+                resolversInput,
+            );
+        } else {
+            throw error;
+        }
+    }
 
-            let resolvedAccountAddress: Address | null = null;
-            if (!isAccountProvided) {
-                resolvedAccountAddress = await resolveAccountAddress({
-                    accountAddressInput,
-                    accountsInput,
-                    argumentsInput,
-                    ixAccountNode,
-                    ixNode,
-                    resolutionPath: [],
-                    resolversInput,
-                    root,
-                });
-            }
-
-            const finalAddress = isAccountProvided ? toAddress(accountAddressInput) : resolvedAccountAddress;
-
+    // Build AccountMeta array in original account order.
+    const accountMetas = ixNode.accounts
+        .map(ixAccountNode => {
             // Optional accounts with "programId" strategy: e.g. PMP's setData instruction `buffer` account. (isWritable, isOptional and "programId" strategy).
-            // But when buffer is null it resolves to the program address which cannot be writable, hence must be downgraded to readonly.
-            const isProgramAddress = finalAddress !== null && finalAddress === programAddress;
-            const role = isProgramAddress
-                ? getReadonlyAccountRole(ixAccountNode, signers)
-                : getAccountRole(ixAccountNode, signers);
+            // When buffer is null it resolves to the program address which cannot be writable, hence must be downgraded to readonly.
+            const resolvedAccountAddress = resolvedAddresses.get(ixAccountNode.name);
+            const role =
+                resolvedAccountAddress === programAddress
+                    ? getReadonlyAccountRole(ixAccountNode, signers)
+                    : getAccountRole(ixAccountNode, signers);
 
             return {
-                address: finalAddress,
+                address: resolvedAccountAddress ?? null,
                 optional: Boolean(ixAccountNode.isOptional),
                 role,
             };
-        }),
+        })
+        // Filter out optional accounts with "omitted" strategy (nulls).
+        .filter((acc): acc is ResolvedAccountWithAddress => acc.address !== null);
+
+    // Append remaining accounts from argument values.
+    appendRemainingAccounts(accountMetas, ixNode, argumentsInput);
+
+    return accountMetas;
+}
+
+/**
+ * Primary path: resolve accounts sequentially in topological order.
+ */
+async function resolveAccountsTopological(
+    root: RootNode,
+    ixNode: InstructionNode,
+    argumentsInput: ArgumentsInput,
+    accountsInput: AccountsInput,
+    resolversInput: ResolversInput,
+): Promise<Map<string, Address | null>> {
+    const sortedInputs = visit(ixNode, getResolvedInstructionInputsVisitor());
+    const sortedAccountInputs = sortedInputs.filter((input): input is ResolvedInstructionAccount =>
+        isNode(input, 'instructionAccountNode'),
     );
 
-    const accountMetas: AccountMeta[] = resolvedAccounts
-        // Filter out optional accounts with "omitted" strategy (nulls).
-        .filter((acc): acc is ResolvedAccountWithAddress => acc.address !== null)
-        .map(acc => ({
-            address: acc.address,
-            role: acc.role,
-        }));
+    const resolvedAddresses = new Map<string, Address | null>();
 
-    // Resolve remaining accounts from argument values
-    // https://github.com/codama-idl/codama/blob/main/packages/nodes/docs/InstructionRemainingAccountsNode.md
+    for (const ixAccountNode of sortedAccountInputs) {
+        const accountAddressInput = accountsInput?.[ixAccountNode.name];
+        const isAccountProvided = accountAddressInput !== undefined && accountAddressInput !== null;
+        // Accounts with default values can be omitted, as they can be resolved from default value.
+        if (!isAccountProvided && !ixAccountNode.isOptional && !ixAccountNode.defaultValue) {
+            throw new AccountError(`Missing required account: ${ixAccountNode.name}`);
+        }
+
+        let addr: Address | null = null;
+        if (isAccountProvided) {
+            addr = toAddress(accountAddressInput);
+        } else {
+            addr = await resolveAccountAddress({
+                accountAddressInput,
+                accountsInput,
+                argumentsInput,
+                ixAccountNode,
+                ixNode,
+                resolvedAddresses,
+                resolversInput,
+                root,
+            });
+        }
+
+        resolvedAddresses.set(ixAccountNode.name, addr);
+    }
+
+    return resolvedAddresses;
+}
+
+/**
+ * Appends remaining accounts from argument values.
+ * @see InstructionRemainingAccountsNode
+ */
+function appendRemainingAccounts(
+    accountMetas: AccountMeta[],
+    ixNode: InstructionNode,
+    argumentsInput: ArgumentsInput,
+): void {
     for (const remainingNode of ixNode.remainingAccounts ?? []) {
         if (remainingNode.value.kind !== 'argumentValueNode') {
             throw new AccountError(`Unsupported remaining accounts value kind: "${remainingNode.value.kind}"`);
@@ -89,13 +151,11 @@ export async function createAccountMeta(
         const addresses = argumentsInput[remainingNode.value.name];
 
         if (addresses === undefined) {
-            // Required remaining accounts must be provided.
             if (!remainingNode.isOptional) {
                 throw new AccountError(
                     `Remaining account argument "${remainingNode.value.name}" is required but was not provided`,
                 );
             }
-            // Optional remaining accounts can be safely omitted.
             continue;
         }
 
@@ -115,8 +175,6 @@ export async function createAccountMeta(
             accountMetas.push({ address: toAddress(addr), role });
         }
     }
-
-    return accountMetas;
 }
 
 // TODO: 'either' is treated as signer — this works for Token Program multisig signers,

@@ -1,4 +1,4 @@
-import { accountValueNode, instructionAccountNode, instructionNode, publicKeyValueNode } from 'codama';
+import { accountValueNode, instructionAccountNode, instructionNode } from 'codama';
 import { describe, expect, test } from 'vitest';
 
 import { SvmTestContext } from '../../../svm-test-context';
@@ -40,29 +40,26 @@ describe('account-default-value: visitAccountValue', async () => {
             name: 'testInstruction',
             optionalAccountStrategy: 'omitted',
         });
+        // Pre-populate resolvedAddresses to simulate topological resolution having resolved
+        // the optional account to null (omitted strategy)
+        const resolvedAddresses = new Map<string, null>([['refAccount', null]]);
         const visitor = makeVisitor({
             accountsInput: { refAccount: null },
             ixNode: ixNodeWithOptional,
+            resolvedAddresses,
         });
         const result = await visitor.visitAccountValue(accountValueNode('refAccount'));
         expect(result).toBeNull();
     });
 
-    test('should resolve referenced account defaultValue', async () => {
+    test('should resolve referenced account from resolvedAddresses map', async () => {
         const expectedDefaultAddress = await SvmTestContext.generateAddress();
-        const ixNodeWithDefault = instructionNode({
-            accounts: [
-                instructionAccountNode({
-                    defaultValue: publicKeyValueNode(expectedDefaultAddress),
-                    isOptional: false,
-                    isSigner: false,
-                    isWritable: false,
-                    name: 'refAccount',
-                }),
-            ],
-            name: 'testInstruction',
+        // Pre-populate resolvedAddresses to simulate topological resolution
+        const resolvedAddresses = new Map([['refAccount', expectedDefaultAddress]]);
+        const visitor = makeVisitor({
+            ixNode: ixNodeWithAccount,
+            resolvedAddresses,
         });
-        const visitor = makeVisitor({ ixNode: ixNodeWithDefault });
         const result = await visitor.visitAccountValue(accountValueNode('refAccount'));
         expect(result).toBe(expectedDefaultAddress);
     });
@@ -71,16 +68,6 @@ describe('account-default-value: visitAccountValue', async () => {
         const visitor = makeVisitor();
         await expect(visitor.visitAccountValue(accountValueNode('unknown'))).rejects.toThrow(
             /Referenced account "unknown" not found in instruction "testInstruction"/,
-        );
-    });
-
-    test('should throw on circular dependency', async () => {
-        const visitor = makeVisitor({
-            ixNode: ixNodeWithAccount,
-            resolutionPath: ['refAccount'],
-        });
-        await expect(visitor.visitAccountValue(accountValueNode('refAccount'))).rejects.toThrow(
-            /Circular dependency detected/,
         );
     });
 });

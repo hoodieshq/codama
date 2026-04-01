@@ -1,9 +1,7 @@
+import type { Address } from '@solana/addresses';
 import type { InstructionNode, RootNode } from 'codama';
 
 import type { AccountsInput, ArgumentsInput, ResolversInput } from '../../shared/types';
-
-// Array of node names being resolved to detect circular dependencies.
-export type ResolutionPath = readonly string[];
 
 /**
  * Shared context threaded through the account/PDA resolution pipeline.
@@ -13,7 +11,7 @@ export type BaseResolutionContext = {
     accountsInput: AccountsInput | undefined;
     argumentsInput: ArgumentsInput | undefined;
     ixNode: InstructionNode;
-    resolutionPath: ResolutionPath;
+    resolvedAddresses: ReadonlyMap<string, Address | null>;
     resolversInput: ResolversInput | undefined;
     root: RootNode;
 };

@@ -35,7 +35,8 @@ type PdaSeedValueVisitorContext = BaseResolutionContext & {
 
 /**
  * Visitor for resolving PdaSeedValueNode value to raw bytes.
- * Supports recursive resolution of dependent PDAs (accounts that are themselves auto-derived PDAs).
+ * Supports resolution of dependent PDAs (accounts that are themselves auto-derived PDAs)
+ * via the resolvedAddresses map — no recursive resolution needed.
  * This is used for both:
  * - Variable seeds (e.g. seeds based on instruction accounts/arguments), and
  * - Constant seeds (e.g. bytes/string/programId/publicKey constants).
@@ -56,20 +57,22 @@ export function createPdaSeedValueVisitor(
     | 'someValueNode'
     | 'stringValueNode'
 > {
-    const { root, ixNode, programId, seedTypeNode, resolversInput, resolutionPath } = ctx;
+    const { root, ixNode, programId, seedTypeNode, resolversInput, resolvedAddresses } = ctx;
     const accountsInput = ctx.accountsInput ?? {};
     const argumentsInput = ctx.argumentsInput ?? {};
 
     return {
         visitAccountValue: async (node: AccountValueNode) => {
-            const resolvedAddress = await resolveAccountValueNodeAddress(node, {
-                accountsInput,
-                argumentsInput,
-                ixNode,
-                resolutionPath,
-                resolversInput,
-                root,
-            });
+            const resolvedAddress = await Promise.resolve(
+                resolveAccountValueNodeAddress(node, {
+                    accountsInput,
+                    argumentsInput,
+                    ixNode,
+                    resolvedAddresses,
+                    resolversInput,
+                    root,
+                }),
+            );
 
             if (resolvedAddress === null) {
                 throw new AccountError(

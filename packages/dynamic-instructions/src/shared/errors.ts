@@ -19,6 +19,15 @@ export class AccountError extends DynamicInstructionsError {
     }
 }
 
+export class DependencyNotResolvedError extends AccountError {
+    readonly dependencyName: string;
+    constructor(dependencyName: string, instructionName: string) {
+        super(`Account "${dependencyName}" has not been resolved yet in instruction "${instructionName}"`);
+        this.name = 'DependencyNotResolvedError';
+        this.dependencyName = dependencyName;
+    }
+}
+
 export class ArgumentError extends DynamicInstructionsError {
     constructor(message: string, options?: ErrorOptions) {
         super(message, options);
