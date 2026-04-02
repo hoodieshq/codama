@@ -1,9 +1,10 @@
 import { address } from '@solana/addresses';
-import type { InstructionAccountNode } from 'codama';
+import type { InstructionAccountNode, InstructionNode, RootNode } from 'codama';
 import { instructionAccountNode, instructionNode, programNode, rootNode } from 'codama';
 
+import type { AccountResolutionContext } from '../../../../src/instruction-encoding/resolvers/shared';
 import { createAccountDefaultValueVisitor } from '../../../../src/instruction-encoding/visitors/account-default-value';
-import { buildLinkables } from '../../test-utils';
+import { buildResolutionContext } from '../../test-utils';
 
 export const programAddress = address('11111111111111111111111111111111');
 export const rootNodeMock = rootNode(programNode({ name: 'test', publicKey: programAddress }));
@@ -17,18 +18,31 @@ export const ixAccountNodeStub: InstructionAccountNode = instructionAccountNode(
     name: 'testAccount',
 });
 
-export function makeVisitor(overrides?: Partial<Parameters<typeof createAccountDefaultValueVisitor>[0]>) {
-    const root = overrides?.root ?? rootNodeMock;
+type MakeVisitorOverrides = {
+    accountAddressInput?: AccountResolutionContext['accountAddressInput'];
+    accountsInput?: AccountResolutionContext['accountsInput'];
+    argumentsInput?: AccountResolutionContext['argumentsInput'];
+    ixAccountNode?: InstructionAccountNode;
+    ixNode?: InstructionNode;
+    resolvedAddresses?: AccountResolutionContext['resolvedAddresses'];
+    resolversInput?: AccountResolutionContext['resolversInput'];
+    root?: RootNode;
+};
+
+export function makeVisitor(overrides?: MakeVisitorOverrides) {
+    const ixNode = overrides?.ixNode ?? ixNodeStub;
+    // Build root that includes the custom ixNode so linkables registers its accounts.
+    const root =
+        overrides?.root ?? rootNode(programNode({ instructions: [ixNode], name: 'test', publicKey: programAddress }));
+    const ctx = buildResolutionContext(root, ixNode, {
+        accountsInput: overrides?.accountsInput,
+        argumentsInput: overrides?.argumentsInput,
+        resolvedAddresses: overrides?.resolvedAddresses,
+        resolversInput: overrides?.resolversInput,
+    });
     return createAccountDefaultValueVisitor({
-        accountAddressInput: undefined,
-        accountsInput: undefined,
-        argumentsInput: undefined,
-        ixAccountNode: ixAccountNodeStub,
-        ixNode: ixNodeStub,
-        linkables: buildLinkables(root),
-        resolvedAddresses: new Map(),
-        resolversInput: undefined,
-        root,
-        ...overrides,
+        ...ctx,
+        accountAddressInput: overrides?.accountAddressInput ?? undefined,
+        ixAccountNode: overrides?.ixAccountNode ?? ixAccountNodeStub,
     });
 }

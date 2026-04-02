@@ -3,16 +3,16 @@ import type { AccountValueNode, ArgumentValueNode, ResolverValueNode } from 'cod
 
 import { ResolverError } from '../../shared/errors';
 import { resolveAccountValueNodeAddress } from '../resolvers/resolve-account-value-node-address';
-import type { BaseResolutionContext } from '../resolvers/types';
+import type { ResolutionContext } from '../resolvers/shared';
 
 /**
  * Visitor for resolving condition nodes in ConditionalValueNode.
  * Returns the runtime value of the condition (from accounts or arguments).
  */
 export function createConditionNodeValueVisitor(
-    ctx: BaseResolutionContext,
+    ctx: ResolutionContext,
 ): Visitor<Promise<unknown>, 'accountValueNode' | 'argumentValueNode' | 'resolverValueNode'> {
-    const { root, ixNode, argumentsInput, accountsInput, linkables, resolvedAddresses, resolversInput } = ctx;
+    const { argumentsInput, accountsInput, resolversInput } = ctx;
 
     return {
         visitAccountValue: async (node: AccountValueNode) => {
@@ -23,17 +23,7 @@ export function createConditionNodeValueVisitor(
                 return null;
             }
 
-            return await Promise.resolve(
-                resolveAccountValueNodeAddress(node, {
-                    accountsInput,
-                    argumentsInput,
-                    ixNode,
-                    linkables,
-                    resolvedAddresses,
-                    resolversInput,
-                    root,
-                }),
-            );
+            return await Promise.resolve(resolveAccountValueNodeAddress(node, ctx));
         },
 
         visitArgumentValue: async (node: ArgumentValueNode) => {

@@ -2,10 +2,10 @@ import { address } from '@solana/addresses';
 import type { InstructionNode, RootNode } from 'codama';
 import { describe, expect, test } from 'vitest';
 
-import { resolveAccountsFallback } from '../../../src/instruction-encoding/accounts/resolve-accounts-fallback';
+import { resolveAccountsFallback } from '../../../src/instruction-encoding/resolvers/resolve-account-address';
 import { loadRoot } from '../../programs/test-utils';
 import { SvmTestContext } from '../../svm-test-context';
-import { buildLinkables } from '../test-utils';
+import { buildResolutionContext } from '../test-utils';
 
 function getInstruction(root: RootNode, name: string): InstructionNode {
     const ix = root.program.instructions.find(i => i.name === name);
@@ -24,11 +24,10 @@ describe('resolveAccountsFallback', () => {
             const authority = await SvmTestContext.generateAddress();
 
             const result = await resolveAccountsFallback(
-                root,
-                ix,
-                buildLinkables(root),
-                { amount: 100 },
-                { authority, destination, source },
+                buildResolutionContext(root, ix, {
+                    accountsInput: { authority, destination, source },
+                    argumentsInput: { amount: 100 },
+                }),
             );
 
             expect(result.get('source')).toBe(source);
@@ -43,11 +42,10 @@ describe('resolveAccountsFallback', () => {
             const mint = await SvmTestContext.generateAddress();
 
             const result = await resolveAccountsFallback(
-                root,
-                ix,
-                buildLinkables(root),
-                { decimals: 9, freezeAuthority: null, mintAuthority: mint },
-                { mint },
+                buildResolutionContext(root, ix, {
+                    accountsInput: { mint },
+                    argumentsInput: { decimals: 9, freezeAuthority: null, mintAuthority: mint },
+                }),
             );
 
             // rent sysvar has publicKeyValueNode default
@@ -63,11 +61,14 @@ describe('resolveAccountsFallback', () => {
             const newAccount = await SvmTestContext.generateAddress();
 
             const result = await resolveAccountsFallback(
-                root,
-                ix,
-                buildLinkables(root),
-                { lamports: 1000000, programAddress: address('11111111111111111111111111111111'), space: 0 },
-                { newAccount, payer },
+                buildResolutionContext(root, ix, {
+                    accountsInput: { newAccount, payer },
+                    argumentsInput: {
+                        lamports: 1000000,
+                        programAddress: address('11111111111111111111111111111111'),
+                        space: 0,
+                    },
+                }),
             );
 
             expect(result.get('payer')).toBe(payer);
@@ -83,11 +84,10 @@ describe('resolveAccountsFallback', () => {
             const authority = await SvmTestContext.generateAddress();
 
             const result = await resolveAccountsFallback(
-                root,
-                ix,
-                buildLinkables(root),
-                { permissions: new Uint8Array([1, 0, 1, 0]) },
-                { authority },
+                buildResolutionContext(root, ix, {
+                    accountsInput: { authority },
+                    argumentsInput: { permissions: new Uint8Array([1, 0, 1, 0]) },
+                }),
             );
 
             // authority resolves in pass 1 (user-provided)
@@ -109,11 +109,10 @@ describe('resolveAccountsFallback', () => {
             const authority = await SvmTestContext.generateAddress();
 
             const result = await resolveAccountsFallback(
-                root,
-                ix,
-                buildLinkables(root),
-                { permissions: new Uint8Array([1, 0, 1, 0]) },
-                { authority },
+                buildResolutionContext(root, ix, {
+                    accountsInput: { authority },
+                    argumentsInput: { permissions: new Uint8Array([1, 0, 1, 0]) },
+                }),
             );
 
             expect(result.size).toBe(ix.accounts.length);
@@ -132,7 +131,9 @@ describe('resolveAccountsFallback', () => {
 
             const testAddress = await SvmTestContext.generateAddress();
 
-            const result = await resolveAccountsFallback(root, ix, buildLinkables(root), {}, { accountA: testAddress });
+            const result = await resolveAccountsFallback(
+                buildResolutionContext(root, ix, { accountsInput: { accountA: testAddress } }),
+            );
 
             // accountA provided by user → resolves in pass 1
             expect(result.get('accountA')).toBe(testAddress);
@@ -146,7 +147,9 @@ describe('resolveAccountsFallback', () => {
 
             const testAddress = await SvmTestContext.generateAddress();
 
-            const result = await resolveAccountsFallback(root, ix, buildLinkables(root), {}, { accountA: testAddress });
+            const result = await resolveAccountsFallback(
+                buildResolutionContext(root, ix, { accountsInput: { accountA: testAddress } }),
+            );
 
             expect(result.get('accountA')).toBe(testAddress);
             expect(result.get('accountB')).toBe(testAddress);
@@ -157,7 +160,7 @@ describe('resolveAccountsFallback', () => {
             const root = loadRoot('circular-account-refs-idl.json');
             const ix = getInstruction(root, 'twoAccountCycle');
 
-            await expect(resolveAccountsFallback(root, ix, buildLinkables(root), {}, {})).rejects.toThrow(
+            await expect(resolveAccountsFallback(buildResolutionContext(root, ix))).rejects.toThrow(
                 /Cannot resolve accounts.*accountA.*accountB/,
             );
         });
@@ -166,7 +169,7 @@ describe('resolveAccountsFallback', () => {
             const root = loadRoot('circular-account-refs-idl.json');
             const ix = getInstruction(root, 'selfReference');
 
-            await expect(resolveAccountsFallback(root, ix, buildLinkables(root), {}, {})).rejects.toThrow(
+            await expect(resolveAccountsFallback(buildResolutionContext(root, ix))).rejects.toThrow(
                 /Cannot resolve accounts.*accountA/,
             );
         });
@@ -181,11 +184,9 @@ describe('resolveAccountsFallback', () => {
             const destination = await SvmTestContext.generateAddress();
 
             const result = await resolveAccountsFallback(
-                root,
-                ix,
-                buildLinkables(root),
-                {},
-                { authority, destination, treasury: null },
+                buildResolutionContext(root, ix, {
+                    accountsInput: { authority, destination, treasury: null },
+                }),
             );
 
             // treasury is optional — null input should resolve based on optionalAccountStrategy
@@ -204,15 +205,13 @@ describe('resolveAccountsFallback', () => {
             const resolvedTreasury = SvmTestContext.generateAddress();
 
             const result = await resolveAccountsFallback(
-                root,
-                ix,
-                buildLinkables(root),
-                {},
-                { authority },
-                {
-                    resolveDestination: () => Promise.resolve(resolvedDestination),
-                    resolveTreasury: () => Promise.resolve(resolvedTreasury),
-                },
+                buildResolutionContext(root, ix, {
+                    accountsInput: { authority },
+                    resolversInput: {
+                        resolveDestination: () => Promise.resolve(resolvedDestination),
+                        resolveTreasury: () => Promise.resolve(resolvedTreasury),
+                    },
+                }),
             );
 
             expect(result.get('destination')).toBe(resolvedDestination);
@@ -225,15 +224,13 @@ describe('resolveAccountsFallback', () => {
             const authority = await SvmTestContext.generateAddress();
 
             const result = await resolveAccountsFallback(
-                root,
-                ix,
-                buildLinkables(root),
-                {},
-                { authority },
-                {
-                    resolveIncludeRequired: () => Promise.resolve(true),
-                    resolveIncludeTarget: () => Promise.resolve(true),
-                },
+                buildResolutionContext(root, ix, {
+                    accountsInput: { authority },
+                    resolversInput: {
+                        resolveIncludeRequired: () => Promise.resolve(true),
+                        resolveIncludeTarget: () => Promise.resolve(true),
+                    },
+                }),
             );
 
             expect(result.get('authority')).toBe(authority);
@@ -250,11 +247,10 @@ describe('resolveAccountsFallback', () => {
             // source is required, no default — should throw immediately, not retry
             await expect(
                 resolveAccountsFallback(
-                    root,
-                    ix,
-                    buildLinkables(root),
-                    { amount: 100 },
-                    { destination: await SvmTestContext.generateAddress() },
+                    buildResolutionContext(root, ix, {
+                        accountsInput: { destination: await SvmTestContext.generateAddress() },
+                        argumentsInput: { amount: 100 },
+                    }),
                 ),
             ).rejects.toThrow(/Missing required account.*source/);
         });
@@ -268,11 +264,10 @@ describe('resolveAccountsFallback', () => {
             const mint = await SvmTestContext.generateAddress();
 
             const result = await resolveAccountsFallback(
-                root,
-                ix,
-                buildLinkables(root),
-                { decimals: 9, freezeAuthority: null, mintAuthority: mint },
-                { mint },
+                buildResolutionContext(root, ix, {
+                    accountsInput: { mint },
+                    argumentsInput: { decimals: 9, freezeAuthority: null, mintAuthority: mint },
+                }),
             );
 
             // mint: user-provided

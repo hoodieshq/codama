@@ -3,7 +3,7 @@ import type { AccountValueNode } from 'codama';
 
 import { toAddress } from '../../shared/address';
 import { AccountError, DependencyNotResolvedError } from '../../shared/errors';
-import type { BaseResolutionContext } from './types';
+import { getInstructionAccountFromCtx, getInstructionFromCtx, type ResolutionContext } from './shared';
 
 /**
  * Resolves an AccountValueNode reference to an Address.
@@ -13,8 +13,9 @@ import type { BaseResolutionContext } from './types';
  * Throws DependencyNotResolvedError if the dependency exists but hasn't been resolved yet
  * To allow for custom resolutiion retry.
  */
-export function resolveAccountValueNodeAddress(node: AccountValueNode, ctx: BaseResolutionContext): Address | null {
-    const { accountsInput, ixNode, resolvedAddresses } = ctx;
+export function resolveAccountValueNodeAddress(node: AccountValueNode, ctx: ResolutionContext): Address | null {
+    const { accountsInput, resolvedAddresses } = ctx;
+    const ixNode = getInstructionFromCtx(ctx);
 
     // Check if user provided the account address.
     const providedAddress = accountsInput?.[node.name];
@@ -28,8 +29,8 @@ export function resolveAccountValueNodeAddress(node: AccountValueNode, ctx: Base
         return resolved;
     }
 
-    // Check if the account exists in the instruction.
-    const referencedIxAccountNode = ixNode.accounts.find(acc => acc.name === node.name);
+    // Check if the account exists in the instruction via linkables.
+    const referencedIxAccountNode = getInstructionAccountFromCtx(ctx, node.name);
     if (!referencedIxAccountNode) {
         throw new AccountError(`Referenced account "${node.name}" not found in instruction "${ixNode.name}"`);
     }

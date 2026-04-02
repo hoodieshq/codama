@@ -13,9 +13,9 @@ import { isNode, pdaLinkNode, visitOrElse } from 'codama';
 
 import { AccountError } from '../../shared/errors';
 import { createPdaSeedValueVisitor } from '../visitors/pda-seed-value';
-import type { BaseResolutionContext } from './types';
+import { getProgramFromCtx, type ResolutionContext } from './shared';
 
-export type ResolvePDAAddressContext = BaseResolutionContext & {
+export type ResolvePDAAddressContext = ResolutionContext & {
     ixAccountNode: InstructionAccountNode;
     pdaValueNode: PdaValueNode;
 };
@@ -24,38 +24,21 @@ export type ResolvePDAAddressContext = BaseResolutionContext & {
  * Derives a PDA from a PdaValueNode.
  * Encodes each seed (ConstantPdaSeedNode and VariablePdaSeedNode) into bytes and computes the address.
  */
-export async function resolvePDAAddress({
-    root,
-    ixNode,
-    ixAccountNode,
-    argumentsInput = {},
-    accountsInput = {},
-    linkables,
-    pdaValueNode,
-    resolvedAddresses,
-    resolversInput,
-}: ResolvePDAAddressContext): Promise<ProgramDerivedAddress | null> {
+export async function resolvePDAAddress(ctx: ResolvePDAAddressContext): Promise<ProgramDerivedAddress | null> {
+    const { ixAccountNode, pdaValueNode } = ctx;
+    const program = getProgramFromCtx(ctx);
+
     if (!isNode(pdaValueNode, 'pdaValueNode')) {
         throw new AccountError(`Account node ${ixAccountNode.name} is not a PDA`);
     }
 
-    const pdaNode = resolvePdaNode(pdaValueNode, root, ixNode, linkables);
-    const programId = address(pdaNode.programId || root.program.publicKey);
+    const pdaNode = resolvePdaNode(pdaValueNode, ctx);
+    const programId = address(pdaNode.programId || program.publicKey);
 
     const seedValues = await Promise.all(
         pdaNode.seeds.map(async seedNode => {
             if (seedNode.kind === 'constantPdaSeedNode') {
-                return await resolveConstantPdaSeed({
-                    accountsInput,
-                    argumentsInput,
-                    ixNode,
-                    linkables,
-                    programId,
-                    resolvedAddresses,
-                    resolversInput,
-                    root,
-                    seedNode,
-                });
+                return await resolveConstantPdaSeed(ctx, programId, seedNode);
             }
 
             if (seedNode.kind === 'variablePdaSeedNode') {
@@ -69,18 +52,7 @@ export async function resolvePDAAddress({
                     );
                 }
 
-                return await resolveVariablePdaSeed({
-                    accountsInput,
-                    argumentsInput,
-                    ixNode,
-                    linkables,
-                    programId,
-                    resolvedAddresses,
-                    resolversInput,
-                    root,
-                    seedNode,
-                    variableSeedValueNode,
-                });
+                return await resolveVariablePdaSeed(ctx, programId, seedNode, variableSeedValueNode);
             }
 
             throw new AccountError(
@@ -95,14 +67,9 @@ export async function resolvePDAAddress({
     });
 }
 
-function resolvePdaNode(
-    pdaDefaultValue: PdaValueNode,
-    root: ResolvePDAAddressContext['root'],
-    ixNode: ResolvePDAAddressContext['ixNode'],
-    linkables: ResolvePDAAddressContext['linkables'],
-): PdaNode {
+function resolvePdaNode(pdaDefaultValue: PdaValueNode, ctx: ResolutionContext): PdaNode {
     if (isNode(pdaDefaultValue.pda, 'pdaLinkNode')) {
-        const linkedPda = linkables.get([root, root.program, ixNode, pdaLinkNode(pdaDefaultValue.pda.name)]);
+        const linkedPda = ctx.linkables.get([...ctx.stack.getPath(), pdaLinkNode(pdaDefaultValue.pda.name)]);
         if (!linkedPda) {
             throw new AccountError(`Linked PDA node not found: ${pdaDefaultValue.pda.name}`);
         }
@@ -116,23 +83,12 @@ function resolvePdaNode(
     throw new AccountError(`Unsupported PDA node kind: ${(pdaDefaultValue.pda as { kind: string }).kind}`);
 }
 
-type ResolvePdaSeedContext = BaseResolutionContext & {
-    programId: Address;
-    seedNode: VariablePdaSeedNode;
-    variableSeedValueNode: PdaSeedValueNode;
-};
-function resolveVariablePdaSeed({
-    accountsInput = {},
-    argumentsInput = {},
-    ixNode,
-    linkables,
-    programId,
-    resolvedAddresses,
-    resolversInput,
-    root,
-    seedNode,
-    variableSeedValueNode,
-}: ResolvePdaSeedContext): Promise<ReadonlyUint8Array> {
+function resolveVariablePdaSeed(
+    ctx: ResolutionContext,
+    programId: Address,
+    seedNode: VariablePdaSeedNode,
+    variableSeedValueNode: PdaSeedValueNode,
+): Promise<ReadonlyUint8Array> {
     if (!isNode(variableSeedValueNode, 'pdaSeedValueNode')) {
         throw new AccountError(`Not a PDA seed value node: ${(variableSeedValueNode as { kind?: string }).kind}`);
     }
@@ -142,14 +98,8 @@ function resolveVariablePdaSeed({
     }
 
     const visitor = createPdaSeedValueVisitor({
-        accountsInput,
-        argumentsInput,
-        ixNode,
-        linkables,
+        ...ctx,
         programId,
-        resolvedAddresses,
-        resolversInput,
-        root,
         seedTypeNode: seedNode.type,
     });
 
@@ -158,34 +108,18 @@ function resolveVariablePdaSeed({
     });
 }
 
-type ResolveConstantPdaSeedContext = BaseResolutionContext & {
-    programId: Address;
-    seedNode: RegisteredPdaSeedNode;
-};
-function resolveConstantPdaSeed({
-    accountsInput,
-    argumentsInput,
-    ixNode,
-    linkables,
-    programId,
-    resolvedAddresses,
-    resolversInput,
-    root,
-    seedNode,
-}: ResolveConstantPdaSeedContext): Promise<ReadonlyUint8Array> {
+function resolveConstantPdaSeed(
+    ctx: ResolutionContext,
+    programId: Address,
+    seedNode: RegisteredPdaSeedNode,
+): Promise<ReadonlyUint8Array> {
     if (!isNode(seedNode, 'constantPdaSeedNode')) {
         throw new AccountError(`Not a constant PDA seed node: ${seedNode.kind}`);
     }
 
     const visitor = createPdaSeedValueVisitor({
-        accountsInput,
-        argumentsInput,
-        ixNode,
-        linkables,
+        ...ctx,
         programId,
-        resolvedAddresses,
-        resolversInput,
-        root,
     });
     return visitOrElse(seedNode.value, visitor, node => {
         throw new AccountError(`Unsupported constant PDA seed value node: ${node.kind}`);

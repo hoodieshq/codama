@@ -7,7 +7,6 @@ import type {
     ArgumentValueNode,
     ConditionalValueNode,
     IdentityValueNode,
-    InstructionAccountNode,
     PayerValueNode,
     PdaValueNode,
     ProgramIdValueNode,
@@ -16,25 +15,19 @@ import type {
 } from 'codama';
 import { visitOrElse } from 'codama';
 
-import type { AddressInput } from '../../shared/address';
 import { isConvertibleAddress, toAddress } from '../../shared/address';
 import { AccountError, ResolverError } from '../../shared/errors';
 import { formatValueType, safeStringify } from '../../shared/util';
 import { resolveAccountValueNodeAddress } from '../resolvers/resolve-account-value-node-address';
 import { resolveConditionalValueNodeCondition } from '../resolvers/resolve-conditional';
 import { resolvePDAAddress } from '../resolvers/resolve-pda-address';
-import type { BaseResolutionContext } from '../resolvers/types';
-
-type AccountDefaultValueVisitorContext = BaseResolutionContext & {
-    accountAddressInput: AddressInput | null | undefined;
-    ixAccountNode: InstructionAccountNode;
-};
+import { type AccountResolutionContext, getInstructionFromCtx, getProgramFromCtx } from '../resolvers/shared';
 
 /**
  * Visitor for resolving InstructionInputValueNode types to Address values for account resolution.
  */
 export function createAccountDefaultValueVisitor(
-    ctx: AccountDefaultValueVisitorContext,
+    ctx: AccountResolutionContext,
 ): Visitor<
     Promise<Address | null>,
     | 'accountBumpValueNode'
@@ -48,17 +41,8 @@ export function createAccountDefaultValueVisitor(
     | 'publicKeyValueNode'
     | 'resolverValueNode'
 > {
-    const {
-        root,
-        ixNode,
-        ixAccountNode,
-        accountAddressInput,
-        argumentsInput,
-        accountsInput,
-        linkables,
-        resolversInput,
-        resolvedAddresses,
-    } = ctx;
+    const { ixAccountNode, accountAddressInput, argumentsInput, accountsInput, resolversInput } = ctx;
+    const program = getProgramFromCtx(ctx);
 
     return {
         visitAccountBumpValue: async (_node: AccountBumpValueNode) => {
@@ -71,17 +55,7 @@ export function createAccountDefaultValueVisitor(
         },
 
         visitAccountValue: async (node: AccountValueNode) => {
-            return await Promise.resolve(
-                resolveAccountValueNodeAddress(node, {
-                    accountsInput,
-                    argumentsInput,
-                    ixNode,
-                    linkables,
-                    resolvedAddresses,
-                    resolversInput,
-                    root,
-                }),
-            );
+            return await Promise.resolve(resolveAccountValueNodeAddress(node, ctx));
         },
 
         visitArgumentValue: async (node: ArgumentValueNode) => {
@@ -109,17 +83,11 @@ export function createAccountDefaultValueVisitor(
         },
 
         visitConditionalValue: async (conditionalValueNode: ConditionalValueNode) => {
+            const ixNode = getInstructionFromCtx(ctx);
             // ifTrue or ifFalse branch of ConditionalValueNode.
             const resolvedInputValueNode = await resolveConditionalValueNodeCondition({
-                accountsInput,
-                argumentsInput,
+                ...ctx,
                 conditionalValueNode,
-                ixAccountNode,
-                ixNode,
-                linkables,
-                resolvedAddresses,
-                resolversInput,
-                root,
             });
 
             if (resolvedInputValueNode === undefined) {
@@ -129,7 +97,7 @@ export function createAccountDefaultValueVisitor(
                     return null;
                 }
                 throw new AccountError(
-                    `Conditional branch resolved to undefined in account "${ixAccountNode.name}" of "${ixNode.name}" instruction`,
+                    `Conditional branch resolved to undefined in account "${ixAccountNode.name}" of "${ixNode && 'name' in ixNode ? ixNode.name : 'unknown'}" instruction`,
                 );
             }
             // Recursively resolve the chosen branch.
@@ -162,15 +130,8 @@ export function createAccountDefaultValueVisitor(
 
         visitPdaValue: async (node: PdaValueNode) => {
             const pda = await resolvePDAAddress({
-                accountsInput,
-                argumentsInput,
-                ixAccountNode,
-                ixNode,
-                linkables,
+                ...ctx,
                 pdaValueNode: node,
-                resolvedAddresses,
-                resolversInput,
-                root,
             });
             if (pda === null) {
                 throw new AccountError(`Cannot derive PDA for account ${ixAccountNode.name}`);
@@ -179,7 +140,7 @@ export function createAccountDefaultValueVisitor(
         },
 
         visitProgramIdValue: async (_node: ProgramIdValueNode) => {
-            return await Promise.resolve(address(root.program.publicKey));
+            return await Promise.resolve(address(program.publicKey));
         },
 
         visitPublicKeyValue: async (node: PublicKeyValueNode) => {

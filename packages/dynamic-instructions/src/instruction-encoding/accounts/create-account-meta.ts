@@ -1,24 +1,16 @@
 import type { Address } from '@solana/addresses';
 import type { AccountMeta } from '@solana/instructions';
 import { AccountRole } from '@solana/instructions';
-import type { InstructionAccountNode, InstructionNode, ResolvedInstructionAccount, RootNode } from 'codama';
-import {
-    CodamaError,
-    getRecordLinkablesVisitor,
-    getResolvedInstructionInputsVisitor,
-    isNode,
-    LinkableDictionary,
-    visit,
-} from 'codama';
+import type { InstructionAccountNode, InstructionNode, RootNode } from 'codama';
+import { CodamaError, getRecordLinkablesVisitor, LinkableDictionary, NodeStack, visit } from 'codama';
 
 import { isConvertibleAddress, toAddress } from '../../shared/address';
 import { AccountError } from '../../shared/errors';
 import type { AccountsInput, ArgumentsInput, EitherSigners, ResolversInput } from '../../shared/types';
 import { formatValueType } from '../../shared/util';
-import { resolveAccountAddress } from '../resolvers/resolve-account-address';
-import { resolveAccountsFallback } from './resolve-accounts-fallback';
+import { resolveAccountsByOrder, resolveAccountsFallback } from '../resolvers';
+import { type ResolutionContext } from '../resolvers/shared';
 
-// type ResolvedAccountWithAddress = { address: Address; role: AccountRole };
 type ResolvedAccount = {
     address: Address | null;
     optional: boolean;
@@ -43,32 +35,30 @@ export async function createAccountMeta(
     signers: EitherSigners = [],
     resolversInput: ResolversInput = {},
 ) {
-    // Build LinkableDictionary once — O(1) lookup for PDAs and other linked nodes.
+    // Build static environment once per instruction resolution.
+    // Stack path [Root, Program, Instruction] is established here and never mutated.
+    // Resolution loop is sequential — no concurrent visitors modifying the stack.
+    // Every async resolver extracts needed nodes from stack before its first await.
     const linkables = buildLinkables(root);
+    const stack = new NodeStack([root, root.program, ixNode]);
 
-    let resolvedAddresses: Map<string, Address | null>;
     const programAddress = toAddress(root.program.publicKey);
+    const ctx: ResolutionContext = {
+        accountsInput,
+        argumentsInput,
+        linkables,
+        resolvedAddresses: new Map<string, Address | null>(),
+        resolversInput,
+        stack,
+    };
 
     try {
-        resolvedAddresses = await resolveAccountsTopological(
-            root,
-            ixNode,
-            linkables,
-            argumentsInput,
-            accountsInput,
-            resolversInput,
-        );
+        ctx.resolvedAddresses = await resolveAccountsByOrder(ctx);
     } catch (error) {
         if (error instanceof CodamaError) {
             // Topological sort failed (circular deps, invalid deps, etc.) - fallback.
-            resolvedAddresses = await resolveAccountsFallback(
-                root,
-                ixNode,
-                linkables,
-                argumentsInput,
-                accountsInput,
-                resolversInput,
-            );
+            ctx.resolvedAddresses.clear();
+            ctx.resolvedAddresses = await resolveAccountsFallback(ctx);
         } else {
             throw error;
         }
@@ -79,7 +69,7 @@ export async function createAccountMeta(
         .map(ixAccountNode => {
             // Optional accounts with "programId" strategy: e.g. PMP's setData instruction `buffer` account. (isWritable, isOptional and "programId" strategy).
             // When buffer is null it resolves to the program address which cannot be writable, hence must be downgraded to readonly.
-            const resolvedAccountAddress = resolvedAddresses.get(ixAccountNode.name);
+            const resolvedAccountAddress = ctx.resolvedAddresses.get(ixAccountNode.name) ?? null;
             const role =
                 resolvedAccountAddress === programAddress
                     ? getReadonlyAccountRole(ixAccountNode, signers)
@@ -98,55 +88,6 @@ export async function createAccountMeta(
     appendRemainingAccounts(accountMetas, ixNode, argumentsInput);
 
     return accountMetas;
-}
-
-/**
- * Primary path: resolve accounts sequentially in topological order.
- */
-async function resolveAccountsTopological(
-    root: RootNode,
-    ixNode: InstructionNode,
-    linkables: LinkableDictionary,
-    argumentsInput: ArgumentsInput,
-    accountsInput: AccountsInput,
-    resolversInput: ResolversInput,
-): Promise<Map<string, Address | null>> {
-    const sortedInputs = visit(ixNode, getResolvedInstructionInputsVisitor());
-    const sortedAccountInputs = sortedInputs.filter((input): input is ResolvedInstructionAccount =>
-        isNode(input, 'instructionAccountNode'),
-    );
-
-    const resolvedAddresses = new Map<string, Address | null>();
-
-    for (const ixAccountNode of sortedAccountInputs) {
-        const accountAddressInput = accountsInput?.[ixAccountNode.name];
-        const isAccountProvided = accountAddressInput !== undefined && accountAddressInput !== null;
-        // Accounts with default values can be omitted, as they can be resolved from default value.
-        if (!isAccountProvided && !ixAccountNode.isOptional && !ixAccountNode.defaultValue) {
-            throw new AccountError(`Missing required account: ${ixAccountNode.name}`);
-        }
-
-        let addr: Address | null = null;
-        if (isAccountProvided) {
-            addr = toAddress(accountAddressInput);
-        } else {
-            addr = await resolveAccountAddress({
-                accountAddressInput,
-                accountsInput,
-                argumentsInput,
-                ixAccountNode,
-                ixNode,
-                linkables,
-                resolvedAddresses,
-                resolversInput,
-                root,
-            });
-        }
-
-        resolvedAddresses.set(ixAccountNode.name, addr);
-    }
-
-    return resolvedAddresses;
 }
 
 /**

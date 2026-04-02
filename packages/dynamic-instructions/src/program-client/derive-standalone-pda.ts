@@ -3,9 +3,10 @@ import type { Address, ProgramDerivedAddress } from '@solana/addresses';
 import { getProgramDerivedAddress } from '@solana/addresses';
 import type { ReadonlyUint8Array } from '@solana/codecs';
 import type { InstructionNode, PdaNode, RegisteredPdaSeedNode, RootNode, VariablePdaSeedNode } from 'codama';
-import { getRecordLinkablesVisitor, isNode, LinkableDictionary, visit, visitOrElse } from 'codama';
+import { getRecordLinkablesVisitor, isNode, LinkableDictionary, NodeStack, visit, visitOrElse } from 'codama';
 
 import { createInputValueTransformer, createPdaSeedValueVisitor } from '../instruction-encoding';
+import type { ResolutionContext } from '../instruction-encoding/resolvers/shared';
 import { toAddress } from '../shared/address';
 import { getMemoizedUtf8Encoder } from '../shared/codecs';
 import { AccountError } from '../shared/errors';
@@ -31,16 +32,16 @@ export async function deriveStandalonePDA(
     pdaNode: PdaNode,
     seedInputs: Record<string, unknown> = {},
 ): Promise<ProgramDerivedAddress> {
-    // Build own LinkableDictionary — standalone PDA derivation operates at program scope,
-    // not instruction scope, so it does not use NodeStack or ResolutionContext.
+    // Build LinkableDictionary and minimal stack.
     const linkables = new LinkableDictionary();
     visit(root, getRecordLinkablesVisitor(linkables));
+    const stack = new NodeStack([root, root.program, STANDALONE_IX_NODE]);
 
     const programAddress = toAddress(pdaNode.programId || root.program.publicKey);
     const seedValues = await Promise.all(
         pdaNode.seeds.map(async (seedNode): Promise<ReadonlyUint8Array> => {
             if (seedNode.kind === 'constantPdaSeedNode') {
-                return await resolveStandaloneConstantSeed(root, linkables, programAddress, seedNode);
+                return await resolveStandaloneConstantSeed({ linkables, stack }, programAddress, seedNode);
             }
             if (seedNode.kind === 'variablePdaSeedNode') {
                 return await resolveStandaloneVariableSeed(root, seedNode, seedInputs);
@@ -55,8 +56,7 @@ export async function deriveStandalonePDA(
 }
 
 function resolveStandaloneConstantSeed(
-    root: RootNode,
-    linkables: LinkableDictionary,
+    env: Pick<ResolutionContext, 'linkables' | 'stack'>,
     programAddress: Address,
     seedNode: RegisteredPdaSeedNode,
 ): Promise<ReadonlyUint8Array> {
@@ -66,12 +66,11 @@ function resolveStandaloneConstantSeed(
     const visitor = createPdaSeedValueVisitor({
         accountsInput: undefined,
         argumentsInput: undefined,
-        ixNode: STANDALONE_IX_NODE,
-        linkables,
+        linkables: env.linkables,
         programId: programAddress,
         resolvedAddresses: new Map(),
         resolversInput: undefined,
-        root,
+        stack: env.stack,
     });
     return visitOrElse(seedNode.value, visitor, node => {
         throw new AccountError(`Unsupported constant PDA seed value node: ${node.kind}`);
