@@ -22,6 +22,7 @@ export async function resolveConditionalValueNodeCondition({
     conditionalValueNode,
     argumentsInput,
     accountsInput,
+    linkables,
     resolvedAddresses,
     resolversInput,
 }: ResolveConditionalContext): Promise<InstructionInputValueNode | undefined> {
@@ -39,6 +40,7 @@ export async function resolveConditionalValueNodeCondition({
         accountsInput,
         argumentsInput,
         ixNode,
+        linkables,
         resolvedAddresses,
         resolversInput,
         root,

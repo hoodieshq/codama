@@ -2,6 +2,7 @@ import { address } from '@solana/addresses';
 import { instructionNode, programNode, rootNode } from 'codama';
 
 import { createPdaSeedValueVisitor } from '../../../../src/instruction-encoding/visitors/pda-seed-value';
+import { buildLinkables } from '../../test-utils';
 
 const PROGRAM_PUBLIC_KEY = '11111111111111111111111111111111';
 
@@ -14,6 +15,7 @@ export function makeVisitor(overrides?: Partial<Parameters<typeof createPdaSeedV
         accountsInput: undefined,
         argumentsInput: undefined,
         ixNode: ixNodeStub,
+        linkables: buildLinkables(rootNodeMock),
         programId: address(PROGRAM_PUBLIC_KEY),
         resolvedAddresses: new Map(),
         resolversInput: undefined,

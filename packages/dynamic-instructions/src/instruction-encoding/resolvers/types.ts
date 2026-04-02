@@ -1,5 +1,5 @@
 import type { Address } from '@solana/addresses';
-import type { InstructionNode, RootNode } from 'codama';
+import type { InstructionNode, LinkableDictionary, RootNode } from 'codama';
 
 import type { AccountsInput, ArgumentsInput, ResolversInput } from '../../shared/types';
 
@@ -11,6 +11,7 @@ export type BaseResolutionContext = {
     accountsInput: AccountsInput | undefined;
     argumentsInput: ArgumentsInput | undefined;
     ixNode: InstructionNode;
+    linkables: LinkableDictionary;
     resolvedAddresses: ReadonlyMap<string, Address | null>;
     resolversInput: ResolversInput | undefined;
     root: RootNode;

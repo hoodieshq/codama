@@ -5,6 +5,7 @@ import { describe, expect, test } from 'vitest';
 import { resolveAccountsFallback } from '../../../src/instruction-encoding/accounts/resolve-accounts-fallback';
 import { loadRoot } from '../../programs/test-utils';
 import { SvmTestContext } from '../../svm-test-context';
+import { buildLinkables } from '../test-utils';
 
 function getInstruction(root: RootNode, name: string): InstructionNode {
     const ix = root.program.instructions.find(i => i.name === name);
@@ -22,7 +23,13 @@ describe('resolveAccountsFallback', () => {
             const destination = await SvmTestContext.generateAddress();
             const authority = await SvmTestContext.generateAddress();
 
-            const result = await resolveAccountsFallback(root, ix, { amount: 100 }, { authority, destination, source });
+            const result = await resolveAccountsFallback(
+                root,
+                ix,
+                buildLinkables(root),
+                { amount: 100 },
+                { authority, destination, source },
+            );
 
             expect(result.get('source')).toBe(source);
             expect(result.get('destination')).toBe(destination);
@@ -38,6 +45,7 @@ describe('resolveAccountsFallback', () => {
             const result = await resolveAccountsFallback(
                 root,
                 ix,
+                buildLinkables(root),
                 { decimals: 9, freezeAuthority: null, mintAuthority: mint },
                 { mint },
             );
@@ -57,6 +65,7 @@ describe('resolveAccountsFallback', () => {
             const result = await resolveAccountsFallback(
                 root,
                 ix,
+                buildLinkables(root),
                 { lamports: 1000000, programAddress: address('11111111111111111111111111111111'), space: 0 },
                 { newAccount, payer },
             );
@@ -76,6 +85,7 @@ describe('resolveAccountsFallback', () => {
             const result = await resolveAccountsFallback(
                 root,
                 ix,
+                buildLinkables(root),
                 { permissions: new Uint8Array([1, 0, 1, 0]) },
                 { authority },
             );
@@ -101,6 +111,7 @@ describe('resolveAccountsFallback', () => {
             const result = await resolveAccountsFallback(
                 root,
                 ix,
+                buildLinkables(root),
                 { permissions: new Uint8Array([1, 0, 1, 0]) },
                 { authority },
             );
@@ -121,7 +132,7 @@ describe('resolveAccountsFallback', () => {
 
             const testAddress = await SvmTestContext.generateAddress();
 
-            const result = await resolveAccountsFallback(root, ix, {}, { accountA: testAddress });
+            const result = await resolveAccountsFallback(root, ix, buildLinkables(root), {}, { accountA: testAddress });
 
             // accountA provided by user → resolves in pass 1
             expect(result.get('accountA')).toBe(testAddress);
@@ -135,7 +146,7 @@ describe('resolveAccountsFallback', () => {
 
             const testAddress = await SvmTestContext.generateAddress();
 
-            const result = await resolveAccountsFallback(root, ix, {}, { accountA: testAddress });
+            const result = await resolveAccountsFallback(root, ix, buildLinkables(root), {}, { accountA: testAddress });
 
             expect(result.get('accountA')).toBe(testAddress);
             expect(result.get('accountB')).toBe(testAddress);
@@ -146,7 +157,7 @@ describe('resolveAccountsFallback', () => {
             const root = loadRoot('circular-account-refs-idl.json');
             const ix = getInstruction(root, 'twoAccountCycle');
 
-            await expect(resolveAccountsFallback(root, ix, {}, {})).rejects.toThrow(
+            await expect(resolveAccountsFallback(root, ix, buildLinkables(root), {}, {})).rejects.toThrow(
                 /Cannot resolve accounts.*accountA.*accountB/,
             );
         });
@@ -155,7 +166,7 @@ describe('resolveAccountsFallback', () => {
             const root = loadRoot('circular-account-refs-idl.json');
             const ix = getInstruction(root, 'selfReference');
 
-            await expect(resolveAccountsFallback(root, ix, {}, {})).rejects.toThrow(
+            await expect(resolveAccountsFallback(root, ix, buildLinkables(root), {}, {})).rejects.toThrow(
                 /Cannot resolve accounts.*accountA/,
             );
         });
@@ -169,7 +180,13 @@ describe('resolveAccountsFallback', () => {
             const authority = await SvmTestContext.generateAddress();
             const destination = await SvmTestContext.generateAddress();
 
-            const result = await resolveAccountsFallback(root, ix, {}, { authority, destination, treasury: null });
+            const result = await resolveAccountsFallback(
+                root,
+                ix,
+                buildLinkables(root),
+                {},
+                { authority, destination, treasury: null },
+            );
 
             // treasury is optional — null input should resolve based on optionalAccountStrategy
             expect(result.has('treasury')).toBe(true);
@@ -189,6 +206,7 @@ describe('resolveAccountsFallback', () => {
             const result = await resolveAccountsFallback(
                 root,
                 ix,
+                buildLinkables(root),
                 {},
                 { authority },
                 {
@@ -209,6 +227,7 @@ describe('resolveAccountsFallback', () => {
             const result = await resolveAccountsFallback(
                 root,
                 ix,
+                buildLinkables(root),
                 {},
                 { authority },
                 {
@@ -233,6 +252,7 @@ describe('resolveAccountsFallback', () => {
                 resolveAccountsFallback(
                     root,
                     ix,
+                    buildLinkables(root),
                     { amount: 100 },
                     { destination: await SvmTestContext.generateAddress() },
                 ),
@@ -250,6 +270,7 @@ describe('resolveAccountsFallback', () => {
             const result = await resolveAccountsFallback(
                 root,
                 ix,
+                buildLinkables(root),
                 { decimals: 9, freezeAuthority: null, mintAuthority: mint },
                 { mint },
             );

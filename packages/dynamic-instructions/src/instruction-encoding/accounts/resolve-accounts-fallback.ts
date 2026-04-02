@@ -1,5 +1,5 @@
 import type { Address } from '@solana/addresses';
-import type { InstructionAccountNode, InstructionNode, RootNode } from 'codama';
+import type { InstructionAccountNode, InstructionNode, LinkableDictionary, RootNode } from 'codama';
 
 import { isConvertibleAddress, toAddress } from '../../shared/address';
 import { AccountError, DependencyNotResolvedError } from '../../shared/errors';
@@ -26,6 +26,7 @@ type PendingAccount = {
 export async function resolveAccountsFallback(
     root: RootNode,
     ixNode: InstructionNode,
+    linkables: LinkableDictionary,
     argumentsInput: ArgumentsInput = {},
     accountsInput: AccountsInput = {},
     resolversInput: ResolversInput = {},
@@ -64,6 +65,7 @@ export async function resolveAccountsFallback(
                     argumentsInput,
                     ixAccountNode,
                     ixNode,
+                    linkables,
                     resolvedAddresses,
                     resolversInput,
                     root,

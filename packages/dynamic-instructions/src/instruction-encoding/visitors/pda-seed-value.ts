@@ -57,7 +57,7 @@ export function createPdaSeedValueVisitor(
     | 'someValueNode'
     | 'stringValueNode'
 > {
-    const { root, ixNode, programId, seedTypeNode, resolversInput, resolvedAddresses } = ctx;
+    const { root, ixNode, linkables, programId, seedTypeNode, resolversInput, resolvedAddresses } = ctx;
     const accountsInput = ctx.accountsInput ?? {};
     const argumentsInput = ctx.argumentsInput ?? {};
 
@@ -68,6 +68,7 @@ export function createPdaSeedValueVisitor(
                     accountsInput,
                     argumentsInput,
                     ixNode,
+                    linkables,
                     resolvedAddresses,
                     resolversInput,
                     root,

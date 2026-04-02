@@ -3,7 +3,7 @@ import type { Address, ProgramDerivedAddress } from '@solana/addresses';
 import { getProgramDerivedAddress } from '@solana/addresses';
 import type { ReadonlyUint8Array } from '@solana/codecs';
 import type { InstructionNode, PdaNode, RegisteredPdaSeedNode, RootNode, VariablePdaSeedNode } from 'codama';
-import { isNode, visitOrElse } from 'codama';
+import { getRecordLinkablesVisitor, isNode, LinkableDictionary, visit, visitOrElse } from 'codama';
 
 import { createInputValueTransformer, createPdaSeedValueVisitor } from '../instruction-encoding';
 import { toAddress } from '../shared/address';
@@ -31,11 +31,16 @@ export async function deriveStandalonePDA(
     pdaNode: PdaNode,
     seedInputs: Record<string, unknown> = {},
 ): Promise<ProgramDerivedAddress> {
+    // Build own LinkableDictionary — standalone PDA derivation operates at program scope,
+    // not instruction scope, so it does not use NodeStack or ResolutionContext.
+    const linkables = new LinkableDictionary();
+    visit(root, getRecordLinkablesVisitor(linkables));
+
     const programAddress = toAddress(pdaNode.programId || root.program.publicKey);
     const seedValues = await Promise.all(
         pdaNode.seeds.map(async (seedNode): Promise<ReadonlyUint8Array> => {
             if (seedNode.kind === 'constantPdaSeedNode') {
-                return await resolveStandaloneConstantSeed(root, programAddress, seedNode);
+                return await resolveStandaloneConstantSeed(root, linkables, programAddress, seedNode);
             }
             if (seedNode.kind === 'variablePdaSeedNode') {
                 return await resolveStandaloneVariableSeed(root, seedNode, seedInputs);
@@ -51,6 +56,7 @@ export async function deriveStandalonePDA(
 
 function resolveStandaloneConstantSeed(
     root: RootNode,
+    linkables: LinkableDictionary,
     programAddress: Address,
     seedNode: RegisteredPdaSeedNode,
 ): Promise<ReadonlyUint8Array> {
@@ -61,6 +67,7 @@ function resolveStandaloneConstantSeed(
         accountsInput: undefined,
         argumentsInput: undefined,
         ixNode: STANDALONE_IX_NODE,
+        linkables,
         programId: programAddress,
         resolvedAddresses: new Map(),
         resolversInput: undefined,

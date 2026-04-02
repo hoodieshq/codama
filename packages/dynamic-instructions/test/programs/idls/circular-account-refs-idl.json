@@ -115,7 +115,8 @@
             }
         ],
         "definedTypes": [],
-        "pdas": []
+        "pdas": [],
+        "errors": []
     },
     "additionalPrograms": []
 }

@@ -2,7 +2,14 @@ import type { Address } from '@solana/addresses';
 import type { AccountMeta } from '@solana/instructions';
 import { AccountRole } from '@solana/instructions';
 import type { InstructionAccountNode, InstructionNode, ResolvedInstructionAccount, RootNode } from 'codama';
-import { CodamaError, getResolvedInstructionInputsVisitor, isNode, visit } from 'codama';
+import {
+    CodamaError,
+    getRecordLinkablesVisitor,
+    getResolvedInstructionInputsVisitor,
+    isNode,
+    LinkableDictionary,
+    visit,
+} from 'codama';
 
 import { isConvertibleAddress, toAddress } from '../../shared/address';
 import { AccountError } from '../../shared/errors';
@@ -36,6 +43,9 @@ export async function createAccountMeta(
     signers: EitherSigners = [],
     resolversInput: ResolversInput = {},
 ) {
+    // Build LinkableDictionary once — O(1) lookup for PDAs and other linked nodes.
+    const linkables = buildLinkables(root);
+
     let resolvedAddresses: Map<string, Address | null>;
     const programAddress = toAddress(root.program.publicKey);
 
@@ -43,6 +53,7 @@ export async function createAccountMeta(
         resolvedAddresses = await resolveAccountsTopological(
             root,
             ixNode,
+            linkables,
             argumentsInput,
             accountsInput,
             resolversInput,
@@ -53,6 +64,7 @@ export async function createAccountMeta(
             resolvedAddresses = await resolveAccountsFallback(
                 root,
                 ixNode,
+                linkables,
                 argumentsInput,
                 accountsInput,
                 resolversInput,
@@ -94,6 +106,7 @@ export async function createAccountMeta(
 async function resolveAccountsTopological(
     root: RootNode,
     ixNode: InstructionNode,
+    linkables: LinkableDictionary,
     argumentsInput: ArgumentsInput,
     accountsInput: AccountsInput,
     resolversInput: ResolversInput,
@@ -123,6 +136,7 @@ async function resolveAccountsTopological(
                 argumentsInput,
                 ixAccountNode,
                 ixNode,
+                linkables,
                 resolvedAddresses,
                 resolversInput,
                 root,
@@ -212,4 +226,10 @@ function isSignerAccount(acc: InstructionAccountNode, signers: string[]) {
         return signers.includes(acc.name);
     }
     return acc.isSigner === true;
+}
+
+function buildLinkables(root: RootNode): LinkableDictionary {
+    const linkables = new LinkableDictionary();
+    visit(root, getRecordLinkablesVisitor(linkables));
+    return linkables;
 }

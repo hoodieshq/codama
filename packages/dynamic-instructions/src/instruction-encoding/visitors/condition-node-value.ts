@@ -12,7 +12,7 @@ import type { BaseResolutionContext } from '../resolvers/types';
 export function createConditionNodeValueVisitor(
     ctx: BaseResolutionContext,
 ): Visitor<Promise<unknown>, 'accountValueNode' | 'argumentValueNode' | 'resolverValueNode'> {
-    const { root, ixNode, argumentsInput, accountsInput, resolvedAddresses, resolversInput } = ctx;
+    const { root, ixNode, argumentsInput, accountsInput, linkables, resolvedAddresses, resolversInput } = ctx;
 
     return {
         visitAccountValue: async (node: AccountValueNode) => {
@@ -28,6 +28,7 @@ export function createConditionNodeValueVisitor(
                     accountsInput,
                     argumentsInput,
                     ixNode,
+                    linkables,
                     resolvedAddresses,
                     resolversInput,
                     root,

@@ -9,7 +9,7 @@ import type {
     RegisteredPdaSeedNode,
     VariablePdaSeedNode,
 } from 'codama';
-import { isNode, visitOrElse } from 'codama';
+import { isNode, pdaLinkNode, visitOrElse } from 'codama';
 
 import { AccountError } from '../../shared/errors';
 import { createPdaSeedValueVisitor } from '../visitors/pda-seed-value';
@@ -30,6 +30,7 @@ export async function resolvePDAAddress({
     ixAccountNode,
     argumentsInput = {},
     accountsInput = {},
+    linkables,
     pdaValueNode,
     resolvedAddresses,
     resolversInput,
@@ -38,7 +39,7 @@ export async function resolvePDAAddress({
         throw new AccountError(`Account node ${ixAccountNode.name} is not a PDA`);
     }
 
-    const pdaNode = resolvePdaNode(pdaValueNode, root.program.pdas);
+    const pdaNode = resolvePdaNode(pdaValueNode, root, ixNode, linkables);
     const programId = address(pdaNode.programId || root.program.publicKey);
 
     const seedValues = await Promise.all(
@@ -48,6 +49,7 @@ export async function resolvePDAAddress({
                     accountsInput,
                     argumentsInput,
                     ixNode,
+                    linkables,
                     programId,
                     resolvedAddresses,
                     resolversInput,
@@ -71,6 +73,7 @@ export async function resolvePDAAddress({
                     accountsInput,
                     argumentsInput,
                     ixNode,
+                    linkables,
                     programId,
                     resolvedAddresses,
                     resolversInput,
@@ -92,9 +95,14 @@ export async function resolvePDAAddress({
     });
 }
 
-function resolvePdaNode(pdaDefaultValue: PdaValueNode, pdas: PdaNode[]): PdaNode {
+function resolvePdaNode(
+    pdaDefaultValue: PdaValueNode,
+    root: ResolvePDAAddressContext['root'],
+    ixNode: ResolvePDAAddressContext['ixNode'],
+    linkables: ResolvePDAAddressContext['linkables'],
+): PdaNode {
     if (isNode(pdaDefaultValue.pda, 'pdaLinkNode')) {
-        const linkedPda = pdas.find(p => p.name === pdaDefaultValue.pda.name);
+        const linkedPda = linkables.get([root, root.program, ixNode, pdaLinkNode(pdaDefaultValue.pda.name)]);
         if (!linkedPda) {
             throw new AccountError(`Linked PDA node not found: ${pdaDefaultValue.pda.name}`);
         }
@@ -117,6 +125,7 @@ function resolveVariablePdaSeed({
     accountsInput = {},
     argumentsInput = {},
     ixNode,
+    linkables,
     programId,
     resolvedAddresses,
     resolversInput,
@@ -136,6 +145,7 @@ function resolveVariablePdaSeed({
         accountsInput,
         argumentsInput,
         ixNode,
+        linkables,
         programId,
         resolvedAddresses,
         resolversInput,
@@ -156,6 +166,7 @@ function resolveConstantPdaSeed({
     accountsInput,
     argumentsInput,
     ixNode,
+    linkables,
     programId,
     resolvedAddresses,
     resolversInput,
@@ -170,6 +181,7 @@ function resolveConstantPdaSeed({
         accountsInput,
         argumentsInput,
         ixNode,
+        linkables,
         programId,
         resolvedAddresses,
         resolversInput,
