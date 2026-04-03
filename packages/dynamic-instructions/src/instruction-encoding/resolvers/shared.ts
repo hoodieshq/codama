@@ -7,7 +7,12 @@ import type {
     ProgramNode,
     RootNode,
 } from 'codama';
-import { instructionAccountLinkNode, isNode } from 'codama';
+import {
+    findFirstNodeFromPath,
+    findInstructionNodeFromPath,
+    findProgramNodeFromPath,
+    instructionAccountLinkNode,
+} from 'codama';
 
 import type { AddressInput } from '../../shared/address';
 import { AccountError } from '../../shared/errors';
@@ -52,27 +57,24 @@ export type ResolvedAddresses = Map<string, Address | null>;
 // Stack path is [Root, Program, Instruction]. Validated at runtime.
 
 export function getRootFromCtx(ctx: ResolutionContext): RootNode {
-    const path = ctx.stack.getPath();
-    const node = path[0];
-    if (!node || !isNode(node, 'rootNode')) {
+    const node = findFirstNodeFromPath(ctx.stack.getPath(), 'rootNode');
+    if (!node) {
         throw new AccountError('Expected RootNode at stack path[0]');
     }
     return node;
 }
 
 export function getProgramFromCtx(ctx: ResolutionContext): ProgramNode {
-    const path = ctx.stack.getPath();
-    const node = path[1];
-    if (!node || !isNode(node, 'programNode')) {
+    const node = findProgramNodeFromPath(ctx.stack.getPath());
+    if (!node) {
         throw new AccountError('Expected ProgramNode at stack path[1]');
     }
     return node;
 }
 
 export function getInstructionFromCtx(ctx: ResolutionContext): InstructionNode {
-    const path = ctx.stack.getPath();
-    const node = path[2];
-    if (!node || !isNode(node, 'instructionNode')) {
+    const node = findInstructionNodeFromPath(ctx.stack.getPath());
+    if (!node) {
         throw new AccountError('Expected InstructionNode at stack path[2]');
     }
     return node;
