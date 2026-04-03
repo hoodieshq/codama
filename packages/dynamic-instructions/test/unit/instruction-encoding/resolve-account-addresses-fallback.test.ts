@@ -2,7 +2,7 @@ import { address } from '@solana/addresses';
 import type { InstructionNode, RootNode } from 'codama';
 import { describe, expect, test } from 'vitest';
 
-import { resolveAccountsFallback } from '../../../src/instruction-encoding/resolvers/resolve-account-address';
+import { resolveAccountAddressesFallback } from '../../../src/instruction-encoding/resolvers/resolve-account-address';
 import { loadRoot } from '../../programs/test-utils';
 import { SvmTestContext } from '../../svm-test-context';
 import { buildResolutionContext } from '../test-utils';
@@ -13,7 +13,7 @@ function getInstruction(root: RootNode, name: string): InstructionNode {
     return ix;
 }
 
-describe('resolveAccountsFallback', () => {
+describe('resolveAccountAddressesFallback', () => {
     describe('zero-dependency accounts', () => {
         test('should resolve all user-provided accounts immediately', async () => {
             const root = loadRoot('token-idl.json');
@@ -23,7 +23,7 @@ describe('resolveAccountsFallback', () => {
             const destination = await SvmTestContext.generateAddress();
             const authority = await SvmTestContext.generateAddress();
 
-            const result = await resolveAccountsFallback(
+            const result = await resolveAccountAddressesFallback(
                 buildResolutionContext(root, ix, {
                     accountsInput: { authority, destination, source },
                     argumentsInput: { amount: 100 },
@@ -41,7 +41,7 @@ describe('resolveAccountsFallback', () => {
 
             const mint = await SvmTestContext.generateAddress();
 
-            const result = await resolveAccountsFallback(
+            const result = await resolveAccountAddressesFallback(
                 buildResolutionContext(root, ix, {
                     accountsInput: { mint },
                     argumentsInput: { decimals: 9, freezeAuthority: null, mintAuthority: mint },
@@ -60,7 +60,7 @@ describe('resolveAccountsFallback', () => {
             const payer = await SvmTestContext.generateAddress();
             const newAccount = await SvmTestContext.generateAddress();
 
-            const result = await resolveAccountsFallback(
+            const result = await resolveAccountAddressesFallback(
                 buildResolutionContext(root, ix, {
                     accountsInput: { newAccount, payer },
                     argumentsInput: {
@@ -83,7 +83,7 @@ describe('resolveAccountsFallback', () => {
 
             const authority = await SvmTestContext.generateAddress();
 
-            const result = await resolveAccountsFallback(
+            const result = await resolveAccountAddressesFallback(
                 buildResolutionContext(root, ix, {
                     accountsInput: { authority },
                     argumentsInput: { permissions: new Uint8Array([1, 0, 1, 0]) },
@@ -108,7 +108,7 @@ describe('resolveAccountsFallback', () => {
 
             const authority = await SvmTestContext.generateAddress();
 
-            const result = await resolveAccountsFallback(
+            const result = await resolveAccountAddressesFallback(
                 buildResolutionContext(root, ix, {
                     accountsInput: { authority },
                     argumentsInput: { permissions: new Uint8Array([1, 0, 1, 0]) },
@@ -131,7 +131,7 @@ describe('resolveAccountsFallback', () => {
 
             const testAddress = await SvmTestContext.generateAddress();
 
-            const result = await resolveAccountsFallback(
+            const result = await resolveAccountAddressesFallback(
                 buildResolutionContext(root, ix, { accountsInput: { accountA: testAddress } }),
             );
 
@@ -147,7 +147,7 @@ describe('resolveAccountsFallback', () => {
 
             const testAddress = await SvmTestContext.generateAddress();
 
-            const result = await resolveAccountsFallback(
+            const result = await resolveAccountAddressesFallback(
                 buildResolutionContext(root, ix, { accountsInput: { accountA: testAddress } }),
             );
 
@@ -160,7 +160,7 @@ describe('resolveAccountsFallback', () => {
             const root = loadRoot('circular-account-refs-idl.json');
             const ix = getInstruction(root, 'twoAccountCycle');
 
-            await expect(resolveAccountsFallback(buildResolutionContext(root, ix))).rejects.toThrow(
+            await expect(resolveAccountAddressesFallback(buildResolutionContext(root, ix))).rejects.toThrow(
                 /Cannot resolve accounts.*accountA.*accountB/,
             );
         });
@@ -169,7 +169,7 @@ describe('resolveAccountsFallback', () => {
             const root = loadRoot('circular-account-refs-idl.json');
             const ix = getInstruction(root, 'selfReference');
 
-            await expect(resolveAccountsFallback(buildResolutionContext(root, ix))).rejects.toThrow(
+            await expect(resolveAccountAddressesFallback(buildResolutionContext(root, ix))).rejects.toThrow(
                 /Cannot resolve accounts.*accountA/,
             );
         });
@@ -183,7 +183,7 @@ describe('resolveAccountsFallback', () => {
             const authority = await SvmTestContext.generateAddress();
             const destination = await SvmTestContext.generateAddress();
 
-            const result = await resolveAccountsFallback(
+            const result = await resolveAccountAddressesFallback(
                 buildResolutionContext(root, ix, {
                     accountsInput: { authority, destination, treasury: null },
                 }),
@@ -204,7 +204,7 @@ describe('resolveAccountsFallback', () => {
 
             const resolvedTreasury = SvmTestContext.generateAddress();
 
-            const result = await resolveAccountsFallback(
+            const result = await resolveAccountAddressesFallback(
                 buildResolutionContext(root, ix, {
                     accountsInput: { authority },
                     resolversInput: {
@@ -223,7 +223,7 @@ describe('resolveAccountsFallback', () => {
 
             const authority = await SvmTestContext.generateAddress();
 
-            const result = await resolveAccountsFallback(
+            const result = await resolveAccountAddressesFallback(
                 buildResolutionContext(root, ix, {
                     accountsInput: { authority },
                     resolversInput: {
@@ -246,7 +246,7 @@ describe('resolveAccountsFallback', () => {
 
             // source is required, no default — should throw immediately, not retry
             await expect(
-                resolveAccountsFallback(
+                resolveAccountAddressesFallback(
                     buildResolutionContext(root, ix, {
                         accountsInput: { destination: await SvmTestContext.generateAddress() },
                         argumentsInput: { amount: 100 },
@@ -263,7 +263,7 @@ describe('resolveAccountsFallback', () => {
 
             const mint = await SvmTestContext.generateAddress();
 
-            const result = await resolveAccountsFallback(
+            const result = await resolveAccountAddressesFallback(
                 buildResolutionContext(root, ix, {
                     accountsInput: { mint },
                     argumentsInput: { decimals: 9, freezeAuthority: null, mintAuthority: mint },

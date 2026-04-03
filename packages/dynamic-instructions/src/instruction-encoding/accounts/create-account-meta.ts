@@ -8,7 +8,7 @@ import { isConvertibleAddress, toAddress } from '../../shared/address';
 import { AccountError } from '../../shared/errors';
 import type { AccountsInput, ArgumentsInput, EitherSigners, ResolversInput } from '../../shared/types';
 import { formatValueType } from '../../shared/util';
-import { resolveAccountsByOrder, resolveAccountsFallback } from '../resolvers';
+import { resolveAccountAddressesByOrder, resolveAccountAddressesFallback } from '../resolvers';
 import { type ResolutionContext } from '../resolvers/shared';
 
 type ResolvedAccount = {
@@ -53,12 +53,12 @@ export async function createAccountMeta(
     };
 
     try {
-        ctx.resolvedAddresses = await resolveAccountsByOrder(ctx);
+        ctx.resolvedAddresses = await resolveAccountAddressesByOrder(ctx);
     } catch (error) {
         if (error instanceof CodamaError) {
             // Topological sort failed (circular deps, invalid deps, etc.) - fallback.
             ctx.resolvedAddresses.clear();
-            ctx.resolvedAddresses = await resolveAccountsFallback(ctx);
+            ctx.resolvedAddresses = await resolveAccountAddressesFallback(ctx);
         } else {
             throw error;
         }

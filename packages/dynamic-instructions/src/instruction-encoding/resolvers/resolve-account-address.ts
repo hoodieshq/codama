@@ -16,7 +16,7 @@ import { type AccountResolutionContext, getInstructionFromCtx, getProgramFromCtx
 /**
  * Primary path: resolve accounts sequentially in topological order.
  */
-export async function resolveAccountsByOrder(ctx: ResolutionContext): Promise<Map<string, Address | null>> {
+export async function resolveAccountAddressesByOrder(ctx: ResolutionContext): Promise<Map<string, Address | null>> {
     const ixNode = getInstructionFromCtx(ctx);
     const sortedInputs = visit(ixNode, getResolvedInstructionInputsVisitor());
     const sortedAccountInputs = sortedInputs.filter((input): input is ResolvedInstructionAccount =>
@@ -68,7 +68,7 @@ type PendingAccount = {
  * - Circular dependencies broken by user-provided accounts
  * - Nested argument dependencies in resolverValueNode.dependsOn (no static analysis needed)
  */
-export async function resolveAccountsFallback(ctx: ResolutionContext): Promise<Map<string, Address | null>> {
+export async function resolveAccountAddressesFallback(ctx: ResolutionContext): Promise<Map<string, Address | null>> {
     const ixNode = getInstructionFromCtx(ctx);
     const resolvedAddresses = new Map<string, Address | null>();
 

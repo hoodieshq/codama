@@ -1,4 +1,8 @@
-export { resolveAccountAddress, resolveAccountsByOrder, resolveAccountsFallback } from './resolve-account-address';
+export {
+    resolveAccountAddress,
+    resolveAccountAddressesByOrder,
+    resolveAccountAddressesFallback,
+} from './resolve-account-address';
 export { resolveAccountValueNodeAddress } from './resolve-account-value-node-address';
 export { resolveConditionalValueNodeCondition } from './resolve-conditional';
 export { resolvePDAAddress } from './resolve-pda-address';
