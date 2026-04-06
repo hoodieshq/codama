@@ -35,7 +35,7 @@ describe('pda-seed-value: visitAccountValue', () => {
         // null is not treated as a provided address — it falls through to resolveAccountAddress,
         // which throws because the account has no default value
         await expect(visitor.visitAccountValue(accountValueNode('authority'))).rejects.toThrow(
-            /Account doesn't have default value or was not provided/,
+            /Missing required account \[authority\] in \[testInstruction\] instruction/,
         );
     });
 
@@ -57,14 +57,14 @@ describe('pda-seed-value: visitAccountValue', () => {
             ixNode: ixNodeWithOptionalAccount,
         });
         await expect(visitor.visitAccountValue(accountValueNode('authority'))).rejects.toThrow(
-            /Cannot resolve dependent account for PDA seed/,
+            /Invalid address for \[authority\]:.*Cannot resolve dependent account for PDA seed/,
         );
     });
 
     test('should throw for unknown account reference', async () => {
         const visitor = makeVisitor({ ixNode: ixNodeWithAccount });
         await expect(visitor.visitAccountValue(accountValueNode('nonexistent'))).rejects.toThrow(
-            /Referenced account "nonexistent" not found in instruction "testInstruction"/,
+            /Referenced account \[nonexistent\] not found in \[testInstruction\]/,
         );
     });
 
@@ -74,7 +74,7 @@ describe('pda-seed-value: visitAccountValue', () => {
             resolutionPath: ['authority'],
         });
         await expect(visitor.visitAccountValue(accountValueNode('authority'))).rejects.toThrow(
-            /Circular dependency detected/,
+            /Circular dependency detected: \[/,
         );
     });
 });

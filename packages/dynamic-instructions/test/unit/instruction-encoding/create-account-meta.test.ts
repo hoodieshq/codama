@@ -101,7 +101,9 @@ describe('createAccountMeta: remaining accounts', () => {
 
         await expect(
             createAccountMeta(root, ix, { m: 2, signers: ADDR_1 }, { multisig: MULTISIG_ADDR }),
-        ).rejects.toThrow('Remaining account argument "signers" must be an array of addresses');
+        ).rejects.toThrow(
+            /Invalid argument input for \[signers\]:.*Remaining account argument must be an array of addresses/,
+        );
     });
 
     test('should throw when remaining account value kind is not argumentValueNode', async () => {
@@ -118,7 +120,7 @@ describe('createAccountMeta: remaining accounts', () => {
         });
 
         await expect(createAccountMeta(root, modifiedIx, { m: 2 }, { multisig: MULTISIG_ADDR })).rejects.toThrow(
-            'Unsupported remaining accounts value kind: "resolverValueNode"',
+            /Unsupported node kind \[resolverValueNode\] while resolving \[remaining accounts value/,
         );
     });
 
@@ -128,7 +130,7 @@ describe('createAccountMeta: remaining accounts', () => {
 
         await expect(
             createAccountMeta(root, ix, { m: 2, signers: [ADDR_1, 123] }, { multisig: MULTISIG_ADDR }),
-        ).rejects.toThrow('Remaining account argument "signers[1]" must be an address string or PublicKey, got number');
+        ).rejects.toThrow(/Invalid address for \[signers\[1\]\]:.*Must be an address string or PublicKey, got number/);
     });
 
     test('should throw when required remaining account argument is not provided', async () => {
@@ -138,7 +140,9 @@ describe('createAccountMeta: remaining accounts', () => {
         // signers is required:
         await expect(
             createAccountMeta(root, ix, { m: 2, signers: undefined }, { multisig: MULTISIG_ADDR }),
-        ).rejects.toThrow('Remaining account argument "signers" is required but was not provided');
+        ).rejects.toThrow(
+            /Invalid argument input for \[signers\]:.*Remaining account argument is required but was not provided/,
+        );
     });
 });
 

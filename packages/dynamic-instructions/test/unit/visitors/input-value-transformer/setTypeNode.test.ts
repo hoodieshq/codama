@@ -23,7 +23,9 @@ describe('setTypeNode', () => {
             setTypeNode(numberTypeNode('u8'), prefixedCountNode(numberTypeNode('u32'))),
             rootNodeMock,
         );
-        expect(() => transformer('not an array')).toThrow('Expected an array for setTypeNode');
-        expect(() => transformer({ a: 1 })).toThrow('Expected an array for setTypeNode');
+        expect(() => transformer('not an array')).toThrow(
+            /Invalid argument input for \[setTypeNode\]:.*Expected an array/,
+        );
+        expect(() => transformer({ a: 1 })).toThrow(/Invalid argument input for \[setTypeNode\]:.*Expected an array/);
     });
 });

@@ -1,3 +1,9 @@
+import {
+    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_PDA_SEED,
+    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__LINKED_PDA_NOT_FOUND,
+    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_NODE,
+    CodamaError,
+} from '@codama/errors';
 import type { Address, ProgramDerivedAddress } from '@solana/addresses';
 import { address, getProgramDerivedAddress } from '@solana/addresses';
 import type { ReadonlyUint8Array } from '@solana/codecs';
@@ -11,7 +17,6 @@ import type {
 } from 'codama';
 import { isNode, visitOrElse } from 'codama';
 
-import { AccountError } from '../../shared/errors';
 import { createPdaSeedValueVisitor } from '../visitors/pda-seed-value';
 import type { BaseResolutionContext } from './types';
 
@@ -35,7 +40,10 @@ export async function resolvePDAAddress({
     resolversInput,
 }: ResolvePDAAddressContext): Promise<ProgramDerivedAddress | null> {
     if (!isNode(pdaValueNode, 'pdaValueNode')) {
-        throw new AccountError(`Account node ${ixAccountNode.name} is not a PDA`);
+        throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_NODE, {
+            context: 'PDA address resolution',
+            nodeKind: `${ixAccountNode.name} is not a pdaValueNode`,
+        });
     }
 
     const pdaNode = resolvePdaNode(pdaValueNode, root.program.pdas);
@@ -62,9 +70,11 @@ export async function resolvePDAAddress({
                 const variableSeedValueNode = variableSeedValueNodes.find(node => node.name === seedName);
 
                 if (!variableSeedValueNode) {
-                    throw new AccountError(
-                        `PDA Node ${pdaNode.name}. Variable PDA SeedValueNode ${seedName} was not found for ${ixAccountNode.name} account`,
-                    );
+                    throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_PDA_SEED, {
+                        details: `Variable PDA SeedValueNode was not found for ${ixAccountNode.name} account`,
+                        pdaName: pdaNode.name,
+                        seedName,
+                    });
                 }
 
                 return await resolveVariablePdaSeed({
@@ -80,9 +90,10 @@ export async function resolvePDAAddress({
                 });
             }
 
-            throw new AccountError(
-                `PDA node: ${pdaNode.name}. Unsupported seed kind ${(seedNode as { kind?: string }).kind}`,
-            );
+            throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_NODE, {
+                context: 'PDA address resolution',
+                nodeKind: (seedNode as { kind?: string }).kind ?? 'unknown',
+            });
         }),
     );
 
@@ -96,7 +107,9 @@ function resolvePdaNode(pdaDefaultValue: PdaValueNode, pdas: PdaNode[]): PdaNode
     if (isNode(pdaDefaultValue.pda, 'pdaLinkNode')) {
         const linkedPda = pdas.find(p => p.name === pdaDefaultValue.pda.name);
         if (!linkedPda) {
-            throw new AccountError(`Linked PDA node not found: ${pdaDefaultValue.pda.name}`);
+            throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__LINKED_PDA_NOT_FOUND, {
+                pdaName: pdaDefaultValue.pda.name,
+            });
         }
         return linkedPda;
     }
@@ -105,7 +118,10 @@ function resolvePdaNode(pdaDefaultValue: PdaValueNode, pdas: PdaNode[]): PdaNode
         return pdaDefaultValue.pda;
     }
 
-    throw new AccountError(`Unsupported PDA node kind: ${(pdaDefaultValue.pda as { kind: string }).kind}`);
+    throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_NODE, {
+        context: 'PDA address resolution',
+        nodeKind: (pdaDefaultValue.pda as { kind: string }).kind,
+    });
 }
 
 type ResolvePdaSeedContext = BaseResolutionContext & {
@@ -125,11 +141,19 @@ function resolveVariablePdaSeed({
     variableSeedValueNode,
 }: ResolvePdaSeedContext): Promise<ReadonlyUint8Array> {
     if (!isNode(variableSeedValueNode, 'pdaSeedValueNode')) {
-        throw new AccountError(`Not a PDA seed value node: ${(variableSeedValueNode as { kind?: string }).kind}`);
+        throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_PDA_SEED, {
+            details: `Not a PDA seed value node: ${(variableSeedValueNode as { kind?: string }).kind}`,
+            pdaName: seedNode.name,
+            seedName: seedNode.name,
+        });
     }
 
     if (seedNode.name !== variableSeedValueNode.name) {
-        throw new AccountError(`Mismatched PDA seed: ${seedNode.name} vs ${variableSeedValueNode.name}`);
+        throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_PDA_SEED, {
+            details: `Mismatched PDA seed: ${seedNode.name} vs ${variableSeedValueNode.name}`,
+            pdaName: seedNode.name,
+            seedName: seedNode.name,
+        });
     }
 
     const visitor = createPdaSeedValueVisitor({
@@ -144,7 +168,10 @@ function resolveVariablePdaSeed({
     });
 
     return visitOrElse(variableSeedValueNode.value, visitor, node => {
-        throw new AccountError(`Unsupported variable PDA seed value node: ${node.kind}`);
+        throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_NODE, {
+            context: 'PDA address resolution',
+            nodeKind: node.kind,
+        });
     });
 }
 
@@ -163,7 +190,10 @@ function resolveConstantPdaSeed({
     seedNode,
 }: ResolveConstantPdaSeedContext): Promise<ReadonlyUint8Array> {
     if (!isNode(seedNode, 'constantPdaSeedNode')) {
-        throw new AccountError(`Not a constant PDA seed node: ${seedNode.kind}`);
+        throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_NODE, {
+            context: 'PDA address resolution',
+            nodeKind: seedNode.kind,
+        });
     }
 
     const visitor = createPdaSeedValueVisitor({
@@ -176,6 +206,9 @@ function resolveConstantPdaSeed({
         root,
     });
     return visitOrElse(seedNode.value, visitor, node => {
-        throw new AccountError(`Unsupported constant PDA seed value node: ${node.kind}`);
+        throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_NODE, {
+            context: 'PDA address resolution',
+            nodeKind: node.kind,
+        });
     });
 }

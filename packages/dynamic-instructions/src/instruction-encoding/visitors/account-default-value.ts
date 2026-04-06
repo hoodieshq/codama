@@ -1,3 +1,11 @@
+import {
+    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__ACCOUNT_RESOLVER_MISSING,
+    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_ACCOUNT_ADDRESS,
+    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__MISSING_REQUIRED_ACCOUNT,
+    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__RESOLVER_EXECUTION_FAILED,
+    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_NODE,
+    CodamaError,
+} from '@codama/errors';
 import type { Address } from '@solana/addresses';
 import { address } from '@solana/addresses';
 import type { Visitor } from 'codama';
@@ -18,7 +26,6 @@ import { visitOrElse } from 'codama';
 
 import type { AddressInput } from '../../shared/address';
 import { isConvertibleAddress, toAddress } from '../../shared/address';
-import { AccountError, ResolverError } from '../../shared/errors';
 import { formatValueType, safeStringify } from '../../shared/util';
 import { resolveAccountValueNodeAddress } from '../resolvers/resolve-account-value-node-address';
 import { resolveConditionalValueNodeCondition } from '../resolvers/resolve-conditional';
@@ -62,10 +69,10 @@ export function createAccountDefaultValueVisitor(
     return {
         visitAccountBumpValue: async (_node: AccountBumpValueNode) => {
             return await Promise.reject(
-                new AccountError(
-                    `AccountBumpValueNode not yet supported for ${ixAccountNode.name} account. ` +
-                        `Bump seeds should be derived from PDA derivation.`,
-                ),
+                new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_NODE, {
+                    context: `account default value for ${ixAccountNode.name}`,
+                    nodeKind: 'accountBumpValueNode',
+                }),
             );
         },
 
@@ -83,24 +90,26 @@ export function createAccountDefaultValueVisitor(
         visitArgumentValue: async (node: ArgumentValueNode) => {
             const argValue = argumentsInput?.[node.name];
             if (argValue === undefined || argValue === null) {
-                throw new AccountError(
-                    `Missing required argument for account default: ${node.name} (used by ${ixAccountNode.name})`,
-                );
+                throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__MISSING_REQUIRED_ACCOUNT, {
+                    accountName: ixAccountNode.name,
+                    instructionName: ixNode.name,
+                });
             }
 
             if (!isConvertibleAddress(argValue)) {
-                throw new AccountError(
-                    `Argument ${node.name} is not a valid Address. Expected a string or PublicKey, got ${formatValueType(argValue)} for account ${ixAccountNode.name}`,
-                );
+                throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_ACCOUNT_ADDRESS, {
+                    details: `Argument ${node.name} is not a valid Address. Expected a string or PublicKey, got ${formatValueType(argValue)}`,
+                    name: ixAccountNode.name,
+                });
             }
 
             try {
                 return await Promise.resolve(toAddress(argValue));
-            } catch (error) {
-                throw new AccountError(
-                    `Argument ${node.name} cannot be converted to Address for account ${ixAccountNode.name}`,
-                    { cause: error },
-                );
+            } catch {
+                throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_ACCOUNT_ADDRESS, {
+                    details: `Argument ${node.name} cannot be converted to Address`,
+                    name: ixAccountNode.name,
+                });
             }
         },
 
@@ -123,34 +132,38 @@ export function createAccountDefaultValueVisitor(
                 if (ixAccountNode.isOptional) {
                     return null;
                 }
-                throw new AccountError(
-                    `Conditional branch resolved to undefined in account "${ixAccountNode.name}" of "${ixNode.name}" instruction`,
-                );
+                throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__MISSING_REQUIRED_ACCOUNT, {
+                    accountName: ixAccountNode.name,
+                    instructionName: ixNode.name,
+                });
             }
             // Recursively resolve the chosen branch.
             const visitor = createAccountDefaultValueVisitor(ctx);
             const addressValue = await visitOrElse(resolvedInputValueNode, visitor, (innerNode: { kind: string }) => {
-                throw new AccountError(
-                    `Cannot resolve conditional branch node: ${innerNode.kind} in account ${ixAccountNode.name}`,
-                );
+                throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_NODE, {
+                    context: `account default value for ${ixAccountNode.name}`,
+                    nodeKind: innerNode.kind,
+                });
             });
             return addressValue;
         },
 
         visitIdentityValue: async (_node: IdentityValueNode) => {
             if (accountAddressInput === undefined || accountAddressInput === null) {
-                throw new AccountError(
-                    `Cannot resolve identity value for ${ixAccountNode.name}: account address not provided`,
-                );
+                throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_ACCOUNT_ADDRESS, {
+                    details: 'Cannot resolve identity value: account address not provided',
+                    name: ixAccountNode.name,
+                });
             }
             return await Promise.resolve(toAddress(accountAddressInput));
         },
 
         visitPayerValue: async (_node: PayerValueNode) => {
             if (accountAddressInput === undefined || accountAddressInput === null) {
-                throw new AccountError(
-                    `Cannot resolve payer value for ${ixAccountNode.name}: account address not provided`,
-                );
+                throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_ACCOUNT_ADDRESS, {
+                    details: 'Cannot resolve payer value: account address not provided',
+                    name: ixAccountNode.name,
+                });
             }
             return await Promise.resolve(toAddress(accountAddressInput));
         },
@@ -167,7 +180,10 @@ export function createAccountDefaultValueVisitor(
                 root,
             });
             if (pda === null) {
-                throw new AccountError(`Cannot derive PDA for account ${ixAccountNode.name}`);
+                throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_ACCOUNT_ADDRESS, {
+                    details: 'Cannot derive PDA',
+                    name: ixAccountNode.name,
+                });
             }
             return pda[0];
         },
@@ -183,25 +199,28 @@ export function createAccountDefaultValueVisitor(
         visitResolverValue: async (node: ResolverValueNode) => {
             const resolverFn = resolversInput?.[node.name];
             if (!resolverFn) {
-                throw new AccountError(
-                    `Resolver "${node.name}" not provided for account "${ixAccountNode.name}". ` +
-                        `Provide via .resolvers({ ${node.name}: async (args, accounts) => ... })`,
-                );
+                throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__ACCOUNT_RESOLVER_MISSING, {
+                    accountName: ixAccountNode.name,
+                    resolverName: node.name,
+                });
             }
             let result: unknown;
             try {
                 result = await resolverFn(argumentsInput ?? {}, accountsInput ?? {});
             } catch (error) {
-                throw new ResolverError(
-                    `Resolver "${node.name}" threw an error while resolving account "${ixAccountNode.name}"`,
-                    { cause: error },
-                );
+                throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__RESOLVER_EXECUTION_FAILED, {
+                    cause: error,
+                    resolverName: node.name,
+                    targetKind: 'account',
+                    targetName: ixAccountNode.name,
+                });
             }
 
             if (!isConvertibleAddress(result)) {
-                throw new AccountError(
-                    `Resolver "${node.name}" returned invalid address ${safeStringify(result)} for account "${ixAccountNode.name}"`,
-                );
+                throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_ACCOUNT_ADDRESS, {
+                    details: `Resolver "${node.name}" returned invalid address ${safeStringify(result)}`,
+                    name: ixAccountNode.name,
+                });
             }
 
             return toAddress(result);

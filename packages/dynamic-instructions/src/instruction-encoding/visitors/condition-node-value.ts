@@ -1,7 +1,7 @@
+import { CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__RESOLVER_EXECUTION_FAILED, CodamaError } from '@codama/errors';
 import type { Visitor } from 'codama';
 import type { AccountValueNode, ArgumentValueNode, ResolverValueNode } from 'codama';
 
-import { ResolverError } from '../../shared/errors';
 import { resolveAccountValueNodeAddress } from '../resolvers/resolve-account-value-node-address';
 import type { BaseResolutionContext } from '../resolvers/types';
 
@@ -48,8 +48,11 @@ export function createConditionNodeValueVisitor(
             try {
                 return await resolverFn(argumentsInput ?? {}, accountsInput ?? {});
             } catch (error) {
-                throw new ResolverError(`Resolver "${node.name}" threw an error while evaluating condition`, {
+                throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__RESOLVER_EXECUTION_FAILED, {
                     cause: error,
+                    resolverName: node.name,
+                    targetKind: 'condition',
+                    targetName: node.name,
                 });
             }
         },

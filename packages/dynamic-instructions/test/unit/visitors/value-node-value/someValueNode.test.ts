@@ -15,6 +15,6 @@ describe('value-node-value: visitSomeValue', () => {
                 // @ts-expect-error - accountValueNode is invalid
                 someValueNode(accountValueNode('test')),
             ),
-        ).toThrow(/Cannot resolve someValueNode/);
+        ).toThrow(/Unsupported node kind \[accountValueNode\] while resolving \[someValueNode wrapping/);
     });
 });

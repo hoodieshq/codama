@@ -15,14 +15,14 @@ describe('account-default-value: visitIdentityValue', () => {
     test('should throw when address not provided (undefined)', async () => {
         const visitor = makeVisitor({ accountAddressInput: undefined });
         await expect(visitor.visitIdentityValue(identityValueNode())).rejects.toThrow(
-            /Cannot resolve identity value for testAccount: account address not provided/,
+            /Invalid address for \[testAccount\]:.*Cannot resolve identity value.*account address not provided/,
         );
     });
 
     test('should throw when address not provided (null)', async () => {
         const visitor = makeVisitor({ accountAddressInput: null });
         await expect(visitor.visitIdentityValue(identityValueNode())).rejects.toThrow(
-            /Cannot resolve identity value for testAccount: account address not provided/,
+            /Invalid address for \[testAccount\]:.*Cannot resolve identity value.*account address not provided/,
         );
     });
 });

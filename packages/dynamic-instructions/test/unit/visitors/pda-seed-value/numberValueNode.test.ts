@@ -1,7 +1,7 @@
+import { CodamaError } from '@codama/errors';
 import { numberValueNode } from 'codama';
 import { describe, expect, test } from 'vitest';
 
-import { AccountError } from '../../../../src/shared/errors';
 import { makeVisitor } from './pda-seed-value-test-utils';
 
 describe('pda-seed-value: visitNumberValue', () => {
@@ -22,7 +22,7 @@ describe('pda-seed-value: visitNumberValue', () => {
     });
 
     test('should throw for negative value', async () => {
-        await expect(makeVisitor().visitNumberValue(numberValueNode(-1))).rejects.toThrow(AccountError);
+        await expect(makeVisitor().visitNumberValue(numberValueNode(-1))).rejects.toThrow(CodamaError);
     });
 
     test('should throw for non-integer value', async () => {

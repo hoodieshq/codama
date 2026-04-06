@@ -26,6 +26,6 @@ describe('value-node-value: visitStructValue', () => {
                 // @ts-expect-error - accountValueNode is invalid as a StandaloneValueNode
                 structValueNode([structFieldValueNode('invalid_field', accountValueNode('test'))]),
             ),
-        ).toThrow(/Cannot resolve struct field invalidField/);
+        ).toThrow(/Unsupported node kind \[accountValueNode\] while resolving \[struct field.*value node\]/);
     });
 });

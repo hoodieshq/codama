@@ -78,6 +78,8 @@ describe('account-default-value: visitPdaValue', async () => {
         const node = pdaValueNode(pdaLinkNode('testPda'));
 
         const visitor = makeVisitor({ root });
-        await expect(visitor.visitPdaValue(node)).rejects.toThrow(/Variable PDA SeedValueNode owner was not found/);
+        await expect(visitor.visitPdaValue(node)).rejects.toThrow(
+            /Invalid PDA seed \[owner\] for PDA \[testPda\]:.*Variable PDA SeedValueNode was not found/,
+        );
     });
 });

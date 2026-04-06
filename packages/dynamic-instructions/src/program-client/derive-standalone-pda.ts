@@ -1,4 +1,9 @@
 import { getNodeCodec } from '@codama/dynamic-codecs';
+import {
+    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_PDA_SEED,
+    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_NODE,
+    CodamaError,
+} from '@codama/errors';
 import type { Address, ProgramDerivedAddress } from '@solana/addresses';
 import { getProgramDerivedAddress } from '@solana/addresses';
 import type { ReadonlyUint8Array } from '@solana/codecs';
@@ -8,7 +13,6 @@ import { isNode, visitOrElse } from 'codama';
 import { createInputValueTransformer, createPdaSeedValueVisitor } from '../instruction-encoding';
 import { toAddress } from '../shared/address';
 import { getMemoizedUtf8Encoder } from '../shared/codecs';
-import { AccountError } from '../shared/errors';
 import { formatValueType } from '../shared/util';
 
 /**
@@ -40,9 +44,10 @@ export async function deriveStandalonePDA(
             if (seedNode.kind === 'variablePdaSeedNode') {
                 return await resolveStandaloneVariableSeed(root, seedNode, seedInputs);
             }
-            throw new AccountError(
-                `PDA node: ${pdaNode.name}. Unsupported seed kind ${(seedNode as { kind?: string }).kind}`,
-            );
+            throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_NODE, {
+                context: `PDA seed resolution for ${pdaNode.name}`,
+                nodeKind: (seedNode as { kind?: string }).kind ?? 'unknown',
+            });
         }),
     );
 
@@ -55,7 +60,10 @@ function resolveStandaloneConstantSeed(
     seedNode: RegisteredPdaSeedNode,
 ): Promise<ReadonlyUint8Array> {
     if (!isNode(seedNode, 'constantPdaSeedNode')) {
-        throw new AccountError(`Not a constant PDA seed node: ${seedNode.kind}`);
+        throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_NODE, {
+            context: 'constant PDA seed resolution',
+            nodeKind: seedNode.kind,
+        });
     }
     const visitor = createPdaSeedValueVisitor({
         accountsInput: undefined,
@@ -67,7 +75,10 @@ function resolveStandaloneConstantSeed(
         root,
     });
     return visitOrElse(seedNode.value, visitor, node => {
-        throw new AccountError(`Unsupported constant PDA seed value node: ${node.kind}`);
+        throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_NODE, {
+            context: 'constant PDA seed value',
+            nodeKind: node.kind,
+        });
     });
 }
 
@@ -84,13 +95,21 @@ function resolveStandaloneVariableSeed(
         if (isNode(typeNode, 'remainderOptionTypeNode')) {
             return Promise.resolve(new Uint8Array(0));
         }
-        throw new AccountError(`Missing seed value for variable PDA seed: ${seedNode.name}`);
+        throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_PDA_SEED, {
+            details: 'missing seed value',
+            pdaName: '__standalone__' as typeof seedNode.name,
+            seedName: seedNode.name,
+        });
     }
 
     // For simple string seeds encode directly with UTF-8 (no length prefix)
     if (isNode(typeNode, 'stringTypeNode')) {
         if (typeof input !== 'string') {
-            throw new AccountError(`Expected string for PDA seed "${seedNode.name}", got ${formatValueType(input)}`);
+            throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_PDA_SEED, {
+                details: `expected string, got ${formatValueType(input)}`,
+                pdaName: '__standalone__' as typeof seedNode.name,
+                seedName: seedNode.name,
+            });
         }
         return Promise.resolve(getMemoizedUtf8Encoder().encode(input));
     }

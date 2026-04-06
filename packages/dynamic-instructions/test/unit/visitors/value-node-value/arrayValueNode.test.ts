@@ -26,6 +26,6 @@ describe('value-node-value: visitArrayValue', () => {
                 // @ts-expect-error - accountValueNode is invalid
                 arrayValueNode([accountValueNode('test')]),
             ),
-        ).toThrow(/Cannot resolve array item/);
+        ).toThrow(/Unsupported node kind \[accountValueNode\] while resolving \[array item value node\]/);
     });
 });

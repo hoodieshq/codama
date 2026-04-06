@@ -1,3 +1,4 @@
+import { CodamaError } from '@codama/errors';
 import { address } from '@solana/addresses';
 import { getU32Encoder, getU64Encoder, mergeBytes } from '@solana/codecs';
 import { getInitializeInstructionDataDecoder } from '@solana-program/program-metadata';
@@ -6,7 +7,6 @@ import { describe, expect, test } from 'vitest';
 
 import { createArgumentsInputValidator, encodeInstructionArguments } from '../../../src/instruction-encoding/arguments';
 import { getCodecFromBytesEncoding } from '../../../src/shared/bytes-encoding';
-import { ArgumentError, ValidationError } from '../../../src/shared/errors';
 import { loadRoot } from '../../programs/test-utils';
 
 function getInstruction(root: RootNode, name: string): InstructionNode {
@@ -99,13 +99,13 @@ describe('Instruction encoding: encodeInstructionArguments', () => {
             encodeInstructionArguments(root, ix, {
                 data: null,
             }),
-        ).toThrow(ArgumentError);
+        ).toThrow(CodamaError);
 
         expect(() =>
             encodeInstructionArguments(root, ix, {
                 data: null,
             }),
-        ).toThrow('Missing required argument: offset');
+        ).toThrow(/Failed to encode argument \[offset\] in \[write\]/);
     });
 
     test('should throw ValidationError when omitted argument is provided', () => {
@@ -120,7 +120,7 @@ describe('Instruction encoding: encodeInstructionArguments', () => {
                 discriminator: 99,
                 offset: 0,
             }),
-        ).toThrow(ValidationError);
+        ).toThrow(CodamaError);
     });
 
     test('should encode instruction with only omitted discriminator (no user args)', () => {
@@ -153,7 +153,7 @@ describe('Instruction validation: remaining account arguments', () => {
 
         // m is a required number argument — passing a string should fail validation
         const validate = createArgumentsInputValidator(root, ix);
-        expect(() => validate({ m: 'invalid', signers: [ADDR_1] })).toThrow(ValidationError);
+        expect(() => validate({ m: 'invalid', signers: [ADDR_1] })).toThrow(CodamaError);
     });
 
     test('should not reject optional remaining account args when omitted', () => {

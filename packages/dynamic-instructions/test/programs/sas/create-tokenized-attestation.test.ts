@@ -159,7 +159,7 @@ describe('SAS: createTokenizedAttestation', () => {
                     tokenProgram: ctx.TOKEN_2022_PROGRAM_ADDRESS,
                 })
                 .instruction(),
-        ).rejects.toThrow(/Missing required account: schemaMint/);
+        ).rejects.toThrow(/Missing required account \[schemaMint\]/);
     });
 
     test('should throw error with invalid argument', async () => {

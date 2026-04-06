@@ -1,3 +1,4 @@
+import { CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_NODE, CodamaError } from '@codama/errors';
 import { address } from '@solana/addresses';
 import type { Visitor } from 'codama';
 import type {
@@ -17,8 +18,6 @@ import type {
     TupleValueNode,
 } from 'codama';
 import { visitOrElse } from 'codama';
-
-import { AccountError } from '../../shared/errors';
 
 type ResolvedValue = {
     encoding?: string;
@@ -67,7 +66,10 @@ export function createValueNodeVisitor(): Visitor<
             kind: node.kind,
             value: node.items.map(item =>
                 visitOrElse(item, visitor, n => {
-                    throw new AccountError(`Cannot resolve array item: ${n.kind}`);
+                    throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_NODE, {
+                        context: 'array item value node',
+                        nodeKind: n.kind,
+                    });
                 }),
             ),
         }),
@@ -85,7 +87,10 @@ export function createValueNodeVisitor(): Visitor<
 
         visitConstantValue: (node: ConstantValueNode) => {
             return visitOrElse(node.value, visitor, innerNode => {
-                throw new AccountError(`Cannot resolve constantValueNode wrapping: ${innerNode.kind}`);
+                throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_NODE, {
+                    context: 'constantValueNode wrapping',
+                    nodeKind: innerNode.kind,
+                });
             });
         },
 
@@ -98,10 +103,16 @@ export function createValueNodeVisitor(): Visitor<
             kind: node.kind,
             value: node.entries.map(entry => ({
                 key: visitOrElse(entry.key, visitor, n => {
-                    throw new AccountError(`Cannot resolve map key: ${n.kind}`);
+                    throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_NODE, {
+                        context: 'map key value node',
+                        nodeKind: n.kind,
+                    });
                 }),
                 value: visitOrElse(entry.value, visitor, n => {
-                    throw new AccountError(`Cannot resolve map value: ${n.kind}`);
+                    throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_NODE, {
+                        context: 'map value value node',
+                        nodeKind: n.kind,
+                    });
                 }),
             })),
         }),
@@ -125,14 +136,20 @@ export function createValueNodeVisitor(): Visitor<
             kind: node.kind,
             value: node.items.map(item =>
                 visitOrElse(item, visitor, n => {
-                    throw new AccountError(`Cannot resolve set item: ${n.kind}`);
+                    throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_NODE, {
+                        context: 'set item value node',
+                        nodeKind: n.kind,
+                    });
                 }),
             ),
         }),
 
         visitSomeValue: (node: SomeValueNode) => {
             return visitOrElse(node.value, visitor, innerNode => {
-                throw new AccountError(`Cannot resolve someValueNode wrapping: ${innerNode.kind}`);
+                throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_NODE, {
+                    context: 'someValueNode wrapping',
+                    nodeKind: innerNode.kind,
+                });
             });
         },
 
@@ -147,7 +164,10 @@ export function createValueNodeVisitor(): Visitor<
                 node.fields.map(field => [
                     field.name,
                     visitOrElse(field.value, visitor, n => {
-                        throw new AccountError(`Cannot resolve struct field ${field.name}: ${n.kind}`);
+                        throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_NODE, {
+                            context: `struct field "${field.name}" value node`,
+                            nodeKind: n.kind,
+                        });
                     }),
                 ]),
             ),
@@ -157,7 +177,10 @@ export function createValueNodeVisitor(): Visitor<
             kind: node.kind,
             value: node.items.map(item =>
                 visitOrElse(item, visitor, n => {
-                    throw new AccountError(`Cannot resolve tuple item: ${n.kind}`);
+                    throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_NODE, {
+                        context: 'tuple item value node',
+                        nodeKind: n.kind,
+                    });
                 }),
             ),
         }),

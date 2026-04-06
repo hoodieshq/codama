@@ -1,9 +1,13 @@
+import {
+    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__MISSING_REQUIRED_ACCOUNT,
+    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_NODE,
+    CodamaError,
+} from '@codama/errors';
 import type { Address } from '@solana/addresses';
 import type { InstructionAccountNode, InstructionNode, RootNode } from 'codama';
 import { visitOrElse } from 'codama';
 
 import { type AddressInput, toAddress } from '../../shared/address';
-import { AccountError } from '../../shared/errors';
 import { createAccountDefaultValueVisitor } from '../visitors/account-default-value';
 import type { BaseResolutionContext } from './types';
 
@@ -43,9 +47,10 @@ export async function resolveAccountAddress({
         });
 
         const addressValue = await visitOrElse(ixAccountNode.defaultValue, visitor, node => {
-            throw new AccountError(
-                `Cannot resolve account ${ixAccountNode.name}:${node.kind} of ${ixNode.name} instruction`,
-            );
+            throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_NODE, {
+                context: 'account address resolution',
+                nodeKind: node.kind,
+            });
         });
 
         // conditionalValueNode with ifFalse branch returns null.
@@ -57,9 +62,10 @@ export async function resolveAccountAddress({
         return addressValue;
     }
 
-    throw new AccountError(
-        `Cannot resolve account ${ixAccountNode.name} of ${ixNode.name} instruction. Account doesn't have default value or was not provided`,
-    );
+    throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__MISSING_REQUIRED_ACCOUNT, {
+        accountName: ixAccountNode.name,
+        instructionName: ixNode.name,
+    });
 }
 
 /**
@@ -73,9 +79,10 @@ function resolveOptionalAccountWithStrategy(
     ixAccountNode: InstructionAccountNode,
 ) {
     if (!ixAccountNode.isOptional) {
-        throw new AccountError(
-            `Account ${ixAccountNode.name} of ${ixNode.name} instruction is not optional, cannot apply optional account strategy`,
-        );
+        throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_NODE, {
+            context: 'account address resolution',
+            nodeKind: `non-optional account ${ixAccountNode.name}`,
+        });
     }
     switch (ixNode.optionalAccountStrategy) {
         case 'omitted':
@@ -83,8 +90,9 @@ function resolveOptionalAccountWithStrategy(
         case 'programId':
             return toAddress(root.program.publicKey);
         default:
-            throw new AccountError(
-                `Cannot resolve optional account: ${ixAccountNode.name} of ${ixNode.name} instruction with strategy: ${String(ixNode.optionalAccountStrategy)}`,
-            );
+            throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_NODE, {
+                context: 'account address resolution',
+                nodeKind: `optionalAccountStrategy:${String(ixNode.optionalAccountStrategy)}`,
+            });
     }
 }

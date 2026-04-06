@@ -78,11 +78,21 @@ describe('structTypeNode', () => {
             { bytesEncoding: 'base16' },
         );
 
-        expect(() => transformer(null)).toThrow('Expected a plain object for structTypeNode');
-        expect(() => transformer(undefined)).toThrow('Expected a plain object for structTypeNode');
-        expect(() => transformer('not an object')).toThrow('Expected a plain object for structTypeNode');
-        expect(() => transformer(123)).toThrow('Expected a plain object for structTypeNode');
-        expect(() => transformer([1, 2, 3])).toThrow('Expected a plain object for structTypeNode');
+        expect(() => transformer(null)).toThrow(
+            /Invalid argument input for \[structTypeNode\]:.*Expected a plain object/,
+        );
+        expect(() => transformer(undefined)).toThrow(
+            /Invalid argument input for \[structTypeNode\]:.*Expected a plain object/,
+        );
+        expect(() => transformer('not an object')).toThrow(
+            /Invalid argument input for \[structTypeNode\]:.*Expected a plain object/,
+        );
+        expect(() => transformer(123)).toThrow(
+            /Invalid argument input for \[structTypeNode\]:.*Expected a plain object/,
+        );
+        expect(() => transformer([1, 2, 3])).toThrow(
+            /Invalid argument input for \[structTypeNode\]:.*Expected a plain object/,
+        );
     });
 
     test('should throw error for Date, Map, and Set inputs', () => {
@@ -92,9 +102,15 @@ describe('structTypeNode', () => {
             { bytesEncoding: 'base16' },
         );
 
-        expect(() => transformer(new Date())).toThrow('Expected a plain object for structTypeNode');
-        expect(() => transformer(new Map())).toThrow('Expected a plain object for structTypeNode');
-        expect(() => transformer(new Set())).toThrow('Expected a plain object for structTypeNode');
+        expect(() => transformer(new Date())).toThrow(
+            /Invalid argument input for \[structTypeNode\]:.*Expected a plain object/,
+        );
+        expect(() => transformer(new Map())).toThrow(
+            /Invalid argument input for \[structTypeNode\]:.*Expected a plain object/,
+        );
+        expect(() => transformer(new Set())).toThrow(
+            /Invalid argument input for \[structTypeNode\]:.*Expected a plain object/,
+        );
     });
 
     test('should transform multiple bytes fields in struct', () => {

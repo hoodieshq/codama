@@ -1,8 +1,14 @@
+import {
+    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__DEFINED_TYPE_NOT_FOUND,
+    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_ARGUMENT_INPUT,
+    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNKNOWN_ENUM_VARIANT,
+    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_TYPE_NODE,
+    CodamaError,
+} from '@codama/errors';
 import type { BytesEncoding, RootNode, TypeNode, Visitor } from 'codama';
 import { isNode, pascalCase, visitOrElse } from 'codama';
 
 import { isUint8Array, uint8ArrayToEncodedString } from '../../shared/bytes-encoding';
-import { ArgumentError } from '../../shared/errors';
 import { formatValueType, isObjectRecord, safeStringify } from '../../shared/util';
 
 /**
@@ -59,20 +65,26 @@ export function createInputValueTransformerVisitor(
     const visitor: Visitor<InputTransformer, TransformableTypeNodeKind> = {
         visitAmountType(node) {
             return visitOrElse(node.number, visitor, innerNode => {
-                throw new ArgumentError(`Unsupported type node in amountTypeNode: ${innerNode.kind}`);
+                throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_TYPE_NODE, {
+                    nodeKind: innerNode.kind,
+                    parentKind: 'amountTypeNode',
+                });
             });
         },
 
         visitArrayType(node) {
             const itemTransform = visitOrElse(node.item, visitor, innerNode => {
-                throw new ArgumentError(`Unsupported type node in arrayTypeNode: ${innerNode.kind}`);
+                throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_TYPE_NODE, {
+                    nodeKind: innerNode.kind,
+                    parentKind: 'arrayTypeNode',
+                });
             });
             return (input: unknown) => {
                 if (!Array.isArray(input)) {
-                    throw new ArgumentError(
-                        `Expected an array for arrayTypeNode, but received: ${formatValueType(input)}. ` +
-                            `Received value: ${safeStringify(input)}`,
-                    );
+                    throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_ARGUMENT_INPUT, {
+                        argumentName: 'arrayTypeNode',
+                        details: `Expected an array, but received: ${formatValueType(input)}. Received value: ${safeStringify(input)}`,
+                    });
                 }
                 return input.map(itemTransform);
             };
@@ -91,26 +103,34 @@ export function createInputValueTransformerVisitor(
                 if (Array.isArray(input) && input.every(item => typeof item === 'number')) {
                     return [bytesEncoding, uint8ArrayToEncodedString(new Uint8Array(input), bytesEncoding)];
                 }
-                throw new ArgumentError(
-                    `Expected bytes input (Uint8Array or number[]) for bytesTypeNode, but received: ${formatValueType(input)}. ` +
-                        `Received value: ${safeStringify(input)}`,
-                );
+                throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_ARGUMENT_INPUT, {
+                    argumentName: 'bytesTypeNode',
+                    details: `Expected bytes input (Uint8Array or number[]), but received: ${formatValueType(input)}. Received value: ${safeStringify(input)}`,
+                });
             };
         },
 
         visitDateTimeType(node) {
             return visitOrElse(node.number, visitor, innerNode => {
-                throw new ArgumentError(`Unsupported type node in dateTimeTypeNode: ${innerNode.kind}`);
+                throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_TYPE_NODE, {
+                    nodeKind: innerNode.kind,
+                    parentKind: 'dateTimeTypeNode',
+                });
             });
         },
 
         visitDefinedTypeLink(node) {
             const definedType = root.program.definedTypes.find(dt => dt.name === node.name);
             if (!definedType) {
-                throw new ArgumentError(`Cannot resolve defined type link: ${node.name}`);
+                throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__DEFINED_TYPE_NOT_FOUND, {
+                    typeName: node.name,
+                });
             }
             return visitOrElse(definedType.type, visitor, innerNode => {
-                throw new ArgumentError(`Unsupported type node in definedTypeLink: ${innerNode.kind}`);
+                throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_TYPE_NODE, {
+                    nodeKind: innerNode.kind,
+                    parentKind: 'definedTypeLinkNode',
+                });
             });
         },
 
@@ -138,9 +158,10 @@ export function createInputValueTransformerVisitor(
 
                 if (!variantNode) {
                     const availableVariants = node.variants.map(v => v.name).join(', ');
-                    throw new ArgumentError(
-                        `Unknown enum variant ${safeStringify(__kind)} for enumTypeNode. Available variants: [${availableVariants}]`,
-                    );
+                    throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNKNOWN_ENUM_VARIANT, {
+                        available: availableVariants,
+                        variant: safeStringify(__kind),
+                    });
                 }
 
                 if (isNode(variantNode, 'enumEmptyVariantTypeNode')) {
@@ -149,29 +170,33 @@ export function createInputValueTransformerVisitor(
 
                 if (isNode(variantNode, 'enumStructVariantTypeNode')) {
                     const structTransform = visitOrElse(variantNode.struct, visitor, innerNode => {
-                        throw new ArgumentError(
-                            `Unsupported type node in enumStructVariantTypeNode: ${innerNode.kind}`,
-                        );
+                        throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_TYPE_NODE, {
+                            nodeKind: innerNode.kind,
+                            parentKind: 'enumStructVariantTypeNode',
+                        });
                     });
                     const transformedFields = structTransform(rest);
                     if (!isObjectRecord(transformedFields)) {
-                        throw new ArgumentError(
-                            `Expected transformed fields to be an object for enumStructVariantTypeNode, got: ${formatValueType(transformedFields)}`,
-                        );
+                        throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_ARGUMENT_INPUT, {
+                            argumentName: 'enumStructVariantTypeNode',
+                            details: `Expected transformed fields to be an object, got: ${formatValueType(transformedFields)}`,
+                        });
                     }
                     return { ...kindObj, ...transformedFields };
                 }
 
                 if (isNode(variantNode, 'enumTupleVariantTypeNode')) {
                     const tupleTransform = visitOrElse(variantNode.tuple, visitor, innerNode => {
-                        throw new ArgumentError(`Unsupported type node in enumTupleVariantTypeNode: ${innerNode.kind}`);
+                        throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_TYPE_NODE, {
+                            nodeKind: innerNode.kind,
+                            parentKind: 'enumTupleVariantTypeNode',
+                        });
                     });
                     if (!('fields' in rest) || !Array.isArray(rest.fields)) {
-                        throw new ArgumentError(
-                            `Expected "fields" array for enum tuple variant ${safeStringify(__kind)}, ` +
-                                `but received: ${formatValueType(rest.fields ?? rest)}. ` +
-                                `Received value: ${safeStringify(input)}`,
-                        );
+                        throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_ARGUMENT_INPUT, {
+                            argumentName: 'enumTupleVariantTypeNode',
+                            details: `Expected "fields" array for enum tuple variant ${safeStringify(__kind)}, but received: ${formatValueType(rest.fields ?? rest)}. Received value: ${safeStringify(input)}`,
+                        });
                     }
                     return { ...kindObj, fields: tupleTransform(rest.fields) };
                 }
@@ -182,33 +207,45 @@ export function createInputValueTransformerVisitor(
 
         visitFixedSizeType(node) {
             return visitOrElse(node.type, visitor, innerNode => {
-                throw new ArgumentError(`Unsupported type node in fixedSizeTypeNode: ${innerNode.kind}`);
+                throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_TYPE_NODE, {
+                    nodeKind: innerNode.kind,
+                    parentKind: 'fixedSizeTypeNode',
+                });
             });
         },
 
         visitHiddenPrefixType(node) {
             return visitOrElse(node.type, visitor, innerNode => {
-                throw new ArgumentError(`Unsupported type node in hiddenPrefixTypeNode: ${innerNode.kind}`);
+                throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_TYPE_NODE, {
+                    nodeKind: innerNode.kind,
+                    parentKind: 'hiddenPrefixTypeNode',
+                });
             });
         },
 
         visitHiddenSuffixType(node) {
             return visitOrElse(node.type, visitor, innerNode => {
-                throw new ArgumentError(`Unsupported type node in hiddenSuffixTypeNode: ${innerNode.kind}`);
+                throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_TYPE_NODE, {
+                    nodeKind: innerNode.kind,
+                    parentKind: 'hiddenSuffixTypeNode',
+                });
             });
         },
 
         visitMapType(node) {
             // Maps are represented as objects in dynamic-codecs
             const valueTransform = visitOrElse(node.value, visitor, innerNode => {
-                throw new ArgumentError(`Unsupported type node in mapTypeNode value: ${innerNode.kind}`);
+                throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_TYPE_NODE, {
+                    nodeKind: innerNode.kind,
+                    parentKind: 'mapTypeNode',
+                });
             });
             return (input: unknown) => {
                 if (!isObjectRecord(input)) {
-                    throw new ArgumentError(
-                        `Expected a plain object for mapTypeNode, but received: ${formatValueType(input)}. ` +
-                            `Received value: ${safeStringify(input)}`,
-                    );
+                    throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_ARGUMENT_INPUT, {
+                        argumentName: 'mapTypeNode',
+                        details: `Expected a plain object, but received: ${formatValueType(input)}. Received value: ${safeStringify(input)}`,
+                    });
                 }
                 const result: Record<string, unknown> = {};
                 for (const [key, value] of Object.entries(input)) {
@@ -225,7 +262,10 @@ export function createInputValueTransformerVisitor(
 
         visitOptionType(node) {
             const innerTransform = visitOrElse(node.item, visitor, innerNode => {
-                throw new ArgumentError(`Unsupported type node in optionTypeNode: ${innerNode.kind}`);
+                throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_TYPE_NODE, {
+                    nodeKind: innerNode.kind,
+                    parentKind: 'optionTypeNode',
+                });
             });
             return (input: unknown) => {
                 if (input === null || input === undefined) return input;
@@ -235,13 +275,19 @@ export function createInputValueTransformerVisitor(
 
         visitPostOffsetType(node) {
             return visitOrElse(node.type, visitor, innerNode => {
-                throw new ArgumentError(`Unsupported type node in postOffsetTypeNode: ${innerNode.kind}`);
+                throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_TYPE_NODE, {
+                    nodeKind: innerNode.kind,
+                    parentKind: 'postOffsetTypeNode',
+                });
             });
         },
 
         visitPreOffsetType(node) {
             return visitOrElse(node.type, visitor, innerNode => {
-                throw new ArgumentError(`Unsupported type node in preOffsetTypeNode: ${innerNode.kind}`);
+                throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_TYPE_NODE, {
+                    nodeKind: innerNode.kind,
+                    parentKind: 'preOffsetTypeNode',
+                });
             });
         },
 
@@ -251,7 +297,10 @@ export function createInputValueTransformerVisitor(
 
         visitRemainderOptionType(node) {
             const innerTransform = visitOrElse(node.item, visitor, innerNode => {
-                throw new ArgumentError(`Unsupported type node in remainderOptionTypeNode: ${innerNode.kind}`);
+                throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_TYPE_NODE, {
+                    nodeKind: innerNode.kind,
+                    parentKind: 'remainderOptionTypeNode',
+                });
             });
             return (input: unknown) => {
                 if (input === null || input === undefined) return input;
@@ -261,21 +310,27 @@ export function createInputValueTransformerVisitor(
 
         visitSentinelType(node) {
             return visitOrElse(node.type, visitor, innerNode => {
-                throw new ArgumentError(`Unsupported type node in sentinelTypeNode: ${innerNode.kind}`);
+                throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_TYPE_NODE, {
+                    nodeKind: innerNode.kind,
+                    parentKind: 'sentinelTypeNode',
+                });
             });
         },
 
         visitSetType(node) {
             // Sets are represented as arrays in dynamic-codecs
             const itemTransform = visitOrElse(node.item, visitor, innerNode => {
-                throw new ArgumentError(`Unsupported type node in setTypeNode: ${innerNode.kind}`);
+                throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_TYPE_NODE, {
+                    nodeKind: innerNode.kind,
+                    parentKind: 'setTypeNode',
+                });
             });
             return (input: unknown) => {
                 if (!Array.isArray(input)) {
-                    throw new ArgumentError(
-                        `Expected an array for setTypeNode, but received: ${formatValueType(input)}. ` +
-                            `Received value: ${safeStringify(input)}`,
-                    );
+                    throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_ARGUMENT_INPUT, {
+                        argumentName: 'setTypeNode',
+                        details: `Expected an array, but received: ${formatValueType(input)}. Received value: ${safeStringify(input)}`,
+                    });
                 }
                 return input.map(itemTransform);
             };
@@ -283,13 +338,19 @@ export function createInputValueTransformerVisitor(
 
         visitSizePrefixType(node) {
             return visitOrElse(node.type, visitor, innerNode => {
-                throw new ArgumentError(`Unsupported type node in sizePrefixTypeNode: ${innerNode.kind}`);
+                throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_TYPE_NODE, {
+                    nodeKind: innerNode.kind,
+                    parentKind: 'sizePrefixTypeNode',
+                });
             });
         },
 
         visitSolAmountType(node) {
             return visitOrElse(node.number, visitor, innerNode => {
-                throw new ArgumentError(`Unsupported type node in solAmountTypeNode: ${innerNode.kind}`);
+                throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_TYPE_NODE, {
+                    nodeKind: innerNode.kind,
+                    parentKind: 'solAmountTypeNode',
+                });
             });
         },
 
@@ -299,23 +360,29 @@ export function createInputValueTransformerVisitor(
 
         visitStructFieldType(node) {
             return visitOrElse(node.type, visitor, innerNode => {
-                throw new ArgumentError(`Unsupported type node in structFieldTypeNode: ${innerNode.kind}`);
+                throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_TYPE_NODE, {
+                    nodeKind: innerNode.kind,
+                    parentKind: 'structFieldTypeNode',
+                });
             });
         },
 
         visitStructType(node) {
             const fieldTransformers = node.fields.map(field => {
                 const transform = visitOrElse(field, visitor, innerNode => {
-                    throw new ArgumentError(`Unsupported type node in structTypeNode field: ${innerNode.kind}`);
+                    throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_TYPE_NODE, {
+                        nodeKind: innerNode.kind,
+                        parentKind: 'structTypeNode',
+                    });
                 });
                 return { name: field.name, transform };
             });
             return (input: unknown) => {
                 if (!isObjectRecord(input)) {
-                    throw new ArgumentError(
-                        `Expected a plain object for structTypeNode, but received: ${formatValueType(input)}. ` +
-                            `Received value: ${safeStringify(input)}`,
-                    );
+                    throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_ARGUMENT_INPUT, {
+                        argumentName: 'structTypeNode',
+                        details: `Expected a plain object, but received: ${formatValueType(input)}. Received value: ${safeStringify(input)}`,
+                    });
                 }
                 const result = { ...input } as Record<string, unknown>;
                 for (const { name, transform } of fieldTransformers) {
@@ -330,20 +397,24 @@ export function createInputValueTransformerVisitor(
         visitTupleType(node) {
             const itemTransforms = node.items.map(item =>
                 visitOrElse(item, visitor, innerNode => {
-                    throw new ArgumentError(`Unsupported type node in tupleTypeNode: ${innerNode.kind}`);
+                    throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_TYPE_NODE, {
+                        nodeKind: innerNode.kind,
+                        parentKind: 'tupleTypeNode',
+                    });
                 }),
             );
             return (input: unknown) => {
                 if (!Array.isArray(input)) {
-                    throw new ArgumentError(
-                        `Expected an array for tupleTypeNode, but received: ${formatValueType(input)}. ` +
-                            `Received value: ${safeStringify(input)}`,
-                    );
+                    throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_ARGUMENT_INPUT, {
+                        argumentName: 'tupleTypeNode',
+                        details: `Expected an array, but received: ${formatValueType(input)}. Received value: ${safeStringify(input)}`,
+                    });
                 }
                 if (input.length !== itemTransforms.length) {
-                    throw new ArgumentError(
-                        `Expected tuple of length ${itemTransforms.length} for tupleTypeNode, but received array of length ${input.length}.`,
-                    );
+                    throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_ARGUMENT_INPUT, {
+                        argumentName: 'tupleTypeNode',
+                        details: `Expected tuple of length ${itemTransforms.length}, but received array of length ${input.length}`,
+                    });
                 }
                 return input.map((value: unknown, index) => itemTransforms[index](value));
             };
@@ -351,7 +422,10 @@ export function createInputValueTransformerVisitor(
 
         visitZeroableOptionType(node) {
             const innerTransform = visitOrElse(node.item, visitor, innerNode => {
-                throw new ArgumentError(`Unsupported type node in zeroableOptionTypeNode: ${innerNode.kind}`);
+                throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_TYPE_NODE, {
+                    nodeKind: innerNode.kind,
+                    parentKind: 'zeroableOptionTypeNode',
+                });
             });
             return (input: unknown) => {
                 if (input === null || input === undefined) return input;
@@ -390,6 +464,9 @@ export function createInputValueTransformer(
 ): InputTransformer {
     const visitor = createInputValueTransformerVisitor(root, options);
     return visitOrElse(typeNode, visitor, node => {
-        throw new ArgumentError(`Unsupported type node for input transformation: ${node.kind}`);
+        throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_TYPE_NODE, {
+            nodeKind: node.kind,
+            parentKind: 'inputTransformation',
+        });
     });
 }

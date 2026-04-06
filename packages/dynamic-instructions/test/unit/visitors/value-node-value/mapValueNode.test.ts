@@ -35,7 +35,7 @@ describe('value-node-value: visitMapValue', () => {
                     ),
                 ]),
             ),
-        ).toThrow(/Cannot resolve map key/);
+        ).toThrow(/Unsupported node kind \[accountValueNode\] while resolving \[map key value node\]/);
     });
 
     test('should throw for unsupported map value', () => {
@@ -49,6 +49,6 @@ describe('value-node-value: visitMapValue', () => {
                     ),
                 ]),
             ),
-        ).toThrow(/Cannot resolve map value/);
+        ).toThrow(/Unsupported node kind \[accountValueNode\] while resolving \[map value value node\]/);
     });
 });

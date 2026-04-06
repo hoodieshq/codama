@@ -26,6 +26,6 @@ describe('value-node-value: visitSetValue', () => {
                 // @ts-expect-error - accountValueNode is invalid as StandaloneValueNode
                 setValueNode([accountValueNode('test')]),
             ),
-        ).toThrow(/Cannot resolve set item/);
+        ).toThrow(/Unsupported node kind \[accountValueNode\] while resolving \[set item value node\]/);
     });
 });

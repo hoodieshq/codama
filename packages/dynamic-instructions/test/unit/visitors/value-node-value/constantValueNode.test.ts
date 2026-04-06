@@ -15,6 +15,6 @@ describe('value-node-value: visitConstantValue', () => {
                 // @ts-expect-error - accountValueNode is invalid inside constantValueNode
                 constantValueNode(numberTypeNode('u8'), accountValueNode('test')),
             ),
-        ).toThrow(/Cannot resolve constantValueNode/);
+        ).toThrow(/Unsupported node kind \[accountValueNode\] while resolving \[constantValueNode wrapping/);
     });
 });

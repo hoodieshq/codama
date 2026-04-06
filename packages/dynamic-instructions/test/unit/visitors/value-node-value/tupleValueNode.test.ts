@@ -24,6 +24,6 @@ describe('value-node-value: visitTupleValue', () => {
                 // @ts-expect-error - accountValueNode is invalid as a StandaloneValueNode
                 tupleValueNode([accountValueNode('test')]),
             ),
-        ).toThrow(/Cannot resolve tuple item/);
+        ).toThrow(/Unsupported node kind \[accountValueNode\] while resolving \[tuple item value node\]/);
     });
 });

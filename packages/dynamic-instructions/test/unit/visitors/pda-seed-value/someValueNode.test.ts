@@ -19,11 +19,15 @@ describe('pda-seed-value: visitSomeValue', () => {
 
     test('should throw for unsupported inner node kind', async () => {
         const node = someValueNode(mapValueNode([]));
-        await expect(makeVisitor().visitSomeValue(node)).rejects.toThrow(/Unsupported some PDA seed value/);
+        await expect(makeVisitor().visitSomeValue(node)).rejects.toThrow(
+            /Unsupported node kind \[mapValueNode\] while resolving \[some PDA seed value/,
+        );
     });
 
     test('should throw for unsupported nested inner node kind', async () => {
         const node = someValueNode(constantValueNode(publicKeyTypeNode(), publicKeyValueNode('invalid-key')));
-        await expect(makeVisitor().visitSomeValue(node)).rejects.toThrow(/Expected base58-encoded Address/);
+        await expect(makeVisitor().visitSomeValue(node)).rejects.toThrow(
+            /Invalid address for \[publicKey\]:.*Expected base58-encoded Address/,
+        );
     });
 });

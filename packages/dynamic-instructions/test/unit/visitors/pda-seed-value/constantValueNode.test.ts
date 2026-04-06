@@ -22,6 +22,8 @@ describe('pda-seed-value: visitConstantValue', () => {
 
     test('should throw for unsupported inner node kind', async () => {
         const node = constantValueNode(numberTypeNode('u8'), mapValueNode([]));
-        await expect(makeVisitor().visitConstantValue(node)).rejects.toThrow(/Unsupported constant PDA seed value/);
+        await expect(makeVisitor().visitConstantValue(node)).rejects.toThrow(
+            /Unsupported node kind \[mapValueNode\] while resolving \[constant PDA seed value/,
+        );
     });
 });
