@@ -1,12 +1,5 @@
 import type { Address } from '@solana/addresses';
-import {
-    getResolvedInstructionInputsVisitor,
-    InstructionAccountNode,
-    isNode,
-    ResolvedInstructionAccount,
-    visit,
-    visitOrElse,
-} from 'codama';
+import { getResolvedInstructionInputsVisitor, InstructionAccountNode, isNode, visit, visitOrElse } from 'codama';
 
 import { isConvertibleAddress, toAddress } from '../../shared/address';
 import { AccountError, DependencyNotResolvedError } from '../../shared/errors';
@@ -19,13 +12,13 @@ import { type AccountResolutionContext, getInstructionFromCtx, getProgramFromCtx
 export async function resolveAccountAddressesByOrder(ctx: ResolutionContext): Promise<Map<string, Address | null>> {
     const ixNode = getInstructionFromCtx(ctx);
     const sortedInputs = visit(ixNode, getResolvedInstructionInputsVisitor());
-    const sortedAccountInputs = sortedInputs.filter((input): input is ResolvedInstructionAccount =>
-        isNode(input, 'instructionAccountNode'),
     );
-
     const resolvedAddresses = new Map<string, Address | null>();
 
-    for (const ixAccountNode of sortedAccountInputs) {
+    for (const ixAccountNode of sortedInputs) {
+        if (!isNode(ixAccountNode, 'instructionAccountNode')) {
+            continue; // Skip non-account inputs.
+        }
         const accountAddressInput = ctx.accountsInput?.[ixAccountNode.name];
         const isAccountProvided = accountAddressInput !== undefined && accountAddressInput !== null;
         // Accounts with default values can be omitted, as they can be resolved from default value.

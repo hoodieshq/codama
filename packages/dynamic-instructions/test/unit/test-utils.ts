@@ -1,19 +1,11 @@
 import { Address } from '@solana/addresses';
 import type { InstructionNode, RootNode } from 'codama';
-import { getRecordLinkablesVisitor, LinkableDictionary, NodeStack, visit } from 'codama';
 
-import type { ResolutionContext } from '../../src/instruction-encoding/resolvers/shared';
-
-export function buildLinkables(root: RootNode): LinkableDictionary {
-    const linkables = new LinkableDictionary();
-    visit(root, getRecordLinkablesVisitor(linkables));
-    return linkables;
-}
-
-export function buildStack(root: RootNode, ixNode: InstructionNode): NodeStack {
-    const stack = new NodeStack([root, root.program, ixNode]);
-    return stack;
-}
+import {
+    buildIxNodeStack,
+    buildLinkables,
+    type ResolutionContext,
+} from '../../src/instruction-encoding/resolvers/shared';
 
 /**
  * Builds a ResolutionContext for tests from root + ixNode + optional overrides.
@@ -31,6 +23,6 @@ export function buildResolutionContext(
         linkables: buildLinkables(root),
         resolvedAddresses: overrides?.resolvedAddresses ?? new Map<string, Address | null>(),
         resolversInput: overrides?.resolversInput ?? undefined,
-        stack: buildStack(root, ixNode),
+        stack: buildIxNodeStack(root, ixNode),
     };
 }

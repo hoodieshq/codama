@@ -3,10 +3,10 @@ import type { Address, ProgramDerivedAddress } from '@solana/addresses';
 import { getProgramDerivedAddress } from '@solana/addresses';
 import type { ReadonlyUint8Array } from '@solana/codecs';
 import type { InstructionNode, PdaNode, RegisteredPdaSeedNode, RootNode, VariablePdaSeedNode } from 'codama';
-import { getRecordLinkablesVisitor, isNode, LinkableDictionary, NodeStack, visit, visitOrElse } from 'codama';
+import { isNode, visitOrElse } from 'codama';
 
 import { createInputValueTransformer, createPdaSeedValueVisitor } from '../instruction-encoding';
-import type { ResolutionContext } from '../instruction-encoding/resolvers/shared';
+import { buildIxNodeStack, buildLinkables, type ResolutionContext } from '../instruction-encoding/resolvers/shared';
 import { toAddress } from '../shared/address';
 import { getMemoizedUtf8Encoder } from '../shared/codecs';
 import { AccountError } from '../shared/errors';
@@ -33,9 +33,8 @@ export async function deriveStandalonePDA(
     seedInputs: Record<string, unknown> = {},
 ): Promise<ProgramDerivedAddress> {
     // Build LinkableDictionary and minimal stack.
-    const linkables = new LinkableDictionary();
-    visit(root, getRecordLinkablesVisitor(linkables));
-    const stack = new NodeStack([root, root.program, STANDALONE_IX_NODE]);
+    const linkables = buildLinkables(root);
+    const stack = buildIxNodeStack(root, STANDALONE_IX_NODE);
 
     const programAddress = toAddress(pdaNode.programId || root.program.publicKey);
     const seedValues = await Promise.all(

@@ -1,11 +1,13 @@
 import type { Address } from '@solana/addresses';
-import type {
+import {
+    getRecordLinkablesVisitor,
     InstructionAccountNode,
     InstructionNode,
     LinkableDictionary,
     NodeStack,
     ProgramNode,
     RootNode,
+    visit,
 } from 'codama';
 import {
     findFirstNodeFromPath,
@@ -53,9 +55,7 @@ export type AccountResolutionContext = ResolutionContext & {
 
 export type ResolvedAddresses = Map<string, Address | null>;
 
-// --- Stack extraction helpers ---
-// Stack path is [Root, Program, Instruction]. Validated at runtime.
-
+// Stack extraction helpers. Stack path is [Root, Program, Instruction].
 export function getRootFromCtx(ctx: ResolutionContext): RootNode {
     const node = findFirstNodeFromPath(ctx.stack.getPath(), 'rootNode');
     if (!node) {
@@ -86,4 +86,14 @@ export function getInstructionFromCtx(ctx: ResolutionContext): InstructionNode {
  */
 export function getInstructionAccountFromCtx(ctx: ResolutionContext, name: string): InstructionAccountNode | undefined {
     return ctx.linkables.get([...ctx.stack.getPath(), instructionAccountLinkNode(name)]);
+}
+
+export function buildLinkables(root: RootNode): LinkableDictionary {
+    const linkables = new LinkableDictionary();
+    visit(root, getRecordLinkablesVisitor(linkables));
+    return linkables;
+}
+
+export function buildIxNodeStack(root: RootNode, ixNode: InstructionNode) {
+    return new NodeStack([root, root.program, ixNode]);
 }

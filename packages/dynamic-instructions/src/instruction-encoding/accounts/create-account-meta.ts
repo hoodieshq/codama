@@ -2,14 +2,14 @@ import type { Address } from '@solana/addresses';
 import type { AccountMeta } from '@solana/instructions';
 import { AccountRole } from '@solana/instructions';
 import type { InstructionAccountNode, InstructionNode, RootNode } from 'codama';
-import { CodamaError, getRecordLinkablesVisitor, LinkableDictionary, NodeStack, visit } from 'codama';
+import { CodamaError } from 'codama';
 
 import { isConvertibleAddress, toAddress } from '../../shared/address';
 import { AccountError } from '../../shared/errors';
 import type { AccountsInput, ArgumentsInput, EitherSigners, ResolversInput } from '../../shared/types';
 import { formatValueType } from '../../shared/util';
 import { resolveAccountAddressesByOrder, resolveAccountAddressesFallback } from '../resolvers';
-import { type ResolutionContext } from '../resolvers/shared';
+import { buildIxNodeStack, buildLinkables, type ResolutionContext } from '../resolvers/shared';
 
 type ResolvedAccount = {
     address: Address | null;
@@ -40,7 +40,7 @@ export async function createAccountMeta(
     // Resolution loop is sequential — no concurrent visitors modifying the stack.
     // Every async resolver extracts needed nodes from stack before its first await.
     const linkables = buildLinkables(root);
-    const stack = new NodeStack([root, root.program, ixNode]);
+    const stack = buildIxNodeStack(root, ixNode);
 
     const programAddress = toAddress(root.program.publicKey);
     const ctx: ResolutionContext = {
@@ -106,11 +106,13 @@ function appendRemainingAccounts(
         const addresses = argumentsInput[remainingNode.value.name];
 
         if (addresses === undefined) {
+            // Required remaining accounts must be provided.
             if (!remainingNode.isOptional) {
                 throw new AccountError(
                     `Remaining account argument "${remainingNode.value.name}" is required but was not provided`,
                 );
             }
+            // Optional remaining accounts can be safely omitted.
             continue;
         }
 
@@ -167,10 +169,4 @@ function isSignerAccount(acc: InstructionAccountNode, signers: string[]) {
         return signers.includes(acc.name);
     }
     return acc.isSigner === true;
-}
-
-function buildLinkables(root: RootNode): LinkableDictionary {
-    const linkables = new LinkableDictionary();
-    visit(root, getRecordLinkablesVisitor(linkables));
-    return linkables;
 }

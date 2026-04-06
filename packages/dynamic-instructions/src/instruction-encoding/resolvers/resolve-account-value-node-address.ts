@@ -8,10 +8,10 @@ import { getInstructionAccountFromCtx, getInstructionFromCtx, type ResolutionCon
 /**
  * Resolves an AccountValueNode reference to an Address.
  *
+ * Shared logic for resolving account references across visitors.
  * Looks up the referenced account in accountsInput (user-provided).
  * Or in the resolvedAddresses map (populated by prior resolution).
- * Throws DependencyNotResolvedError if the dependency exists but hasn't been resolved yet
- * To allow for custom resolutiion retry.
+ * Throws DependencyNotResolvedError if the dependency exists but hasn't been resolved yet (allows custom resolutiion retry).
  */
 export function resolveAccountValueNodeAddress(node: AccountValueNode, ctx: ResolutionContext): Address | null {
     const { accountsInput, resolvedAddresses } = ctx;
