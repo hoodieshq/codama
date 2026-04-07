@@ -1,5 +1,6 @@
 import {
-    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_PDA_SEED,
+    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVARIANT_VIOLATION,
+    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__NODE_REFERENCE_NOT_FOUND,
     CODAMA_ERROR__LINKED_NODE_NOT_FOUND,
     CODAMA_ERROR__UNEXPECTED_NODE_KIND,
     CODAMA_ERROR__UNRECOGNIZED_NODE_KIND,
@@ -9,8 +10,8 @@ import type { Address, ProgramDerivedAddress } from '@solana/addresses';
 import { address, getProgramDerivedAddress } from '@solana/addresses';
 import type { ReadonlyUint8Array } from '@solana/codecs';
 import type {
-    InstructionAccountNode,
     Node,
+    NodeKind,
     PdaNode,
     PdaSeedValueNode,
     PdaValueNode,
@@ -24,7 +25,6 @@ import { createPdaSeedValueVisitor, PDA_SEED_VALUE_SUPPORTED_NODE_KINDS } from '
 import type { BaseResolutionContext } from './types';
 
 export type ResolvePDAAddressContext = BaseResolutionContext & {
-    ixAccountNode: InstructionAccountNode;
     pdaValueNode: PdaValueNode;
 };
 
@@ -35,7 +35,6 @@ export type ResolvePDAAddressContext = BaseResolutionContext & {
 export async function resolvePDAAddress({
     root,
     ixNode,
-    ixAccountNode,
     argumentsInput = {},
     accountsInput = {},
     pdaValueNode,
@@ -74,10 +73,9 @@ export async function resolvePDAAddress({
                 const variableSeedValueNode = variableSeedValueNodes.find(node => node.name === seedName);
 
                 if (!variableSeedValueNode) {
-                    throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_PDA_SEED, {
-                        details: `Variable PDA SeedValueNode was not found for [${ixAccountNode.name}] account`,
-                        pdaName: pdaNode.name,
-                        seedName,
+                    throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__NODE_REFERENCE_NOT_FOUND, {
+                        instructionName: ixNode.name,
+                        referencedName: seedName,
                     });
                 }
 
@@ -148,18 +146,16 @@ function resolveVariablePdaSeed({
     variableSeedValueNode,
 }: ResolvePdaSeedContext): Promise<ReadonlyUint8Array> {
     if (!isNode(variableSeedValueNode, 'pdaSeedValueNode')) {
-        throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_PDA_SEED, {
-            details: `Not a PDA seed value node [${safeStringify((variableSeedValueNode as { kind?: string }).kind)}]`,
-            pdaName: seedNode.name,
-            seedName: seedNode.name,
+        throw new CodamaError(CODAMA_ERROR__UNEXPECTED_NODE_KIND, {
+            expectedKinds: ['pdaSeedValueNode'],
+            kind: (variableSeedValueNode as { kind?: string }).kind as NodeKind,
+            node: variableSeedValueNode as Node,
         });
     }
 
     if (seedNode.name !== variableSeedValueNode.name) {
-        throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_PDA_SEED, {
-            details: `Mismatched PDA seed: [${seedNode.name}] vs [${variableSeedValueNode.name}]`,
-            pdaName: seedNode.name,
-            seedName: seedNode.name,
+        throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVARIANT_VIOLATION, {
+            message: `Mismatched PDA seed names: expected [${seedNode.name}], got [${variableSeedValueNode.name}]`,
         });
     }
 

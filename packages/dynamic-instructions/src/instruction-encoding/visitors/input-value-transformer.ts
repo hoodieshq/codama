@@ -1,5 +1,5 @@
 import {
-    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_ARGUMENT_INPUT,
+    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNEXPECTED_ARGUMENT_TYPE,
     CODAMA_ERROR__LINKED_NODE_NOT_FOUND,
     CODAMA_ERROR__UNEXPECTED_NODE_KIND,
     CodamaError,
@@ -8,7 +8,7 @@ import type { BytesEncoding, Node, RootNode, TypeNode, Visitor } from 'codama';
 import { isNode, pascalCase, visitOrElse } from 'codama';
 
 import { isUint8Array, uint8ArrayToEncodedString } from '../../shared/bytes-encoding';
-import { formatValueType, isObjectRecord, safeStringify } from '../../shared/util';
+import { formatValueType, isObjectRecord } from '../../shared/util';
 
 /**
  * Type nodes that the input value transformer can process.
@@ -77,8 +77,10 @@ export function createInputValueTransformerVisitor(
             const itemTransform = visitOrElse(node.item, visitor, unexpectedNodeFallback);
             return (input: unknown) => {
                 if (!Array.isArray(input)) {
-                    throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_ARGUMENT_INPUT, {
-                        details: `Expected an array for arrayTypeNode, but received: ${formatValueType(input)}. Received value: ${safeStringify(input)}`,
+                    throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNEXPECTED_ARGUMENT_TYPE, {
+                        actualType: formatValueType(input),
+                        expectedType: 'array',
+                        nodeKind: 'arrayTypeNode',
                     });
                 }
                 return input.map(itemTransform);
@@ -98,8 +100,10 @@ export function createInputValueTransformerVisitor(
                 if (Array.isArray(input) && input.every(item => typeof item === 'number')) {
                     return [bytesEncoding, uint8ArrayToEncodedString(new Uint8Array(input), bytesEncoding)];
                 }
-                throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_ARGUMENT_INPUT, {
-                    details: `Expected bytes input (Uint8Array or number[]) for bytesTypeNode, but received: ${formatValueType(input)}. Received value: ${safeStringify(input)}`,
+                throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNEXPECTED_ARGUMENT_TYPE, {
+                    actualType: formatValueType(input),
+                    expectedType: 'Uint8Array | number[]',
+                    nodeKind: 'bytesTypeNode',
                 });
             };
         },
@@ -145,8 +149,10 @@ export function createInputValueTransformerVisitor(
 
                 if (!variantNode) {
                     const availableVariants = node.variants.map(v => v.name).join(', ');
-                    throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_ARGUMENT_INPUT, {
-                        details: `Unknown enum variant ${safeStringify(__kind)} for enumTypeNode. Available variants: [${availableVariants}]`,
+                    throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNEXPECTED_ARGUMENT_TYPE, {
+                        actualType: `variant '${String(__kind)}'`,
+                        expectedType: `one of [${availableVariants}]`,
+                        nodeKind: 'enumTypeNode',
                     });
                 }
 
@@ -158,8 +164,10 @@ export function createInputValueTransformerVisitor(
                     const structTransform = visitOrElse(variantNode.struct, visitor, unexpectedNodeFallback);
                     const transformedFields = structTransform(rest);
                     if (!isObjectRecord(transformedFields)) {
-                        throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_ARGUMENT_INPUT, {
-                            details: `Expected transformed fields to be an object for enumStructVariantTypeNode, got: ${formatValueType(transformedFields)}`,
+                        throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNEXPECTED_ARGUMENT_TYPE, {
+                            actualType: formatValueType(transformedFields),
+                            expectedType: 'object',
+                            nodeKind: 'enumStructVariantTypeNode',
                         });
                     }
                     return { ...kindObj, ...transformedFields };
@@ -168,8 +176,10 @@ export function createInputValueTransformerVisitor(
                 if (isNode(variantNode, 'enumTupleVariantTypeNode')) {
                     const tupleTransform = visitOrElse(variantNode.tuple, visitor, unexpectedNodeFallback);
                     if (!('fields' in rest) || !Array.isArray(rest.fields)) {
-                        throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_ARGUMENT_INPUT, {
-                            details: `Expected "fields" array for enum tuple variant ${safeStringify(__kind)} for enumTupleVariantTypeNode, but received: ${formatValueType(rest.fields ?? rest)}. Received value: ${safeStringify(input)}`,
+                        throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNEXPECTED_ARGUMENT_TYPE, {
+                            actualType: formatValueType(rest.fields ?? rest),
+                            expectedType: 'array (fields)',
+                            nodeKind: 'enumTupleVariantTypeNode',
                         });
                     }
                     return { ...kindObj, fields: tupleTransform(rest.fields) };
@@ -196,8 +206,10 @@ export function createInputValueTransformerVisitor(
             const valueTransform = visitOrElse(node.value, visitor, unexpectedNodeFallback);
             return (input: unknown) => {
                 if (!isObjectRecord(input)) {
-                    throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_ARGUMENT_INPUT, {
-                        details: `Expected a plain object for mapTypeNode, but received: ${formatValueType(input)}. Received value: ${safeStringify(input)}`,
+                    throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNEXPECTED_ARGUMENT_TYPE, {
+                        actualType: formatValueType(input),
+                        expectedType: 'object',
+                        nodeKind: 'mapTypeNode',
                     });
                 }
                 const result: Record<string, unknown> = {};
@@ -250,8 +262,10 @@ export function createInputValueTransformerVisitor(
             const itemTransform = visitOrElse(node.item, visitor, unexpectedNodeFallback);
             return (input: unknown) => {
                 if (!Array.isArray(input)) {
-                    throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_ARGUMENT_INPUT, {
-                        details: `Expected an array for setTypeNode, but received: ${formatValueType(input)}. Received value: ${safeStringify(input)}`,
+                    throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNEXPECTED_ARGUMENT_TYPE, {
+                        actualType: formatValueType(input),
+                        expectedType: 'array',
+                        nodeKind: 'setTypeNode',
                     });
                 }
                 return input.map(itemTransform);
@@ -281,8 +295,10 @@ export function createInputValueTransformerVisitor(
             });
             return (input: unknown) => {
                 if (!isObjectRecord(input)) {
-                    throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_ARGUMENT_INPUT, {
-                        details: `Expected a plain object for structTypeNode, but received: ${formatValueType(input)}. Received value: ${safeStringify(input)}`,
+                    throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNEXPECTED_ARGUMENT_TYPE, {
+                        actualType: formatValueType(input),
+                        expectedType: 'object',
+                        nodeKind: 'structTypeNode',
                     });
                 }
                 const result = { ...input } as Record<string, unknown>;
@@ -299,13 +315,17 @@ export function createInputValueTransformerVisitor(
             const itemTransforms = node.items.map(item => visitOrElse(item, visitor, unexpectedNodeFallback));
             return (input: unknown) => {
                 if (!Array.isArray(input)) {
-                    throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_ARGUMENT_INPUT, {
-                        details: `Expected an array for tupleTypeNode, but received: ${formatValueType(input)}. Received value: ${safeStringify(input)}`,
+                    throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNEXPECTED_ARGUMENT_TYPE, {
+                        actualType: formatValueType(input),
+                        expectedType: 'array',
+                        nodeKind: 'tupleTypeNode',
                     });
                 }
                 if (input.length !== itemTransforms.length) {
-                    throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_ARGUMENT_INPUT, {
-                        details: `Expected tuple of length ${itemTransforms.length} for tupleTypeNode, but received array of length ${input.length}`,
+                    throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNEXPECTED_ARGUMENT_TYPE, {
+                        actualType: `array(length:${input.length})`,
+                        expectedType: `array(length:${itemTransforms.length})`,
+                        nodeKind: 'tupleTypeNode',
                     });
                 }
                 return input.map((value: unknown, index) => itemTransforms[index](value));

@@ -1,13 +1,13 @@
 import {
-    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__FAILED_TO_EVALUATE_CONDITIONAL,
+    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVARIANT_VIOLATION,
     CODAMA_ERROR__UNEXPECTED_NODE_KIND,
     CodamaError,
 } from '@codama/errors';
 import type { ConditionalValueNode, InstructionAccountNode, InstructionInputValueNode, Node } from 'codama';
 import { isNode, visitOrElse } from 'codama';
 
-import { createConditionNodeValueVisitor } from '../visitors/condition-node-value';
-import { createValueNodeVisitor } from '../visitors/value-node-value';
+import { CONDITION_NODE_SUPPORTED_NODE_KINDS, createConditionNodeValueVisitor } from '../visitors/condition-node-value';
+import { createValueNodeVisitor, VALUE_NODE_SUPPORTED_NODE_KINDS } from '../visitors/value-node-value';
 import type { BaseResolutionContext } from './types';
 
 export type ResolveConditionalContext = BaseResolutionContext & {
@@ -39,10 +39,8 @@ export async function resolveConditionalValueNodeCondition({
     const { condition, value: expectedValueNode, ifTrue, ifFalse } = conditionalValueNode;
 
     if (!expectedValueNode && !ifTrue && !ifFalse) {
-        throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__FAILED_TO_EVALUATE_CONDITIONAL, {
-            accountName: ixAccountNode.name,
-            details: 'Invalid conditionalValueNode: missing value and branches',
-            instructionName: ixNode.name,
+        throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVARIANT_VIOLATION, {
+            message: `Invalid conditionalValueNode: missing value and branches for account ${ixAccountNode.name} in ${ixNode.name}`,
         });
     }
 
@@ -56,10 +54,10 @@ export async function resolveConditionalValueNodeCondition({
         root,
     });
     const actualProvidedValue = await visitOrElse(condition, conditionVisitor, condNode => {
-        throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__FAILED_TO_EVALUATE_CONDITIONAL, {
-            accountName: ixAccountNode.name,
-            details: `Cannot resolve condition node: ${condNode.kind}`,
-            instructionName: ixNode.name,
+        throw new CodamaError(CODAMA_ERROR__UNEXPECTED_NODE_KIND, {
+            expectedKinds: [...CONDITION_NODE_SUPPORTED_NODE_KINDS],
+            kind: condNode.kind,
+            node: condNode,
         });
     });
 
@@ -70,18 +68,16 @@ export async function resolveConditionalValueNodeCondition({
     // If expectedValueNode exists, the condition must be equal to expected value.
     const valueVisitor = createValueNodeVisitor();
     const expectedValue = visitOrElse(expectedValueNode, valueVisitor, valueNode => {
-        throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__FAILED_TO_EVALUATE_CONDITIONAL, {
-            accountName: ixAccountNode.name,
-            details: `Cannot resolve required value node: ${valueNode.kind}`,
-            instructionName: ixNode.name,
+        throw new CodamaError(CODAMA_ERROR__UNEXPECTED_NODE_KIND, {
+            expectedKinds: [...VALUE_NODE_SUPPORTED_NODE_KINDS],
+            kind: valueNode.kind,
+            node: valueNode,
         });
     });
 
     if (typeof expectedValue.value === 'object' || typeof actualProvidedValue === 'object') {
-        throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__FAILED_TO_EVALUATE_CONDITIONAL, {
-            accountName: ixAccountNode.name,
-            details: 'Deep equality comparison not yet supported for conditional value',
-            instructionName: ixNode.name,
+        throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVARIANT_VIOLATION, {
+            message: 'Deep equality comparison not yet supported for conditional value',
         });
     }
 

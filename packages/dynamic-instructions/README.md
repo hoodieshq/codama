@@ -188,13 +188,13 @@ All errors are instances of `CodamaError` from `@codama/errors`, each with a uni
 import {
     CodamaError,
     isCodamaError,
-    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__MISSING_REQUIRED_ACCOUNT,
+    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__ACCOUNT_MISSING,
 } from '@codama/dynamic-instructions';
 
 try {
     const ix = await client.methods.transferSol({ amount: 100 }).accounts({}).instruction();
 } catch (err) {
-    if (isCodamaError(err, CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__MISSING_REQUIRED_ACCOUNT)) {
+    if (isCodamaError(err, CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__ACCOUNT_MISSING)) {
         console.error(`Missing account: ${err.context.accountName}`);
     }
 }

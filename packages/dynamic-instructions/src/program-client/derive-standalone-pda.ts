@@ -1,6 +1,7 @@
 import { getNodeCodec } from '@codama/dynamic-codecs';
 import {
-    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_PDA_SEED,
+    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__ARGUMENT_MISSING,
+    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNEXPECTED_ARGUMENT_TYPE,
     CODAMA_ERROR__UNEXPECTED_NODE_KIND,
     CODAMA_ERROR__UNRECOGNIZED_NODE_KIND,
     CodamaError,
@@ -101,20 +102,19 @@ function resolveStandaloneVariableSeed(
         if (isNode(typeNode, 'remainderOptionTypeNode')) {
             return Promise.resolve(new Uint8Array(0));
         }
-        throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_PDA_SEED, {
-            details: 'missing seed value',
-            pdaName: '__standalone__' as typeof seedNode.name,
-            seedName: seedNode.name,
+        throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__ARGUMENT_MISSING, {
+            argumentName: seedNode.name,
+            instructionName: '__standalone__' as typeof seedNode.name,
         });
     }
 
     // For simple string seeds encode directly with UTF-8 (no length prefix)
     if (isNode(typeNode, 'stringTypeNode')) {
         if (typeof input !== 'string') {
-            throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_PDA_SEED, {
-                details: `expected string, got ${formatValueType(input)}`,
-                pdaName: '__standalone__' as typeof seedNode.name,
-                seedName: seedNode.name,
+            throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNEXPECTED_ARGUMENT_TYPE, {
+                actualType: formatValueType(input),
+                expectedType: 'string',
+                nodeKind: 'stringTypeNode',
             });
         }
         return Promise.resolve(getMemoizedUtf8Encoder().encode(input));

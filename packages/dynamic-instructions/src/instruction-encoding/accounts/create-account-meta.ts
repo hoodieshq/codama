@@ -1,7 +1,8 @@
 import {
-    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_ACCOUNT_ADDRESS,
-    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_ARGUMENT_INPUT,
-    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__MISSING_REQUIRED_ACCOUNT,
+    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__ACCOUNT_MISSING,
+    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__ARGUMENT_MISSING,
+    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNEXPECTED_ADDRESS_TYPE,
+    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNEXPECTED_ARGUMENT_TYPE,
     CODAMA_ERROR__UNEXPECTED_NODE_KIND,
     CodamaError,
 } from '@codama/errors';
@@ -44,7 +45,7 @@ export async function createAccountMeta(
             const isAccountProvided = accountAddressInput !== undefined && accountAddressInput !== null;
             // Accounts with default values can be omitted, as they can be resolved from default value
             if (!isAccountProvided && !ixAccountNode.isOptional && !ixAccountNode.defaultValue) {
-                throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__MISSING_REQUIRED_ACCOUNT, {
+                throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__ACCOUNT_MISSING, {
                     accountName: ixAccountNode.name,
                     instructionName: ixNode.name,
                 });
@@ -104,8 +105,9 @@ export async function createAccountMeta(
         if (addresses === undefined) {
             // Required remaining accounts must be provided.
             if (!remainingNode.isOptional) {
-                throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_ARGUMENT_INPUT, {
-                    details: `Remaining account argument [${remainingNode.value.name}] is required but was not provided`,
+                throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__ARGUMENT_MISSING, {
+                    argumentName: remainingNode.value.name,
+                    instructionName: ixNode.name,
                 });
             }
             // Optional remaining accounts can be safely omitted.
@@ -113,17 +115,20 @@ export async function createAccountMeta(
         }
 
         if (!Array.isArray(addresses)) {
-            throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_ARGUMENT_INPUT, {
-                details: `Remaining account argument [${remainingNode.value.name}] must be an array of addresses`,
+            throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNEXPECTED_ARGUMENT_TYPE, {
+                actualType: formatValueType(addresses),
+                expectedType: 'array',
+                nodeKind: 'remainingAccounts',
             });
         }
         const role = getRemainingAccountRole(remainingNode.isSigner, remainingNode.isWritable);
         for (let i = 0; i < addresses.length; i++) {
             const addr: unknown = addresses[i];
             if (!isConvertibleAddress(addr)) {
-                throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_ACCOUNT_ADDRESS, {
-                    details: `Remaining account argument must be an address string or PublicKey, got ${formatValueType(addr)}`,
-                    name: `${remainingNode.value.name}[${i}]`,
+                throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNEXPECTED_ADDRESS_TYPE, {
+                    accountName: `${remainingNode.value.name}[${i}]`,
+                    actualType: formatValueType(addr),
+                    expectedType: 'Address | PublicKey',
                 });
             }
             accountMetas.push({ address: toAddress(addr), role });

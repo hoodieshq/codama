@@ -1,4 +1,8 @@
-import { CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_ARGUMENT_INPUT, CodamaError } from '@codama/errors';
+import {
+    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__FAILED_TO_VALIDATE_INPUT,
+    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_ARGUMENT_INPUT,
+    CodamaError,
+} from '@codama/errors';
 import type { InstructionNode, RootNode } from 'codama';
 import type { Failure } from 'superstruct';
 import { assert, StructError } from 'superstruct';
@@ -33,18 +37,19 @@ export function createArgumentsInputValidator(root: RootNode, ixNode: Instructio
             assert(filteredInput, validator);
         } catch (error) {
             if (!(error instanceof StructError)) {
-                throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_ARGUMENT_INPUT, {
+                throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__FAILED_TO_VALIDATE_INPUT, {
                     cause: error,
-                    details: 'Unexpected validation error',
+                    message: 'Unexpected validation error',
                 });
             }
-            const message = error.failures().map(failure => {
+            const formattedMessage = error.failures().map(failure => {
                 const fieldPath = formatFailurePath(failure);
                 const value = formatFailureValue(failure.value);
                 return `Invalid argument "${fieldPath}", value: ${value}. ${failure.message}\n`;
             });
-            throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_ARGUMENT_INPUT, {
-                details: message.join(''),
+            throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__FAILED_TO_VALIDATE_INPUT, {
+                cause: error,
+                message: formattedMessage.join(''),
             });
         }
     };
@@ -82,7 +87,8 @@ function validateOmittedArguments(ixNode: InstructionNode, argumentsInput: Argum
     ixNode.arguments.filter(isOmittedArgument).forEach(ixArgumentNode => {
         if (Object.hasOwn(argumentsInput, ixArgumentNode.name)) {
             throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_ARGUMENT_INPUT, {
-                details: `Argument [${ixArgumentNode.name}] cannot be provided (omitted defaultValueStrategy)`,
+                argumentName: ixArgumentNode.name,
+                message: 'Omitted argument must not be provided',
             });
         }
     });

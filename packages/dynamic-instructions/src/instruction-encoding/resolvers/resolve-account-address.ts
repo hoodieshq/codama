@@ -1,6 +1,7 @@
 import {
-    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__CANNOT_RESOLVE_OPTIONAL_ACCOUNT,
-    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__MISSING_REQUIRED_ACCOUNT,
+    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__ACCOUNT_MISSING,
+    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVARIANT_VIOLATION,
+    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_OPTIONAL_ACCOUNT_STRATEGY,
     CODAMA_ERROR__UNEXPECTED_NODE_KIND,
     CodamaError,
 } from '@codama/errors';
@@ -68,7 +69,7 @@ export async function resolveAccountAddress({
         return addressValue;
     }
 
-    throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__MISSING_REQUIRED_ACCOUNT, {
+    throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__ACCOUNT_MISSING, {
         accountName: ixAccountNode.name,
         instructionName: ixNode.name,
     });
@@ -85,10 +86,8 @@ function resolveOptionalAccountWithStrategy(
     ixAccountNode: InstructionAccountNode,
 ) {
     if (!ixAccountNode.isOptional) {
-        throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__CANNOT_RESOLVE_OPTIONAL_ACCOUNT, {
-            accountName: ixAccountNode.name,
-            details: 'Account is non-optional',
-            instructionName: ixNode.name,
+        throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVARIANT_VIOLATION, {
+            message: `resolveOptionalAccountWithStrategy called for non-optional account: ${ixAccountNode.name}`,
         });
     }
     switch (ixNode.optionalAccountStrategy) {
@@ -97,10 +96,10 @@ function resolveOptionalAccountWithStrategy(
         case 'programId':
             return toAddress(root.program.publicKey);
         default:
-            throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__CANNOT_RESOLVE_OPTIONAL_ACCOUNT, {
+            throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_OPTIONAL_ACCOUNT_STRATEGY, {
                 accountName: ixAccountNode.name,
-                details: `Unsupported strategy [${safeStringify(ixNode.optionalAccountStrategy)}]`,
                 instructionName: ixNode.name,
+                strategy: safeStringify(ixNode.optionalAccountStrategy),
             });
     }
 }

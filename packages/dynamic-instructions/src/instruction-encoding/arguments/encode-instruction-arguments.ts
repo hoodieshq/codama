@@ -1,5 +1,10 @@
 import { getNodeCodec, type ReadonlyUint8Array } from '@codama/dynamic-codecs';
-import { CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__FAILED_TO_ENCODE_ARGUMENT, CodamaError } from '@codama/errors';
+import {
+    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__DEFAULT_VALUE_MISSING,
+    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__FAILED_TO_ENCODE_ARGUMENT,
+    CODAMA_ERROR__UNEXPECTED_NODE_KIND,
+    CodamaError,
+} from '@codama/errors';
 import { Codec, mergeBytes } from '@solana/codecs';
 import type { InstructionNode, RootNode } from 'codama';
 import { visitOrElse } from 'codama';
@@ -43,19 +48,18 @@ function encodeOmittedArgument(
 ): ReadonlyUint8Array {
     const defaultValue = ixArgumentNode.defaultValue;
     if (defaultValue === undefined) {
-        throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__FAILED_TO_ENCODE_ARGUMENT, {
+        throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__DEFAULT_VALUE_MISSING, {
             argumentName: ixArgumentNode.name,
-            details: 'Omitted argument has no default value',
             instructionName: ix.name,
         });
     }
 
     const visitor = createDefaultValueEncoderVisitor(nodeCodec);
     return visitOrElse(defaultValue, visitor, node => {
-        throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__FAILED_TO_ENCODE_ARGUMENT, {
-            argumentName: ixArgumentNode.name,
-            details: `Unsupported encoding for "${ixArgumentNode.type.kind}" kind (defaultValue: ${node.kind})`,
-            instructionName: ix.name,
+        throw new CodamaError(CODAMA_ERROR__UNEXPECTED_NODE_KIND, {
+            expectedKinds: ['numberValueNode', 'booleanValueNode', 'enumValueNode'],
+            kind: node.kind,
+            node,
         });
     });
 }
@@ -71,7 +75,6 @@ function encodeOptionalArgument(
         throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__FAILED_TO_ENCODE_ARGUMENT, {
             argumentName: ixArgumentNode.name,
             cause: error,
-            details: 'Failed to encode optional argument as null',
             instructionName: ix.name,
         });
     }
@@ -87,7 +90,6 @@ function encodeRequiredArgument(
     if (input === undefined) {
         throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__FAILED_TO_ENCODE_ARGUMENT, {
             argumentName: ixArgumentNode.name,
-            details: 'Missing required argument',
             instructionName: ix.name,
         });
     }
@@ -102,7 +104,6 @@ function encodeRequiredArgument(
         throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__FAILED_TO_ENCODE_ARGUMENT, {
             argumentName: ixArgumentNode.name,
             cause: error,
-            details: 'Required argument encoding',
             instructionName: ix.name,
         });
     }

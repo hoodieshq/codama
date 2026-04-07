@@ -5,13 +5,21 @@ import type { AccountValueNode, ArgumentValueNode, ResolverValueNode } from 'cod
 import { resolveAccountValueNodeAddress } from '../resolvers/resolve-account-value-node-address';
 import type { BaseResolutionContext } from '../resolvers/types';
 
+export const CONDITION_NODE_SUPPORTED_NODE_KINDS = [
+    'accountValueNode',
+    'argumentValueNode',
+    'resolverValueNode',
+] as const;
+
+type ConditionNodeSupportedNodeKind = (typeof CONDITION_NODE_SUPPORTED_NODE_KINDS)[number];
+
 /**
  * Visitor for resolving condition nodes in ConditionalValueNode.
  * Returns the runtime value of the condition (from accounts or arguments).
  */
 export function createConditionNodeValueVisitor(
     ctx: BaseResolutionContext,
-): Visitor<Promise<unknown>, 'accountValueNode' | 'argumentValueNode' | 'resolverValueNode'> {
+): Visitor<Promise<unknown>, ConditionNodeSupportedNodeKind> {
     const { root, ixNode, argumentsInput, accountsInput, resolutionPath, resolversInput } = ctx;
 
     return {

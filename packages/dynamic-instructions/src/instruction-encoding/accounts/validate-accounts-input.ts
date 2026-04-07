@@ -1,6 +1,7 @@
 import {
+    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__ACCOUNT_MISSING,
+    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__FAILED_TO_VALIDATE_INPUT,
     CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_ACCOUNT_ADDRESS,
-    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__MISSING_REQUIRED_ACCOUNT,
     CodamaError,
 } from '@codama/errors';
 import { camelCase, type InstructionNode } from 'codama';
@@ -28,21 +29,20 @@ export function createAccountsInputValidator(ixNode: InstructionNode) {
                 const key = error.key as string;
                 const value = error.value as unknown;
                 if (value == null) {
-                    throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__MISSING_REQUIRED_ACCOUNT, {
+                    throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__ACCOUNT_MISSING, {
                         accountName: camelCase(key),
                         instructionName: ixNode.name,
                     });
                 } else {
                     throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_ACCOUNT_ADDRESS, {
-                        details: safeStringify(value),
                         name: key,
+                        value: safeStringify(value),
                     });
                 }
             }
-            throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_ACCOUNT_ADDRESS, {
+            throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__FAILED_TO_VALIDATE_INPUT, {
                 cause: error,
-                details: 'Unexpected account validation error',
-                name: 'unknown',
+                message: 'Unexpected validation error',
             });
         }
     };
