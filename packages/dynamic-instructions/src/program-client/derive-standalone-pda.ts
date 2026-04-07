@@ -1,7 +1,8 @@
 import { getNodeCodec } from '@codama/dynamic-codecs';
 import {
     CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_PDA_SEED,
-    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_NODE,
+    CODAMA_ERROR__UNEXPECTED_NODE_KIND,
+    CODAMA_ERROR__UNRECOGNIZED_NODE_KIND,
     CodamaError,
 } from '@codama/errors';
 import type { Address, ProgramDerivedAddress } from '@solana/addresses';
@@ -10,7 +11,11 @@ import type { ReadonlyUint8Array } from '@solana/codecs';
 import type { InstructionNode, PdaNode, RegisteredPdaSeedNode, RootNode, VariablePdaSeedNode } from 'codama';
 import { isNode, visitOrElse } from 'codama';
 
-import { createInputValueTransformer, createPdaSeedValueVisitor } from '../instruction-encoding';
+import {
+    createInputValueTransformer,
+    createPdaSeedValueVisitor,
+    PDA_SEED_VALUE_SUPPORTED_NODE_KINDS,
+} from '../instruction-encoding';
 import { toAddress } from '../shared/address';
 import { getMemoizedUtf8Encoder } from '../shared/codecs';
 import { formatValueType } from '../shared/util';
@@ -44,9 +49,8 @@ export async function deriveStandalonePDA(
             if (seedNode.kind === 'variablePdaSeedNode') {
                 return await resolveStandaloneVariableSeed(root, seedNode, seedInputs);
             }
-            throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_NODE, {
-                details: `PDA seed resolution for ${pdaNode.name}`,
-                nodeKind: (seedNode as { kind?: string }).kind ?? 'unknown',
+            throw new CodamaError(CODAMA_ERROR__UNRECOGNIZED_NODE_KIND, {
+                kind: (seedNode as { kind?: string }).kind ?? 'unknown',
             });
         }),
     );
@@ -60,9 +64,10 @@ function resolveStandaloneConstantSeed(
     seedNode: RegisteredPdaSeedNode,
 ): Promise<ReadonlyUint8Array> {
     if (!isNode(seedNode, 'constantPdaSeedNode')) {
-        throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_NODE, {
-            details: 'constant PDA seed resolution',
-            nodeKind: seedNode.kind,
+        throw new CodamaError(CODAMA_ERROR__UNEXPECTED_NODE_KIND, {
+            expectedKinds: ['constantPdaSeedNode'],
+            kind: seedNode.kind,
+            node: seedNode,
         });
     }
     const visitor = createPdaSeedValueVisitor({
@@ -75,9 +80,10 @@ function resolveStandaloneConstantSeed(
         root,
     });
     return visitOrElse(seedNode.value, visitor, node => {
-        throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_NODE, {
-            details: 'constant PDA seed value',
-            nodeKind: node.kind,
+        throw new CodamaError(CODAMA_ERROR__UNEXPECTED_NODE_KIND, {
+            expectedKinds: Array.from(PDA_SEED_VALUE_SUPPORTED_NODE_KINDS),
+            kind: node.kind,
+            node,
         });
     });
 }

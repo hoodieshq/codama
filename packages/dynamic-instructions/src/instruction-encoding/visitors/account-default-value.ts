@@ -4,6 +4,7 @@ import {
     CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_ACCOUNT_ADDRESS,
     CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__MISSING_REQUIRED_ACCOUNT,
     CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_NODE,
+    CODAMA_ERROR__UNEXPECTED_NODE_KIND,
     CodamaError,
 } from '@codama/errors';
 import type { Address } from '@solana/addresses';
@@ -37,24 +38,27 @@ type AccountDefaultValueVisitorContext = BaseResolutionContext & {
     ixAccountNode: InstructionAccountNode;
 };
 
+export const ACCOUNT_DEFAULT_VALUE_SUPPORTED_NODE_KINDS = [
+    'accountBumpValueNode',
+    'accountValueNode',
+    'argumentValueNode',
+    'conditionalValueNode',
+    'identityValueNode',
+    'payerValueNode',
+    'pdaValueNode',
+    'programIdValueNode',
+    'publicKeyValueNode',
+    'resolverValueNode',
+] as const;
+
+type AccountDefaultValueSupportedNodeKind = (typeof ACCOUNT_DEFAULT_VALUE_SUPPORTED_NODE_KINDS)[number];
+
 /**
  * Visitor for resolving InstructionInputValueNode types to Address values for account resolution.
  */
 export function createAccountDefaultValueVisitor(
     ctx: AccountDefaultValueVisitorContext,
-): Visitor<
-    Promise<Address | null>,
-    | 'accountBumpValueNode'
-    | 'accountValueNode'
-    | 'argumentValueNode'
-    | 'conditionalValueNode'
-    | 'identityValueNode'
-    | 'payerValueNode'
-    | 'pdaValueNode'
-    | 'programIdValueNode'
-    | 'publicKeyValueNode'
-    | 'resolverValueNode'
-> {
+): Visitor<Promise<Address | null>, AccountDefaultValueSupportedNodeKind> {
     const {
         root,
         ixNode,
@@ -103,14 +107,7 @@ export function createAccountDefaultValueVisitor(
                 });
             }
 
-            try {
-                return await Promise.resolve(toAddress(argValue));
-            } catch {
-                throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_ACCOUNT_ADDRESS, {
-                    details: `Argument ${node.name} cannot be converted to Address`,
-                    name: ixAccountNode.name,
-                });
-            }
+            return await Promise.resolve(toAddress(argValue));
         },
 
         visitConditionalValue: async (conditionalValueNode: ConditionalValueNode) => {
@@ -139,10 +136,11 @@ export function createAccountDefaultValueVisitor(
             }
             // Recursively resolve the chosen branch.
             const visitor = createAccountDefaultValueVisitor(ctx);
-            const addressValue = await visitOrElse(resolvedInputValueNode, visitor, (innerNode: { kind: string }) => {
-                throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_NODE, {
-                    details: `Cannot resolve conditional branch node in account [${ixAccountNode.name}]`,
-                    nodeKind: innerNode.kind,
+            const addressValue = await visitOrElse(resolvedInputValueNode, visitor, innerNode => {
+                throw new CodamaError(CODAMA_ERROR__UNEXPECTED_NODE_KIND, {
+                    expectedKinds: [...ACCOUNT_DEFAULT_VALUE_SUPPORTED_NODE_KINDS],
+                    kind: innerNode.kind,
+                    node: innerNode,
                 });
             });
             return addressValue;

@@ -1,12 +1,11 @@
 import {
     CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__FAILED_TO_EVALUATE_CONDITIONAL,
-    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_NODE,
+    CODAMA_ERROR__UNEXPECTED_NODE_KIND,
     CodamaError,
 } from '@codama/errors';
-import type { ConditionalValueNode, InstructionAccountNode, InstructionInputValueNode } from 'codama';
+import type { ConditionalValueNode, InstructionAccountNode, InstructionInputValueNode, Node } from 'codama';
 import { isNode, visitOrElse } from 'codama';
 
-import { safeStringify } from '../../shared/util';
 import { createConditionNodeValueVisitor } from '../visitors/condition-node-value';
 import { createValueNodeVisitor } from '../visitors/value-node-value';
 import type { BaseResolutionContext } from './types';
@@ -31,9 +30,10 @@ export async function resolveConditionalValueNodeCondition({
     resolversInput,
 }: ResolveConditionalContext): Promise<InstructionInputValueNode | undefined> {
     if (!isNode(conditionalValueNode, 'conditionalValueNode')) {
-        throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_NODE, {
-            details: 'Expected conditionalValueNode',
-            nodeKind: safeStringify((conditionalValueNode as unknown as { kind: string })?.kind),
+        throw new CodamaError(CODAMA_ERROR__UNEXPECTED_NODE_KIND, {
+            expectedKinds: ['conditionalValueNode'],
+            kind: (conditionalValueNode as unknown as { kind: Node['kind'] })?.kind,
+            node: conditionalValueNode,
         });
     }
     const { condition, value: expectedValueNode, ifTrue, ifFalse } = conditionalValueNode;

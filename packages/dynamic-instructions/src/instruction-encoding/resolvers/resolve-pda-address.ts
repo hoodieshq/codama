@@ -1,7 +1,8 @@
 import {
     CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_PDA_SEED,
-    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__LINKED_PDA_NOT_FOUND,
-    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_NODE,
+    CODAMA_ERROR__LINKED_NODE_NOT_FOUND,
+    CODAMA_ERROR__UNEXPECTED_NODE_KIND,
+    CODAMA_ERROR__UNRECOGNIZED_NODE_KIND,
     CodamaError,
 } from '@codama/errors';
 import type { Address, ProgramDerivedAddress } from '@solana/addresses';
@@ -9,6 +10,7 @@ import { address, getProgramDerivedAddress } from '@solana/addresses';
 import type { ReadonlyUint8Array } from '@solana/codecs';
 import type {
     InstructionAccountNode,
+    Node,
     PdaNode,
     PdaSeedValueNode,
     PdaValueNode,
@@ -18,7 +20,7 @@ import type {
 import { isNode, visitOrElse } from 'codama';
 
 import { safeStringify } from '../../shared/util';
-import { createPdaSeedValueVisitor } from '../visitors/pda-seed-value';
+import { createPdaSeedValueVisitor, PDA_SEED_VALUE_SUPPORTED_NODE_KINDS } from '../visitors/pda-seed-value';
 import type { BaseResolutionContext } from './types';
 
 export type ResolvePDAAddressContext = BaseResolutionContext & {
@@ -41,9 +43,10 @@ export async function resolvePDAAddress({
     resolversInput,
 }: ResolvePDAAddressContext): Promise<ProgramDerivedAddress | null> {
     if (!isNode(pdaValueNode, 'pdaValueNode')) {
-        throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_NODE, {
-            details: `[${ixAccountNode.name}] is not a PDA node`,
-            nodeKind: ixAccountNode.kind,
+        throw new CodamaError(CODAMA_ERROR__UNEXPECTED_NODE_KIND, {
+            expectedKinds: ['pdaValueNode'],
+            kind: (pdaValueNode as unknown as { kind: Node['kind'] })?.kind,
+            node: pdaValueNode,
         });
     }
 
@@ -91,9 +94,8 @@ export async function resolvePDAAddress({
                 });
             }
 
-            throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_NODE, {
-                details: `Seed [${safeStringify((seedNode as { kind?: string })?.kind)}] resolution of PDA node [${pdaNode.name}]`,
-                nodeKind: (seedNode as { kind?: string }).kind ?? 'unknown',
+            throw new CodamaError(CODAMA_ERROR__UNRECOGNIZED_NODE_KIND, {
+                kind: safeStringify((seedNode as { kind?: string })?.kind),
             });
         }),
     );
@@ -108,8 +110,11 @@ function resolvePdaNode(pdaDefaultValue: PdaValueNode, pdas: PdaNode[]): PdaNode
     if (isNode(pdaDefaultValue.pda, 'pdaLinkNode')) {
         const linkedPda = pdas.find(p => p.name === pdaDefaultValue.pda.name);
         if (!linkedPda) {
-            throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__LINKED_PDA_NOT_FOUND, {
-                pdaName: pdaDefaultValue.pda.name,
+            throw new CodamaError(CODAMA_ERROR__LINKED_NODE_NOT_FOUND, {
+                kind: 'pdaLinkNode',
+                linkNode: pdaDefaultValue.pda,
+                name: pdaDefaultValue.pda.name,
+                path: [],
             });
         }
         return linkedPda;
@@ -119,9 +124,10 @@ function resolvePdaNode(pdaDefaultValue: PdaValueNode, pdas: PdaNode[]): PdaNode
         return pdaDefaultValue.pda;
     }
 
-    throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_NODE, {
-        details: 'PDA address resolution',
-        nodeKind: (pdaDefaultValue.pda as { kind: string }).kind,
+    throw new CodamaError(CODAMA_ERROR__UNEXPECTED_NODE_KIND, {
+        expectedKinds: ['pdaLinkNode', 'pdaNode'],
+        kind: (pdaDefaultValue.pda as unknown as { kind: Node['kind'] })?.kind,
+        node: pdaDefaultValue.pda,
     });
 }
 
@@ -169,9 +175,10 @@ function resolveVariablePdaSeed({
     });
 
     return visitOrElse(variableSeedValueNode.value, visitor, node => {
-        throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_NODE, {
-            details: 'Variable PDA seed resolution',
-            nodeKind: node.kind,
+        throw new CodamaError(CODAMA_ERROR__UNEXPECTED_NODE_KIND, {
+            expectedKinds: [...PDA_SEED_VALUE_SUPPORTED_NODE_KINDS],
+            kind: node.kind,
+            node,
         });
     });
 }
@@ -191,9 +198,10 @@ function resolveConstantPdaSeed({
     seedNode,
 }: ResolveConstantPdaSeedContext): Promise<ReadonlyUint8Array> {
     if (!isNode(seedNode, 'constantPdaSeedNode')) {
-        throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_NODE, {
-            details: 'Expected a ConstantPdaSeedNode',
-            nodeKind: seedNode.kind,
+        throw new CodamaError(CODAMA_ERROR__UNEXPECTED_NODE_KIND, {
+            expectedKinds: ['constantPdaSeedNode'],
+            kind: seedNode.kind,
+            node: seedNode,
         });
     }
 
@@ -207,9 +215,10 @@ function resolveConstantPdaSeed({
         root,
     });
     return visitOrElse(seedNode.value, visitor, node => {
-        throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_NODE, {
-            details: 'Constant PDA seed resolution',
-            nodeKind: node.kind,
+        throw new CodamaError(CODAMA_ERROR__UNEXPECTED_NODE_KIND, {
+            expectedKinds: [...PDA_SEED_VALUE_SUPPORTED_NODE_KINDS],
+            kind: node.kind,
+            node,
         });
     });
 }

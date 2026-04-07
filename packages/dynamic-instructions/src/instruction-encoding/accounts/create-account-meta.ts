@@ -2,7 +2,7 @@ import {
     CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_ACCOUNT_ADDRESS,
     CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_ARGUMENT_INPUT,
     CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__MISSING_REQUIRED_ACCOUNT,
-    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_NODE,
+    CODAMA_ERROR__UNEXPECTED_NODE_KIND,
     CodamaError,
 } from '@codama/errors';
 import type { Address } from '@solana/addresses';
@@ -93,9 +93,10 @@ export async function createAccountMeta(
     // https://github.com/codama-idl/codama/blob/main/packages/nodes/docs/InstructionRemainingAccountsNode.md
     for (const remainingNode of ixNode.remainingAccounts ?? []) {
         if (remainingNode.value.kind !== 'argumentValueNode') {
-            throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_NODE, {
-                details: 'Remaining accounts value',
-                nodeKind: remainingNode.value.kind,
+            throw new CodamaError(CODAMA_ERROR__UNEXPECTED_NODE_KIND, {
+                expectedKinds: ['argumentValueNode'],
+                kind: remainingNode.value.kind,
+                node: remainingNode.value,
             });
         }
         const addresses = argumentsInput[remainingNode.value.name];

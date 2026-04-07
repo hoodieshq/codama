@@ -4,7 +4,7 @@ import {
     CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_ARGUMENT_INPUT,
     CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_PDA_SEED,
     CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__NODE_REFERENCE_NOT_FOUND,
-    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_NODE,
+    CODAMA_ERROR__UNEXPECTED_NODE_KIND,
     CodamaError,
 } from '@codama/errors';
 import type { Address } from '@solana/addresses';
@@ -36,6 +36,22 @@ import { resolveAccountValueNodeAddress } from '../resolvers/resolve-account-val
 import type { BaseResolutionContext } from '../resolvers/types';
 import { createInputValueTransformer } from './input-value-transformer';
 
+export const PDA_SEED_VALUE_SUPPORTED_NODE_KINDS = [
+    'accountValueNode',
+    'argumentValueNode',
+    'booleanValueNode',
+    'bytesValueNode',
+    'constantValueNode',
+    'noneValueNode',
+    'numberValueNode',
+    'programIdValueNode',
+    'publicKeyValueNode',
+    'someValueNode',
+    'stringValueNode',
+] as const;
+
+type PdaSeedValueSupportedNodeKind = (typeof PDA_SEED_VALUE_SUPPORTED_NODE_KINDS)[number];
+
 type PdaSeedValueVisitorContext = BaseResolutionContext & {
     programId: Address;
     seedTypeNode?: TypeNode;
@@ -50,20 +66,7 @@ type PdaSeedValueVisitorContext = BaseResolutionContext & {
  */
 export function createPdaSeedValueVisitor(
     ctx: PdaSeedValueVisitorContext,
-): Visitor<
-    Promise<ReadonlyUint8Array>,
-    | 'accountValueNode'
-    | 'argumentValueNode'
-    | 'booleanValueNode'
-    | 'bytesValueNode'
-    | 'constantValueNode'
-    | 'noneValueNode'
-    | 'numberValueNode'
-    | 'programIdValueNode'
-    | 'publicKeyValueNode'
-    | 'someValueNode'
-    | 'stringValueNode'
-> {
+): Visitor<Promise<ReadonlyUint8Array>, PdaSeedValueSupportedNodeKind> {
     const { root, ixNode, programId, seedTypeNode, resolversInput, resolutionPath } = ctx;
     const accountsInput = ctx.accountsInput ?? {};
     const argumentsInput = ctx.argumentsInput ?? {};
@@ -132,9 +135,10 @@ export function createPdaSeedValueVisitor(
         visitConstantValue: async (node: ConstantValueNode) => {
             const innerVisitor = createPdaSeedValueVisitor(ctx);
             return await visitOrElse(node.value, innerVisitor, innerNode => {
-                throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_NODE, {
-                    details: `ConstantValueNode in [${ixNode.name}]`,
-                    nodeKind: innerNode.kind,
+                throw new CodamaError(CODAMA_ERROR__UNEXPECTED_NODE_KIND, {
+                    expectedKinds: [...PDA_SEED_VALUE_SUPPORTED_NODE_KINDS],
+                    kind: innerNode.kind,
+                    node: innerNode,
                 });
             });
         },
@@ -175,9 +179,10 @@ export function createPdaSeedValueVisitor(
         visitSomeValue: async (node: SomeValueNode) => {
             const innerVisitor = createPdaSeedValueVisitor(ctx);
             return await visitOrElse(node.value, innerVisitor, innerNode => {
-                throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_NODE, {
-                    details: `SomeValueNode in ${ixNode.name}`,
-                    nodeKind: innerNode.kind,
+                throw new CodamaError(CODAMA_ERROR__UNEXPECTED_NODE_KIND, {
+                    expectedKinds: [...PDA_SEED_VALUE_SUPPORTED_NODE_KINDS],
+                    kind: innerNode.kind,
+                    node: innerNode,
                 });
             });
         },
