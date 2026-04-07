@@ -30,24 +30,20 @@ import {
     CODAMA_ERROR__ANCHOR__UNRECOGNIZED_IDL_TYPE,
     CODAMA_ERROR__DISCRIMINATOR_FIELD_HAS_NO_DEFAULT_VALUE,
     CODAMA_ERROR__DISCRIMINATOR_FIELD_NOT_FOUND,
-    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__ACCOUNT_REFERENCE_NOT_FOUND,
     CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__ACCOUNT_RESOLVER_MISSING,
     CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__CANNOT_CONVERT_TO_ADDRESS,
     CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__CIRCULAR_ACCOUNT_DEPENDENCY,
-    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__CONDITIONAL_EVALUATION_FAILED,
-    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__DEFINED_TYPE_NOT_FOUND,
     CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__FAILED_TO_ENCODE_ARGUMENT,
+    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__FAILED_TO_EVALUATE_CONDITIONAL,
+    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__FAILED_TO_EXECUTE_RESOLVER,
     CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INSTRUCTION_NOT_FOUND,
     CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_ACCOUNT_ADDRESS,
     CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_ARGUMENT_INPUT,
     CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_PDA_SEED,
-    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__LINKED_PDA_NOT_FOUND,
     CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__MISSING_REQUIRED_ACCOUNT,
+    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__NODE_REFERENCE_NOT_FOUND,
     CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__PDA_NOT_FOUND,
-    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__RESOLVER_EXECUTION_FAILED,
-    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNKNOWN_ENUM_VARIANT,
     CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_NODE,
-    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_TYPE_NODE,
     CODAMA_ERROR__ENUM_VARIANT_NOT_FOUND,
     CODAMA_ERROR__LINKED_NODE_NOT_FOUND,
     CODAMA_ERROR__NODE_FILESYSTEM_FUNCTION_UNAVAILABLE,
@@ -115,10 +111,6 @@ export type CodamaErrorContext = DefaultUnspecifiedErrorContextToUndefined<{
     [CODAMA_ERROR__DISCRIMINATOR_FIELD_NOT_FOUND]: {
         field: CamelCaseString;
     };
-    [CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__ACCOUNT_REFERENCE_NOT_FOUND]: {
-        instructionName: CamelCaseString;
-        referencedName: CamelCaseString;
-    };
     [CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__ACCOUNT_RESOLVER_MISSING]: {
         accountName: CamelCaseString;
         resolverName: string;
@@ -129,18 +121,20 @@ export type CodamaErrorContext = DefaultUnspecifiedErrorContextToUndefined<{
     [CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__CIRCULAR_ACCOUNT_DEPENDENCY]: {
         chain: string;
     };
-    [CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__CONDITIONAL_EVALUATION_FAILED]: {
-        accountName: CamelCaseString;
-        instructionName: CamelCaseString;
-        reason: string;
-    };
-    [CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__DEFINED_TYPE_NOT_FOUND]: {
-        typeName: CamelCaseString;
-    };
     [CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__FAILED_TO_ENCODE_ARGUMENT]: {
         argumentName: CamelCaseString;
+        details: string;
         instructionName: CamelCaseString;
-        reason: string;
+    };
+    [CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__FAILED_TO_EVALUATE_CONDITIONAL]: {
+        accountName: CamelCaseString;
+        details: string;
+        instructionName: CamelCaseString;
+    };
+    [CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__FAILED_TO_EXECUTE_RESOLVER]: {
+        resolverName: string;
+        targetKind: string;
+        targetName: string;
     };
     [CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INSTRUCTION_NOT_FOUND]: {
         available: string;
@@ -151,7 +145,6 @@ export type CodamaErrorContext = DefaultUnspecifiedErrorContextToUndefined<{
         name: string;
     };
     [CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_ARGUMENT_INPUT]: {
-        argumentName: string;
         details: string;
     };
     [CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_PDA_SEED]: {
@@ -159,33 +152,21 @@ export type CodamaErrorContext = DefaultUnspecifiedErrorContextToUndefined<{
         pdaName: CamelCaseString;
         seedName: CamelCaseString;
     };
-    [CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__LINKED_PDA_NOT_FOUND]: {
-        pdaName: CamelCaseString;
-    };
     [CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__MISSING_REQUIRED_ACCOUNT]: {
         accountName: CamelCaseString;
         instructionName: CamelCaseString;
+    };
+    [CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__NODE_REFERENCE_NOT_FOUND]: {
+        instructionName: CamelCaseString;
+        referencedName: CamelCaseString;
     };
     [CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__PDA_NOT_FOUND]: {
         available: string;
         pdaName: string;
     };
-    [CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__RESOLVER_EXECUTION_FAILED]: {
-        resolverName: string;
-        targetKind: string;
-        targetName: string;
-    };
-    [CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNKNOWN_ENUM_VARIANT]: {
-        available: string;
-        variant: string;
-    };
     [CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_NODE]: {
-        context: string;
+        details: string;
         nodeKind: string;
-    };
-    [CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_TYPE_NODE]: {
-        nodeKind: string;
-        parentKind: string;
     };
     [CODAMA_ERROR__ENUM_VARIANT_NOT_FOUND]: {
         enum: EnumTypeNode;

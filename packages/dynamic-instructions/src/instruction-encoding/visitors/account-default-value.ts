@@ -1,8 +1,8 @@
 import {
     CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__ACCOUNT_RESOLVER_MISSING,
+    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__FAILED_TO_EXECUTE_RESOLVER,
     CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_ACCOUNT_ADDRESS,
     CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__MISSING_REQUIRED_ACCOUNT,
-    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__RESOLVER_EXECUTION_FAILED,
     CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_NODE,
     CodamaError,
 } from '@codama/errors';
@@ -70,7 +70,7 @@ export function createAccountDefaultValueVisitor(
         visitAccountBumpValue: async (_node: AccountBumpValueNode) => {
             return await Promise.reject(
                 new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_NODE, {
-                    context: `account default value for ${ixAccountNode.name}`,
+                    details: `Account default value for [${ixAccountNode.name}]. Bump seeds should be derived from PDA derivation`,
                     nodeKind: 'accountBumpValueNode',
                 }),
             );
@@ -141,7 +141,7 @@ export function createAccountDefaultValueVisitor(
             const visitor = createAccountDefaultValueVisitor(ctx);
             const addressValue = await visitOrElse(resolvedInputValueNode, visitor, (innerNode: { kind: string }) => {
                 throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_NODE, {
-                    context: `account default value for ${ixAccountNode.name}`,
+                    details: `Cannot resolve conditional branch node in account [${ixAccountNode.name}]`,
                     nodeKind: innerNode.kind,
                 });
             });
@@ -151,7 +151,7 @@ export function createAccountDefaultValueVisitor(
         visitIdentityValue: async (_node: IdentityValueNode) => {
             if (accountAddressInput === undefined || accountAddressInput === null) {
                 throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_ACCOUNT_ADDRESS, {
-                    details: 'Cannot resolve identity value: account address not provided',
+                    details: 'Cannot resolve identity value (account address not provided)',
                     name: ixAccountNode.name,
                 });
             }
@@ -161,7 +161,7 @@ export function createAccountDefaultValueVisitor(
         visitPayerValue: async (_node: PayerValueNode) => {
             if (accountAddressInput === undefined || accountAddressInput === null) {
                 throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_ACCOUNT_ADDRESS, {
-                    details: 'Cannot resolve payer value: account address not provided',
+                    details: 'Cannot resolve payer value (account address not provided)',
                     name: ixAccountNode.name,
                 });
             }
@@ -208,10 +208,10 @@ export function createAccountDefaultValueVisitor(
             try {
                 result = await resolverFn(argumentsInput ?? {}, accountsInput ?? {});
             } catch (error) {
-                throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__RESOLVER_EXECUTION_FAILED, {
+                throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__FAILED_TO_EXECUTE_RESOLVER, {
                     cause: error,
                     resolverName: node.name,
-                    targetKind: 'account',
+                    targetKind: 'InstructionAccountNode',
                     targetName: ixAccountNode.name,
                 });
             }

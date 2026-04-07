@@ -45,7 +45,7 @@ export async function deriveStandalonePDA(
                 return await resolveStandaloneVariableSeed(root, seedNode, seedInputs);
             }
             throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_NODE, {
-                context: `PDA seed resolution for ${pdaNode.name}`,
+                details: `PDA seed resolution for ${pdaNode.name}`,
                 nodeKind: (seedNode as { kind?: string }).kind ?? 'unknown',
             });
         }),
@@ -61,7 +61,7 @@ function resolveStandaloneConstantSeed(
 ): Promise<ReadonlyUint8Array> {
     if (!isNode(seedNode, 'constantPdaSeedNode')) {
         throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_NODE, {
-            context: 'constant PDA seed resolution',
+            details: 'constant PDA seed resolution',
             nodeKind: seedNode.kind,
         });
     }
@@ -76,7 +76,7 @@ function resolveStandaloneConstantSeed(
     });
     return visitOrElse(seedNode.value, visitor, node => {
         throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_NODE, {
-            context: 'constant PDA seed value',
+            details: 'constant PDA seed value',
             nodeKind: node.kind,
         });
     });

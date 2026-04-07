@@ -48,7 +48,7 @@ export async function resolveAccountAddress({
 
         const addressValue = await visitOrElse(ixAccountNode.defaultValue, visitor, node => {
             throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_NODE, {
-                context: 'account address resolution',
+                details: 'Account address default value resolution',
                 nodeKind: node.kind,
             });
         });
@@ -80,8 +80,8 @@ function resolveOptionalAccountWithStrategy(
 ) {
     if (!ixAccountNode.isOptional) {
         throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_NODE, {
-            context: 'account address resolution',
-            nodeKind: `non-optional account ${ixAccountNode.name}`,
+            details: 'Cannot apply optional account strategy for non-optional account',
+            nodeKind: ixAccountNode.name,
         });
     }
     switch (ixNode.optionalAccountStrategy) {
@@ -91,8 +91,8 @@ function resolveOptionalAccountWithStrategy(
             return toAddress(root.program.publicKey);
         default:
             throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_NODE, {
-                context: 'account address resolution',
-                nodeKind: `optionalAccountStrategy:${String(ixNode.optionalAccountStrategy)}`,
+                details: `Cannot resolve optional account [${ixAccountNode.name}] with [${String(ixNode.optionalAccountStrategy)}] strategy`,
+                nodeKind: ixAccountNode.kind,
             });
     }
 }

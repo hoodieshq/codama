@@ -1,4 +1,4 @@
-import { CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__RESOLVER_EXECUTION_FAILED, CodamaError } from '@codama/errors';
+import { CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__FAILED_TO_EXECUTE_RESOLVER, CodamaError } from '@codama/errors';
 import type { InstructionNode } from 'codama';
 import { isNode } from 'codama';
 
@@ -33,10 +33,10 @@ export async function resolveArgumentDefaultsFromCustomResolvers(
         try {
             resolvedArgumentsInput[argumentNode.name] = await resolverFn(resolvedArgumentsInput, accountsInput);
         } catch (error) {
-            throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__RESOLVER_EXECUTION_FAILED, {
+            throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__FAILED_TO_EXECUTE_RESOLVER, {
                 cause: error,
                 resolverName: argumentNode.defaultValue.name,
-                targetKind: 'argument',
+                targetKind: 'InstructionArgumentNode',
                 targetName: argumentNode.name,
             });
         }

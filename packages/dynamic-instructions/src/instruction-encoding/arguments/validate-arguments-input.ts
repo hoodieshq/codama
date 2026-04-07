@@ -34,7 +34,6 @@ export function createArgumentsInputValidator(root: RootNode, ixNode: Instructio
         } catch (error) {
             if (!(error instanceof StructError)) {
                 throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_ARGUMENT_INPUT, {
-                    argumentName: 'unknown',
                     cause: error,
                     details: 'Unexpected validation error',
                 });
@@ -45,7 +44,6 @@ export function createArgumentsInputValidator(root: RootNode, ixNode: Instructio
                 return `Invalid argument "${fieldPath}", value: ${value}. ${failure.message}\n`;
             });
             throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_ARGUMENT_INPUT, {
-                argumentName: 'multiple',
                 details: message.join(''),
             });
         }
@@ -84,8 +82,7 @@ function validateOmittedArguments(ixNode: InstructionNode, argumentsInput: Argum
     ixNode.arguments.filter(isOmittedArgument).forEach(ixArgumentNode => {
         if (Object.hasOwn(argumentsInput, ixArgumentNode.name)) {
             throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_ARGUMENT_INPUT, {
-                argumentName: ixArgumentNode.name,
-                details: 'argument cannot be provided (omitted defaultValueStrategy)',
+                details: `Argument [${ixArgumentNode.name}] cannot be provided (omitted defaultValueStrategy)`,
             });
         }
     });

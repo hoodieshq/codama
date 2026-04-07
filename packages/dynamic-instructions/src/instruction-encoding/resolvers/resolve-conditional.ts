@@ -1,7 +1,12 @@
-import { CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__CONDITIONAL_EVALUATION_FAILED, CodamaError } from '@codama/errors';
+import {
+    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__FAILED_TO_EVALUATE_CONDITIONAL,
+    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_NODE,
+    CodamaError,
+} from '@codama/errors';
 import type { ConditionalValueNode, InstructionAccountNode, InstructionInputValueNode } from 'codama';
 import { isNode, visitOrElse } from 'codama';
 
+import { safeStringify } from '../../shared/util';
 import { createConditionNodeValueVisitor } from '../visitors/condition-node-value';
 import { createValueNodeVisitor } from '../visitors/value-node-value';
 import type { BaseResolutionContext } from './types';
@@ -26,19 +31,18 @@ export async function resolveConditionalValueNodeCondition({
     resolversInput,
 }: ResolveConditionalContext): Promise<InstructionInputValueNode | undefined> {
     if (!isNode(conditionalValueNode, 'conditionalValueNode')) {
-        throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__CONDITIONAL_EVALUATION_FAILED, {
-            accountName: ixAccountNode.name,
-            instructionName: ixNode.name,
-            reason: 'Expected conditionalValueNode',
+        throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_NODE, {
+            details: 'Expected conditionalValueNode',
+            nodeKind: safeStringify((conditionalValueNode as unknown as { kind: string })?.kind),
         });
     }
     const { condition, value: expectedValueNode, ifTrue, ifFalse } = conditionalValueNode;
 
     if (!expectedValueNode && !ifTrue && !ifFalse) {
-        throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__CONDITIONAL_EVALUATION_FAILED, {
+        throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__FAILED_TO_EVALUATE_CONDITIONAL, {
             accountName: ixAccountNode.name,
+            details: 'Invalid conditionalValueNode: missing value and branches',
             instructionName: ixNode.name,
-            reason: 'Invalid conditionalValueNode: missing value and branches',
         });
     }
 
@@ -52,10 +56,10 @@ export async function resolveConditionalValueNodeCondition({
         root,
     });
     const actualProvidedValue = await visitOrElse(condition, conditionVisitor, condNode => {
-        throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__CONDITIONAL_EVALUATION_FAILED, {
+        throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__FAILED_TO_EVALUATE_CONDITIONAL, {
             accountName: ixAccountNode.name,
+            details: `Cannot resolve condition node: ${condNode.kind}`,
             instructionName: ixNode.name,
-            reason: `Cannot resolve condition node: ${condNode.kind}`,
         });
     });
 
@@ -66,18 +70,18 @@ export async function resolveConditionalValueNodeCondition({
     // If expectedValueNode exists, the condition must be equal to expected value.
     const valueVisitor = createValueNodeVisitor();
     const expectedValue = visitOrElse(expectedValueNode, valueVisitor, valueNode => {
-        throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__CONDITIONAL_EVALUATION_FAILED, {
+        throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__FAILED_TO_EVALUATE_CONDITIONAL, {
             accountName: ixAccountNode.name,
+            details: `Cannot resolve required value node: ${valueNode.kind}`,
             instructionName: ixNode.name,
-            reason: `Cannot resolve required value node: ${valueNode.kind}`,
         });
     });
 
     if (typeof expectedValue.value === 'object' || typeof actualProvidedValue === 'object') {
-        throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__CONDITIONAL_EVALUATION_FAILED, {
+        throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__FAILED_TO_EVALUATE_CONDITIONAL, {
             accountName: ixAccountNode.name,
+            details: 'Deep equality comparison not yet supported for conditional value',
             instructionName: ixNode.name,
-            reason: 'Deep equality comparison not yet supported for conditional value',
         });
     }
 

@@ -1,6 +1,6 @@
 import {
-    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__ACCOUNT_REFERENCE_NOT_FOUND,
     CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__CIRCULAR_ACCOUNT_DEPENDENCY,
+    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__NODE_REFERENCE_NOT_FOUND,
     CodamaError,
 } from '@codama/errors';
 import type { Address } from '@solana/addresses';
@@ -33,7 +33,7 @@ export async function resolveAccountValueNodeAddress(
     // Find the referenced account in the instruction.
     const referencedIxAccountNode = ixNode.accounts.find(acc => acc.name === node.name);
     if (!referencedIxAccountNode) {
-        throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__ACCOUNT_REFERENCE_NOT_FOUND, {
+        throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__NODE_REFERENCE_NOT_FOUND, {
             instructionName: ixNode.name,
             referencedName: node.name,
         });

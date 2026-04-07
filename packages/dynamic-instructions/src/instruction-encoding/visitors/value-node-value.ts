@@ -67,7 +67,7 @@ export function createValueNodeVisitor(): Visitor<
             value: node.items.map(item =>
                 visitOrElse(item, visitor, n => {
                     throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_NODE, {
-                        context: 'array item value node',
+                        details: '[ArrayValueNode]',
                         nodeKind: n.kind,
                     });
                 }),
@@ -88,7 +88,7 @@ export function createValueNodeVisitor(): Visitor<
         visitConstantValue: (node: ConstantValueNode) => {
             return visitOrElse(node.value, visitor, innerNode => {
                 throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_NODE, {
-                    context: 'constantValueNode wrapping',
+                    details: '[ConstantValueNode]',
                     nodeKind: innerNode.kind,
                 });
             });
@@ -104,13 +104,13 @@ export function createValueNodeVisitor(): Visitor<
             value: node.entries.map(entry => ({
                 key: visitOrElse(entry.key, visitor, n => {
                     throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_NODE, {
-                        context: 'map key value node',
+                        details: '[MapValueNode] key',
                         nodeKind: n.kind,
                     });
                 }),
                 value: visitOrElse(entry.value, visitor, n => {
                     throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_NODE, {
-                        context: 'map value value node',
+                        details: '[MapValueNode] value',
                         nodeKind: n.kind,
                     });
                 }),
@@ -137,7 +137,7 @@ export function createValueNodeVisitor(): Visitor<
             value: node.items.map(item =>
                 visitOrElse(item, visitor, n => {
                     throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_NODE, {
-                        context: 'set item value node',
+                        details: '[SetValueNode] item',
                         nodeKind: n.kind,
                     });
                 }),
@@ -147,7 +147,7 @@ export function createValueNodeVisitor(): Visitor<
         visitSomeValue: (node: SomeValueNode) => {
             return visitOrElse(node.value, visitor, innerNode => {
                 throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_NODE, {
-                    context: 'someValueNode wrapping',
+                    details: '[SomeValueNode]',
                     nodeKind: innerNode.kind,
                 });
             });
@@ -165,7 +165,7 @@ export function createValueNodeVisitor(): Visitor<
                     field.name,
                     visitOrElse(field.value, visitor, n => {
                         throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_NODE, {
-                            context: `struct field "${field.name}" value node`,
+                            details: `[StructValueNode] field [${field.name}]`,
                             nodeKind: n.kind,
                         });
                     }),
@@ -178,7 +178,8 @@ export function createValueNodeVisitor(): Visitor<
             value: node.items.map(item =>
                 visitOrElse(item, visitor, n => {
                     throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_NODE, {
-                        context: 'tuple item value node',
+                        details: `[TupleValueNode] item`,
+
                         nodeKind: n.kind,
                     });
                 }),

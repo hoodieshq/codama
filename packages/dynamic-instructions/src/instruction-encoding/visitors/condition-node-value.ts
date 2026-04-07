@@ -1,4 +1,4 @@
-import { CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__RESOLVER_EXECUTION_FAILED, CodamaError } from '@codama/errors';
+import { CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__FAILED_TO_EXECUTE_RESOLVER, CodamaError } from '@codama/errors';
 import type { Visitor } from 'codama';
 import type { AccountValueNode, ArgumentValueNode, ResolverValueNode } from 'codama';
 
@@ -48,10 +48,10 @@ export function createConditionNodeValueVisitor(
             try {
                 return await resolverFn(argumentsInput ?? {}, accountsInput ?? {});
             } catch (error) {
-                throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__RESOLVER_EXECUTION_FAILED, {
+                throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__FAILED_TO_EXECUTE_RESOLVER, {
                     cause: error,
                     resolverName: node.name,
-                    targetKind: 'condition',
+                    targetKind: 'ConditionNodeValue',
                     targetName: node.name,
                 });
             }

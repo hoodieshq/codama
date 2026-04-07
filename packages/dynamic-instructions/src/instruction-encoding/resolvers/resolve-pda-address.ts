@@ -17,6 +17,7 @@ import type {
 } from 'codama';
 import { isNode, visitOrElse } from 'codama';
 
+import { safeStringify } from '../../shared/util';
 import { createPdaSeedValueVisitor } from '../visitors/pda-seed-value';
 import type { BaseResolutionContext } from './types';
 
@@ -41,8 +42,8 @@ export async function resolvePDAAddress({
 }: ResolvePDAAddressContext): Promise<ProgramDerivedAddress | null> {
     if (!isNode(pdaValueNode, 'pdaValueNode')) {
         throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_NODE, {
-            context: 'PDA address resolution',
-            nodeKind: `${ixAccountNode.name} is not a pdaValueNode`,
+            details: `[${ixAccountNode.name}] is not a PDA node`,
+            nodeKind: ixAccountNode.kind,
         });
     }
 
@@ -71,7 +72,7 @@ export async function resolvePDAAddress({
 
                 if (!variableSeedValueNode) {
                     throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_PDA_SEED, {
-                        details: `Variable PDA SeedValueNode was not found for ${ixAccountNode.name} account`,
+                        details: `Variable PDA SeedValueNode was not found for [${ixAccountNode.name}] account`,
                         pdaName: pdaNode.name,
                         seedName,
                     });
@@ -91,7 +92,7 @@ export async function resolvePDAAddress({
             }
 
             throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_NODE, {
-                context: 'PDA address resolution',
+                details: `Seed [${safeStringify((seedNode as { kind?: string })?.kind)}] resolution of PDA node [${pdaNode.name}]`,
                 nodeKind: (seedNode as { kind?: string }).kind ?? 'unknown',
             });
         }),
@@ -119,7 +120,7 @@ function resolvePdaNode(pdaDefaultValue: PdaValueNode, pdas: PdaNode[]): PdaNode
     }
 
     throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_NODE, {
-        context: 'PDA address resolution',
+        details: 'PDA address resolution',
         nodeKind: (pdaDefaultValue.pda as { kind: string }).kind,
     });
 }
@@ -142,7 +143,7 @@ function resolveVariablePdaSeed({
 }: ResolvePdaSeedContext): Promise<ReadonlyUint8Array> {
     if (!isNode(variableSeedValueNode, 'pdaSeedValueNode')) {
         throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_PDA_SEED, {
-            details: `Not a PDA seed value node: ${(variableSeedValueNode as { kind?: string }).kind}`,
+            details: `Not a PDA seed value node [${safeStringify((variableSeedValueNode as { kind?: string }).kind)}]`,
             pdaName: seedNode.name,
             seedName: seedNode.name,
         });
@@ -150,7 +151,7 @@ function resolveVariablePdaSeed({
 
     if (seedNode.name !== variableSeedValueNode.name) {
         throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_PDA_SEED, {
-            details: `Mismatched PDA seed: ${seedNode.name} vs ${variableSeedValueNode.name}`,
+            details: `Mismatched PDA seed: [${seedNode.name}] vs [${variableSeedValueNode.name}]`,
             pdaName: seedNode.name,
             seedName: seedNode.name,
         });
@@ -169,7 +170,7 @@ function resolveVariablePdaSeed({
 
     return visitOrElse(variableSeedValueNode.value, visitor, node => {
         throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_NODE, {
-            context: 'PDA address resolution',
+            details: 'Variable PDA seed resolution',
             nodeKind: node.kind,
         });
     });
@@ -191,7 +192,7 @@ function resolveConstantPdaSeed({
 }: ResolveConstantPdaSeedContext): Promise<ReadonlyUint8Array> {
     if (!isNode(seedNode, 'constantPdaSeedNode')) {
         throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_NODE, {
-            context: 'PDA address resolution',
+            details: 'Expected a ConstantPdaSeedNode',
             nodeKind: seedNode.kind,
         });
     }
@@ -207,7 +208,7 @@ function resolveConstantPdaSeed({
     });
     return visitOrElse(seedNode.value, visitor, node => {
         throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_NODE, {
-            context: 'PDA address resolution',
+            details: 'Constant PDA seed resolution',
             nodeKind: node.kind,
         });
     });

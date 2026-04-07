@@ -94,7 +94,7 @@ export async function createAccountMeta(
     for (const remainingNode of ixNode.remainingAccounts ?? []) {
         if (remainingNode.value.kind !== 'argumentValueNode') {
             throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNSUPPORTED_NODE, {
-                context: 'remaining accounts value',
+                details: 'Remaining accounts value',
                 nodeKind: remainingNode.value.kind,
             });
         }
@@ -104,8 +104,7 @@ export async function createAccountMeta(
             // Required remaining accounts must be provided.
             if (!remainingNode.isOptional) {
                 throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_ARGUMENT_INPUT, {
-                    argumentName: remainingNode.value.name,
-                    details: 'Remaining account argument is required but was not provided',
+                    details: `Remaining account argument [${remainingNode.value.name}] is required but was not provided`,
                 });
             }
             // Optional remaining accounts can be safely omitted.
@@ -114,8 +113,7 @@ export async function createAccountMeta(
 
         if (!Array.isArray(addresses)) {
             throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_ARGUMENT_INPUT, {
-                argumentName: remainingNode.value.name,
-                details: 'Remaining account argument must be an array of addresses',
+                details: `Remaining account argument [${remainingNode.value.name}] must be an array of addresses`,
             });
         }
         const role = getRemainingAccountRole(remainingNode.isSigner, remainingNode.isWritable);
@@ -123,7 +121,7 @@ export async function createAccountMeta(
             const addr: unknown = addresses[i];
             if (!isConvertibleAddress(addr)) {
                 throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_ACCOUNT_ADDRESS, {
-                    details: `Must be an address string or PublicKey, got ${formatValueType(addr)}`,
+                    details: `Remaining account argument must be an address string or PublicKey, got ${formatValueType(addr)}`,
                     name: `${remainingNode.value.name}[${i}]`,
                 });
             }

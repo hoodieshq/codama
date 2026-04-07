@@ -45,8 +45,8 @@ function encodeOmittedArgument(
     if (defaultValue === undefined) {
         throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__FAILED_TO_ENCODE_ARGUMENT, {
             argumentName: ixArgumentNode.name,
+            details: 'Omitted argument has no default value',
             instructionName: ix.name,
-            reason: 'Omitted argument has no default value',
         });
     }
 
@@ -54,8 +54,8 @@ function encodeOmittedArgument(
     return visitOrElse(defaultValue, visitor, node => {
         throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__FAILED_TO_ENCODE_ARGUMENT, {
             argumentName: ixArgumentNode.name,
+            details: `Unsupported encoding for "${ixArgumentNode.type.kind}" kind (defaultValue: ${node.kind})`,
             instructionName: ix.name,
-            reason: `Unsupported encoding for "${ixArgumentNode.type.kind}" kind (defaultValue: ${node.kind})`,
         });
     });
 }
@@ -71,8 +71,8 @@ function encodeOptionalArgument(
         throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__FAILED_TO_ENCODE_ARGUMENT, {
             argumentName: ixArgumentNode.name,
             cause: error,
+            details: 'Failed to encode optional argument as null',
             instructionName: ix.name,
-            reason: 'Failed to encode optional argument as null',
         });
     }
 }
@@ -87,8 +87,8 @@ function encodeRequiredArgument(
     if (input === undefined) {
         throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__FAILED_TO_ENCODE_ARGUMENT, {
             argumentName: ixArgumentNode.name,
+            details: 'Missing required argument',
             instructionName: ix.name,
-            reason: 'Missing required argument',
         });
     }
 
@@ -102,8 +102,8 @@ function encodeRequiredArgument(
         throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__FAILED_TO_ENCODE_ARGUMENT, {
             argumentName: ixArgumentNode.name,
             cause: error,
+            details: 'Required argument encoding',
             instructionName: ix.name,
-            reason: 'Failed to encode required argument',
         });
     }
 }
