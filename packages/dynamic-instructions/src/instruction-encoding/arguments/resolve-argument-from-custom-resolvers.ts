@@ -36,7 +36,7 @@ export async function resolveArgumentDefaultsFromCustomResolvers(
             throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__FAILED_TO_EXECUTE_RESOLVER, {
                 cause: error,
                 resolverName: argumentNode.defaultValue.name,
-                targetKind: 'InstructionArgumentNode',
+                targetKind: 'instructionArgumentNode',
                 targetName: argumentNode.name,
             });
         }

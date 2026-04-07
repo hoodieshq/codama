@@ -154,6 +154,7 @@ function resolveVariablePdaSeed({
     }
 
     if (seedNode.name !== variableSeedValueNode.name) {
+        // Sanity check: this should not happen.
         throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVARIANT_VIOLATION, {
             message: `Mismatched PDA seed names: expected [${seedNode.name}], got [${variableSeedValueNode.name}]`,
         });
@@ -209,6 +210,7 @@ function resolveConstantPdaSeed({
         resolutionPath,
         resolversInput,
         root,
+        seedTypeNode: seedNode.type,
     });
     return visitOrElse(seedNode.value, visitor, node => {
         throw new CodamaError(CODAMA_ERROR__UNEXPECTED_NODE_KIND, {

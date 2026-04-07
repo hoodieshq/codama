@@ -128,7 +128,7 @@ describe('Custom resolvers: arguments ResolverValueNode', () => {
                 })
                 .instruction(),
         ).rejects.toThrow(
-            /Resolver \[resolveDescription\] threw an error while resolving \[argument\] \[description\]/,
+            /Resolver \[resolveDescription\] threw an error while resolving \[instructionArgumentNode\] \[description\]/,
         );
 
         await expect(
@@ -140,7 +140,7 @@ describe('Custom resolvers: arguments ResolverValueNode', () => {
                 })
                 .instruction(),
         ).rejects.toThrow(
-            /Resolver \[resolveDescription\] threw an error while resolving \[argument\] \[description\]/,
+            /Resolver \[resolveDescription\] threw an error while resolving \[instructionArgumentNode\] \[description\]/,
         );
     });
 

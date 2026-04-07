@@ -2,21 +2,18 @@ import { getNodeCodec } from '@codama/dynamic-codecs';
 import {
     CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__ARGUMENT_MISSING,
     CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__FAILED_TO_DERIVE_PDA,
+    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVARIANT_VIOLATION,
     CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__NODE_REFERENCE_NOT_FOUND,
-    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__PDA_SEED_OUT_OF_RANGE,
-    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNEXPECTED_ADDRESS_TYPE,
     CODAMA_ERROR__UNEXPECTED_NODE_KIND,
     CodamaError,
 } from '@codama/errors';
 import type { Address } from '@solana/addresses';
-import { address } from '@solana/addresses';
 import type { ReadonlyUint8Array } from '@solana/codecs';
 import type {
     AccountValueNode,
     ArgumentValueNode,
     BooleanValueNode,
     BytesValueNode,
-    CamelCaseString,
     ConstantValueNode,
     NoneValueNode,
     NumberValueNode,
@@ -29,10 +26,9 @@ import type {
 } from 'codama';
 import { isNode, visitOrElse } from 'codama';
 
-import { isConvertibleAddress } from '../../shared/address';
+import { toAddress } from '../../shared/address';
 import { getCodecFromBytesEncoding } from '../../shared/bytes-encoding';
 import { getMemoizedAddressEncoder, getMemoizedBooleanEncoder, getMemoizedUtf8Codec } from '../../shared/codecs';
-import { formatValueType } from '../../shared/util';
 import { resolveAccountValueNodeAddress } from '../resolvers/resolve-account-value-node-address';
 import type { BaseResolutionContext } from '../resolvers/types';
 import { createInputValueTransformer } from './input-value-transformer';
@@ -147,36 +143,21 @@ export function createPdaSeedValueVisitor(
         visitNoneValue: async (_node: NoneValueNode) => await Promise.resolve(new Uint8Array(0)),
 
         visitNumberValue: async (node: NumberValueNode) => {
+            // Sanity check: a violation here indicates a malformed IDL, not a user input error.
             if (!Number.isInteger(node.number) || node.number < 0 || node.number > 0xff) {
-                throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__PDA_SEED_OUT_OF_RANGE, {
-                    pdaName: ixNode.name,
-                    seedName: 'NumberValueNode' as CamelCaseString,
-                    value: node.number,
+                throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVARIANT_VIOLATION, {
+                    message: `NumberValueNode PDA seed is out of range: must be a valid u8 (0–255), got ${node.number}`,
                 });
             }
             return await Promise.resolve(new Uint8Array([node.number]));
         },
 
         visitProgramIdValue: async (_node: ProgramIdValueNode) => {
-            if (!isConvertibleAddress(programId)) {
-                throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNEXPECTED_ADDRESS_TYPE, {
-                    accountName: 'programId',
-                    actualType: formatValueType(programId),
-                    expectedType: 'Address',
-                });
-            }
-            return await Promise.resolve(getMemoizedAddressEncoder().encode(address(programId)));
+            return await Promise.resolve(getMemoizedAddressEncoder().encode(toAddress(programId)));
         },
 
         visitPublicKeyValue: async (node: PublicKeyValueNode) => {
-            if (!isConvertibleAddress(node.publicKey)) {
-                throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNEXPECTED_ADDRESS_TYPE, {
-                    accountName: 'publicKey',
-                    actualType: formatValueType(node.publicKey),
-                    expectedType: 'Address',
-                });
-            }
-            return await Promise.resolve(getMemoizedAddressEncoder().encode(address(node.publicKey)));
+            return await Promise.resolve(getMemoizedAddressEncoder().encode(toAddress(node.publicKey)));
         },
 
         visitSomeValue: async (node: SomeValueNode) => {

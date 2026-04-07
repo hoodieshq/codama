@@ -26,7 +26,7 @@ describe('account-default-value: visitResolverValue', () => {
             resolversInput: { myResolver: () => Promise.resolve(null) },
         });
         await expect(visitor.visitResolverValue(resolverValueNode('myResolver'))).rejects.toThrow(
-            /Invalid address for \[testAccount\]:.*Resolver "myResolver" returned invalid address/,
+            /Invalid address for \[testAccount\]: \[null\]/,
         );
     });
 
@@ -35,7 +35,7 @@ describe('account-default-value: visitResolverValue', () => {
             resolversInput: { myResolver: () => Promise.resolve(undefined) },
         });
         await expect(visitor.visitResolverValue(resolverValueNode('myResolver'))).rejects.toThrow(
-            /Invalid address for \[testAccount\]:.*Resolver "myResolver" returned invalid address/,
+            /Invalid address for \[testAccount\]: \[undefined\]/,
         );
     });
 

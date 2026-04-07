@@ -118,7 +118,7 @@ export async function createAccountMeta(
             throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNEXPECTED_ARGUMENT_TYPE, {
                 actualType: formatValueType(addresses),
                 expectedType: 'array',
-                nodeKind: 'remainingAccounts',
+                nodeKind: remainingNode.value.kind,
             });
         }
         const role = getRemainingAccountRole(remainingNode.isSigner, remainingNode.isWritable);

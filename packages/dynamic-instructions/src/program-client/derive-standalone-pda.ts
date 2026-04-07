@@ -10,7 +10,7 @@ import type { Address, ProgramDerivedAddress } from '@solana/addresses';
 import { getProgramDerivedAddress } from '@solana/addresses';
 import type { ReadonlyUint8Array } from '@solana/codecs';
 import type { InstructionNode, PdaNode, RegisteredPdaSeedNode, RootNode, VariablePdaSeedNode } from 'codama';
-import { isNode, visitOrElse } from 'codama';
+import { camelCase, isNode, visitOrElse } from 'codama';
 
 import {
     createInputValueTransformer,
@@ -104,7 +104,7 @@ function resolveStandaloneVariableSeed(
         }
         throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__ARGUMENT_MISSING, {
             argumentName: seedNode.name,
-            instructionName: '__standalone__' as typeof seedNode.name,
+            instructionName: camelCase('standaloneSeedNode'),
         });
     }
 

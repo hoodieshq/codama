@@ -67,7 +67,7 @@ describe('account-default-value: visitConditionalValue', async () => {
                 isOptional: false,
             },
         });
-        await expect(visitor.visitConditionalValue(node)).rejects.toThrow(/Missing required account \[/);
+        await expect(visitor.visitConditionalValue(node)).rejects.toThrow(/Missing account \[/);
     });
 
     test('should resolve ifTrue when primitive value matches', async () => {

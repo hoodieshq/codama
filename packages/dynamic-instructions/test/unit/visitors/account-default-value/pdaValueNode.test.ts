@@ -79,7 +79,7 @@ describe('account-default-value: visitPdaValue', async () => {
 
         const visitor = makeVisitor({ root });
         await expect(visitor.visitPdaValue(node)).rejects.toThrow(
-            /Invalid PDA seed \[owner\] for PDA \[testPda\]:.*Variable PDA SeedValueNode was not found/,
+            /Referenced node \[owner\] not found in \[testInstruction\]/,
         );
     });
 });

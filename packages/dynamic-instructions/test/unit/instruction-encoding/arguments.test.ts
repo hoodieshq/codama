@@ -91,21 +91,28 @@ describe('Instruction encoding: encodeInstructionArguments', () => {
         expect(expected.dataSource).toBe(1);
     });
 
-    test('should throw ArgumentError for missing required argument', () => {
+    test('should throw ARGUMENT_MISSING for missing required argument', () => {
         const root = loadRoot('pmp-idl.json');
         const ix = getInstruction(root, 'write');
 
-        expect(() =>
-            encodeInstructionArguments(root, ix, {
-                data: null,
-            }),
-        ).toThrow(CodamaError);
+        expect(() => encodeInstructionArguments(root, ix, {})).toThrow('Missing argument [offset] in [write].');
+    });
 
-        expect(() =>
-            encodeInstructionArguments(root, ix, {
-                data: null,
-            }),
-        ).toThrow(/Failed to encode argument \[offset\] in \[write\]/);
+    test('should throw DEFAULT_VALUE_MISSING when omitted argument has no defaultValue', () => {
+        const root = loadRoot('pmp-idl.json');
+        const ix = getInstruction(root, 'write');
+
+        // Create a modified instruction where the omitted discriminator has no defaultValue.
+        const modifiedIx: InstructionNode = {
+            ...ix,
+            arguments: ix.arguments.map(arg =>
+                arg.name === 'discriminator' ? { ...arg, defaultValue: undefined } : arg,
+            ),
+        };
+
+        expect(() => encodeInstructionArguments(root, modifiedIx, { data: null, offset: 0 })).toThrow(
+            'Default value is missing for argument [discriminator] in [write].',
+        );
     });
 
     test('should throw ValidationError when omitted argument is provided', () => {

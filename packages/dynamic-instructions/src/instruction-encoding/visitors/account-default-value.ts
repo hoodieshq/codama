@@ -1,6 +1,7 @@
 import {
     CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__ACCOUNT_MISSING,
     CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__ACCOUNT_RESOLVER_MISSING,
+    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__ARGUMENT_MISSING,
     CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__FAILED_TO_DERIVE_PDA,
     CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__FAILED_TO_EXECUTE_RESOLVER,
     CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_ACCOUNT_ADDRESS,
@@ -95,8 +96,8 @@ export function createAccountDefaultValueVisitor(
         visitArgumentValue: async (node: ArgumentValueNode) => {
             const argValue = argumentsInput?.[node.name];
             if (argValue === undefined || argValue === null) {
-                throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__ACCOUNT_MISSING, {
-                    accountName: ixAccountNode.name,
+                throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__ARGUMENT_MISSING, {
+                    argumentName: node.name,
                     instructionName: ixNode.name,
                 });
             }
@@ -209,7 +210,7 @@ export function createAccountDefaultValueVisitor(
                 throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__FAILED_TO_EXECUTE_RESOLVER, {
                     cause: error,
                     resolverName: node.name,
-                    targetKind: 'InstructionAccountNode',
+                    targetKind: 'instructionAccountNode',
                     targetName: ixAccountNode.name,
                 });
             }

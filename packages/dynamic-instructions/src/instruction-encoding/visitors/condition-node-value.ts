@@ -59,7 +59,7 @@ export function createConditionNodeValueVisitor(
                 throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__FAILED_TO_EXECUTE_RESOLVER, {
                     cause: error,
                     resolverName: node.name,
-                    targetKind: 'ConditionNodeValue',
+                    targetKind: 'conditionalValueNode',
                     targetName: node.name,
                 });
             }

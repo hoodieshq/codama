@@ -1,5 +1,6 @@
 import { getNodeCodec, type ReadonlyUint8Array } from '@codama/dynamic-codecs';
 import {
+    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__ARGUMENT_MISSING,
     CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__DEFAULT_VALUE_MISSING,
     CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__FAILED_TO_ENCODE_ARGUMENT,
     CODAMA_ERROR__UNEXPECTED_NODE_KIND,
@@ -88,7 +89,7 @@ function encodeRequiredArgument(
     nodeCodec: Codec<unknown>,
 ): ReadonlyUint8Array {
     if (input === undefined) {
-        throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__FAILED_TO_ENCODE_ARGUMENT, {
+        throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__ARGUMENT_MISSING, {
             argumentName: ixArgumentNode.name,
             instructionName: ix.name,
         });

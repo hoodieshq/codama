@@ -49,9 +49,7 @@ describe('Custom resolvers: accounts ResolverValueNode', () => {
                     resolveDestination: () => Promise.resolve(null),
                 })
                 .instruction(),
-        ).rejects.toThrow(
-            /Invalid address for \[destination\].*Resolver "resolveDestination" returned invalid address null/,
-        );
+        ).rejects.toThrow(/Invalid address for \[destination\]: \[null\]/);
 
         await expect(
             programClient.methods
@@ -61,9 +59,7 @@ describe('Custom resolvers: accounts ResolverValueNode', () => {
                     resolveDestination: () => Promise.resolve(undefined),
                 })
                 .instruction(),
-        ).rejects.toThrow(
-            /Invalid address for \[destination\].*Resolver "resolveDestination" returned invalid address undefined/,
-        );
+        ).rejects.toThrow(/Invalid address for \[destination\]: \[undefined\]/);
     });
 
     test('should propagate error when account resolver rejects', async () => {
@@ -76,7 +72,9 @@ describe('Custom resolvers: accounts ResolverValueNode', () => {
                     resolveTreasury: () => Promise.resolve(ctx.SYSTEM_PROGRAM_ADDRESS),
                 })
                 .instruction(),
-        ).rejects.toThrow(/Resolver \[resolveDestination\] threw an error while resolving \[account\] \[destination\]/);
+        ).rejects.toThrow(
+            /Resolver \[resolveDestination\] threw an error while resolving \[instructionAccountNode\] \[destination\]/,
+        );
     });
 
     test('should throw when resolver missing for optional undefined account with direct resolverValueNode', async () => {
@@ -147,6 +145,6 @@ describe('Custom resolvers: accounts ResolverValueNode', () => {
                     resolveIncludeTarget: () => Promise.resolve(true),
                 })
                 .instruction(),
-        ).rejects.toThrow(/Missing required account \[requiredTarget\] in \[conditionalTransfer\] instruction/);
+        ).rejects.toThrow(/Missing account \[requiredTarget\] in \[conditionalTransfer\] instruction/);
     });
 });

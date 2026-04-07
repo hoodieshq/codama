@@ -101,9 +101,7 @@ describe('createAccountMeta: remaining accounts', () => {
 
         await expect(
             createAccountMeta(root, ix, { m: 2, signers: ADDR_1 }, { multisig: MULTISIG_ADDR }),
-        ).rejects.toThrow(
-            /Invalid argument input for \[signers\]:.*Remaining account argument must be an array of addresses/,
-        );
+        ).rejects.toThrow(/Expected \[array\] for \[argumentValueNode\]/);
     });
 
     test('should throw when remaining account value kind is not argumentValueNode', async () => {
@@ -120,7 +118,7 @@ describe('createAccountMeta: remaining accounts', () => {
         });
 
         await expect(createAccountMeta(root, modifiedIx, { m: 2 }, { multisig: MULTISIG_ADDR })).rejects.toThrow(
-            /Unsupported node kind \[resolverValueNode\] while resolving \[remaining accounts value/,
+            /Expected node of kind \[argumentValueNode\], got \[resolverValueNode\]/,
         );
     });
 
@@ -130,7 +128,7 @@ describe('createAccountMeta: remaining accounts', () => {
 
         await expect(
             createAccountMeta(root, ix, { m: 2, signers: [ADDR_1, 123] }, { multisig: MULTISIG_ADDR }),
-        ).rejects.toThrow(/Invalid address for \[signers\[1\]\]:.*Must be an address string or PublicKey, got number/);
+        ).rejects.toThrow(/Expected \[Address \| PublicKey\] for account \[signers\[1\]\]/);
     });
 
     test('should throw when required remaining account argument is not provided', async () => {
@@ -140,8 +138,32 @@ describe('createAccountMeta: remaining accounts', () => {
         // signers is required:
         await expect(
             createAccountMeta(root, ix, { m: 2, signers: undefined }, { multisig: MULTISIG_ADDR }),
-        ).rejects.toThrow(
-            /Invalid argument input for \[signers\]:.*Remaining account argument is required but was not provided/,
+        ).rejects.toThrow(/Missing argument \[signers\]/);
+    });
+});
+
+describe('createAccountMeta: UNSUPPORTED_OPTIONAL_ACCOUNT_STRATEGY', () => {
+    test('should throw when optionalAccountStrategy is unsupported', async () => {
+        const root = loadRoot('token-idl.json');
+        const ix = getInstruction(root, 'initializeMint');
+
+        // Create an optional account with no default value.
+        const optionalAccount = {
+            ...ix.accounts[0],
+            defaultValue: undefined,
+            isOptional: true,
+        };
+
+        // Set an invalid optionalAccountStrategy.
+        const modifiedIx: InstructionNode = {
+            ...ix,
+            accounts: [optionalAccount],
+            // @ts-expect-error - we're intentionally passing an invalid strategy to test error handling
+            optionalAccountStrategy: 'invalid',
+        };
+
+        await expect(createAccountMeta(root, modifiedIx, {}, { [optionalAccount.name]: null })).rejects.toThrow(
+            'Unsupported optional account strategy ["invalid"] for account [mint] in [initializeMint].',
         );
     });
 });

@@ -28,11 +28,7 @@ describe('mapTypeNode', () => {
             mapTypeNode(stringTypeNode('utf8'), numberTypeNode('u8'), prefixedCountNode(numberTypeNode('u32'))),
             rootNodeMock,
         );
-        expect(() => transformer('not an object')).toThrow(
-            /Invalid argument input for \[mapTypeNode\]:.*Expected a plain object/,
-        );
-        expect(() => transformer([1, 2])).toThrow(
-            /Invalid argument input for \[mapTypeNode\]:.*Expected a plain object/,
-        );
+        expect(() => transformer('not an object')).toThrow(/Expected \[object\] for \[mapTypeNode\]/);
+        expect(() => transformer([1, 2])).toThrow(/Expected \[object\] for \[mapTypeNode\]/);
     });
 });

@@ -35,7 +35,7 @@ describe('pda-seed-value: visitAccountValue', () => {
         // null is not treated as a provided address — it falls through to resolveAccountAddress,
         // which throws because the account has no default value
         await expect(visitor.visitAccountValue(accountValueNode('authority'))).rejects.toThrow(
-            /Missing required account \[authority\] in \[testInstruction\] instruction/,
+            /Missing account \[authority\]/,
         );
     });
 
@@ -57,14 +57,14 @@ describe('pda-seed-value: visitAccountValue', () => {
             ixNode: ixNodeWithOptionalAccount,
         });
         await expect(visitor.visitAccountValue(accountValueNode('authority'))).rejects.toThrow(
-            /Invalid address for \[authority\]:.*Cannot resolve dependent account for PDA seed/,
+            /Failed to derive PDA for account \[authority\]/,
         );
     });
 
     test('should throw for unknown account reference', async () => {
         const visitor = makeVisitor({ ixNode: ixNodeWithAccount });
         await expect(visitor.visitAccountValue(accountValueNode('nonexistent'))).rejects.toThrow(
-            /Referenced account \[nonexistent\] not found in \[testInstruction\]/,
+            /Referenced node \[nonexistent\] not found in \[testInstruction\]/,
         );
     });
 

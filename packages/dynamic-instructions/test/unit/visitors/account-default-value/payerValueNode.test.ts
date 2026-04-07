@@ -14,15 +14,11 @@ describe('account-default-value: visitPayerValue', () => {
 
     test('should throw when address not provided (undefined)', async () => {
         const visitor = makeVisitor({ accountAddressInput: undefined });
-        await expect(visitor.visitPayerValue(payerValueNode())).rejects.toThrow(
-            /Invalid address for \[testAccount\]:.*Cannot resolve payer value.*account address not provided/,
-        );
+        await expect(visitor.visitPayerValue(payerValueNode())).rejects.toThrow(/Missing account \[testAccount\]/);
     });
 
     test('should throw when address not provided (null)', async () => {
         const visitor = makeVisitor({ accountAddressInput: null });
-        await expect(visitor.visitPayerValue(payerValueNode())).rejects.toThrow(
-            /Invalid address for \[testAccount\]:.*Cannot resolve payer value.*account address not provided/,
-        );
+        await expect(visitor.visitPayerValue(payerValueNode())).rejects.toThrow(/Missing account \[testAccount\]/);
     });
 });
