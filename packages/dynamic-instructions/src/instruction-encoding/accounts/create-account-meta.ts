@@ -9,7 +9,7 @@ import {
 import type { Address } from '@solana/addresses';
 import type { AccountMeta } from '@solana/instructions';
 import { AccountRole } from '@solana/instructions';
-import type { InstructionAccountNode, InstructionNode, RootNode } from 'codama';
+import { type InstructionAccountNode, type InstructionNode, isNode, type RootNode } from 'codama';
 
 import { isConvertibleAddress, toAddress } from '../../shared/address';
 import type { AccountsInput, ArgumentsInput, EitherSigners, ResolversInput } from '../../shared/types';
@@ -93,7 +93,7 @@ export async function createAccountMeta(
     // Resolve remaining accounts from argument values
     // https://github.com/codama-idl/codama/blob/main/packages/nodes/docs/InstructionRemainingAccountsNode.md
     for (const remainingNode of ixNode.remainingAccounts ?? []) {
-        if (remainingNode.value.kind !== 'argumentValueNode') {
+        if (!isNode(remainingNode.value, 'argumentValueNode')) {
             throw new CodamaError(CODAMA_ERROR__UNEXPECTED_NODE_KIND, {
                 expectedKinds: ['argumentValueNode'],
                 kind: remainingNode.value.kind,

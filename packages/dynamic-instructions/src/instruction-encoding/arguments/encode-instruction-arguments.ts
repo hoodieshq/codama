@@ -11,7 +11,11 @@ import type { InstructionNode, RootNode } from 'codama';
 import { visitOrElse } from 'codama';
 
 import type { ArgumentsInput } from '../../shared/types';
-import { createDefaultValueEncoderVisitor, createInputValueTransformer } from '../visitors';
+import {
+    createDefaultValueEncoderVisitor,
+    createInputValueTransformer,
+    DEFAULT_VALUE_ENCODER_SUPPORTED_NODE_KINDS,
+} from '../visitors';
 import { isOmittedArgument, isOptionalArgument } from './shared';
 
 /**
@@ -58,7 +62,7 @@ function encodeOmittedArgument(
     const visitor = createDefaultValueEncoderVisitor(nodeCodec);
     return visitOrElse(defaultValue, visitor, node => {
         throw new CodamaError(CODAMA_ERROR__UNEXPECTED_NODE_KIND, {
-            expectedKinds: ['numberValueNode', 'booleanValueNode', 'enumValueNode'],
+            expectedKinds: [...DEFAULT_VALUE_ENCODER_SUPPORTED_NODE_KINDS],
             kind: node.kind,
             node,
         });
