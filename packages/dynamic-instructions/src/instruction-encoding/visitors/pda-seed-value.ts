@@ -35,8 +35,7 @@ type PdaSeedValueVisitorContext = BaseResolutionContext & {
 
 /**
  * Visitor for resolving PdaSeedValueNode value to raw bytes.
- * Supports resolution of dependent PDAs (accounts that are themselves auto-derived PDAs)
- * via the resolvedAddresses map — no recursive resolution needed.
+ * Supports resolution of dependent PDAs (accounts that are themselves auto-derived PDAs) via the resolvedAddresses map.
  * This is used for both:
  * - Variable seeds (e.g. seeds based on instruction accounts/arguments), and
  * - Constant seeds (e.g. bytes/string/programId/publicKey constants).

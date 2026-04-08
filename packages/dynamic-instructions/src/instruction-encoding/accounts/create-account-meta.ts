@@ -1,17 +1,15 @@
 import type { Address } from '@solana/addresses';
 import type { AccountMeta } from '@solana/instructions';
 import { AccountRole } from '@solana/instructions';
-import type { InstructionAccountNode, InstructionNode, ResolvedInstructionAccount, RootNode } from 'codama';
-import { CodamaError, getResolvedInstructionInputsVisitor, isNode, visit } from 'codama';
+import type { InstructionAccountNode, InstructionNode, RootNode } from 'codama';
+import { CodamaError } from 'codama';
 
 import { isConvertibleAddress, toAddress } from '../../shared/address';
 import { AccountError } from '../../shared/errors';
 import type { AccountsInput, ArgumentsInput, EitherSigners, ResolversInput } from '../../shared/types';
 import { formatValueType } from '../../shared/util';
-import { resolveAccountAddress } from '../resolvers/resolve-account-address';
-import { resolveAccountsFallback } from './resolve-accounts-fallback';
+import { resolveAccountAddressesByOrder, resolveAccountAddressesFallback } from '../resolvers/resolve-account-address';
 
-// type ResolvedAccountWithAddress = { address: Address; role: AccountRole };
 type ResolvedAccount = {
     address: Address | null;
     optional: boolean;
@@ -40,7 +38,7 @@ export async function createAccountMeta(
     const programAddress = toAddress(root.program.publicKey);
 
     try {
-        resolvedAddresses = await resolveAccountsTopological(
+        resolvedAddresses = await resolveAccountAddressesByOrder(
             root,
             ixNode,
             argumentsInput,
@@ -50,7 +48,7 @@ export async function createAccountMeta(
     } catch (error) {
         if (error instanceof CodamaError) {
             // Topological sort failed (circular deps, invalid deps, etc.) - fallback.
-            resolvedAddresses = await resolveAccountsFallback(
+            resolvedAddresses = await resolveAccountAddressesFallback(
                 root,
                 ixNode,
                 argumentsInput,
@@ -89,53 +87,6 @@ export async function createAccountMeta(
 }
 
 /**
- * Primary path: resolve accounts sequentially in topological order.
- */
-async function resolveAccountsTopological(
-    root: RootNode,
-    ixNode: InstructionNode,
-    argumentsInput: ArgumentsInput,
-    accountsInput: AccountsInput,
-    resolversInput: ResolversInput,
-): Promise<Map<string, Address | null>> {
-    const sortedInputs = visit(ixNode, getResolvedInstructionInputsVisitor());
-    const sortedAccountInputs = sortedInputs.filter((input): input is ResolvedInstructionAccount =>
-        isNode(input, 'instructionAccountNode'),
-    );
-
-    const resolvedAddresses = new Map<string, Address | null>();
-
-    for (const ixAccountNode of sortedAccountInputs) {
-        const accountAddressInput = accountsInput?.[ixAccountNode.name];
-        const isAccountProvided = accountAddressInput !== undefined && accountAddressInput !== null;
-        // Accounts with default values can be omitted, as they can be resolved from default value.
-        if (!isAccountProvided && !ixAccountNode.isOptional && !ixAccountNode.defaultValue) {
-            throw new AccountError(`Missing required account: ${ixAccountNode.name}`);
-        }
-
-        let addr: Address | null = null;
-        if (isAccountProvided) {
-            addr = toAddress(accountAddressInput);
-        } else {
-            addr = await resolveAccountAddress({
-                accountAddressInput,
-                accountsInput,
-                argumentsInput,
-                ixAccountNode,
-                ixNode,
-                resolvedAddresses,
-                resolversInput,
-                root,
-            });
-        }
-
-        resolvedAddresses.set(ixAccountNode.name, addr);
-    }
-
-    return resolvedAddresses;
-}
-
-/**
  * Appends remaining accounts from argument values.
  * @see InstructionRemainingAccountsNode
  */
@@ -151,11 +102,13 @@ function appendRemainingAccounts(
         const addresses = argumentsInput[remainingNode.value.name];
 
         if (addresses === undefined) {
+            // Required remaining accounts must be provided.
             if (!remainingNode.isOptional) {
                 throw new AccountError(
                     `Remaining account argument "${remainingNode.value.name}" is required but was not provided`,
                 );
             }
+            // Optional remaining accounts can be safely omitted.
             continue;
         }
 
