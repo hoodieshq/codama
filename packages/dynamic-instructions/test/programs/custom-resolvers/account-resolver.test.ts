@@ -49,7 +49,7 @@ describe('Custom resolvers: accounts ResolverValueNode', () => {
                     resolveDestination: () => Promise.resolve(null),
                 })
                 .instruction(),
-        ).rejects.toThrow(/Invalid address for \[destination\]: \[null\]/);
+        ).rejects.toThrow(/Invalid account address \[destination\]: \[null\]/);
 
         await expect(
             programClient.methods
@@ -59,7 +59,7 @@ describe('Custom resolvers: accounts ResolverValueNode', () => {
                     resolveDestination: () => Promise.resolve(undefined),
                 })
                 .instruction(),
-        ).rejects.toThrow(/Invalid address for \[destination\]: \[undefined\]/);
+        ).rejects.toThrow(/Invalid account address \[destination\]: \[undefined\]/);
     });
 
     test('should propagate error when account resolver rejects', async () => {

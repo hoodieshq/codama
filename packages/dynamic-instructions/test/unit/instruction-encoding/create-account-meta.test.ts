@@ -101,7 +101,9 @@ describe('createAccountMeta: remaining accounts', () => {
 
         await expect(
             createAccountMeta(root, ix, { m: 2, signers: ADDR_1 }, { multisig: MULTISIG_ADDR }),
-        ).rejects.toThrow(/Expected \[array\] for \[argumentValueNode\]/);
+        ).rejects.toThrow(
+            'Invalid argument input [signers]: ["11111111111111111111111111111111"]. Expected [Address[]].',
+        );
     });
 
     test('should throw when remaining account value kind is not argumentValueNode', async () => {

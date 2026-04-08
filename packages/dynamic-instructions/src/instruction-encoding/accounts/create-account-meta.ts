@@ -1,8 +1,8 @@
 import {
     CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__ACCOUNT_MISSING,
     CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__ARGUMENT_MISSING,
+    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_ARGUMENT_INPUT,
     CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNEXPECTED_ADDRESS_TYPE,
-    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNEXPECTED_ARGUMENT_TYPE,
     CODAMA_ERROR__UNEXPECTED_NODE_KIND,
     CodamaError,
 } from '@codama/errors';
@@ -13,7 +13,7 @@ import { type InstructionAccountNode, type InstructionNode, isNode, type RootNod
 
 import { isConvertibleAddress, toAddress } from '../../shared/address';
 import type { AccountsInput, ArgumentsInput, EitherSigners, ResolversInput } from '../../shared/types';
-import { formatValueType } from '../../shared/util';
+import { formatValueType, safeStringify } from '../../shared/util';
 import { resolveAccountAddress } from '../resolvers/resolve-account-address';
 
 type ResolvedAccount = {
@@ -115,10 +115,10 @@ export async function createAccountMeta(
         }
 
         if (!Array.isArray(addresses)) {
-            throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__UNEXPECTED_ARGUMENT_TYPE, {
-                actualType: formatValueType(addresses),
-                expectedType: 'array',
-                nodeKind: remainingNode.value.kind,
+            throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_ARGUMENT_INPUT, {
+                argumentName: remainingNode.value.name,
+                expectedType: 'Address[]',
+                value: safeStringify(addresses),
             });
         }
         const role = getRemainingAccountRole(remainingNode.isSigner, remainingNode.isWritable);

@@ -35,7 +35,7 @@ export function createAccountsInputValidator(ixNode: InstructionNode) {
                     });
                 } else {
                     throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_ACCOUNT_ADDRESS, {
-                        name: camelCase(key),
+                        accountName: camelCase(key),
                         value: safeStringify(value),
                     });
                 }

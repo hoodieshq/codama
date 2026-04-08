@@ -96,9 +96,10 @@ export const CodamaErrorMessages: Readonly<{
         'Resolver [$resolverName] threw an error while resolving [$targetKind] [$targetName].',
     [CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__FAILED_TO_VALIDATE_INPUT]: 'Failed to validate input: [$message].',
     [CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INSTRUCTION_NOT_FOUND]:
-        'Instruction [$instructionName] not found in IDL. Available: [$available].',
-    [CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_ACCOUNT_ADDRESS]: 'Invalid address for [$name]: [$value].',
-    [CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_ARGUMENT_INPUT]: 'Invalid argument input [$argumentName]: [$message].',
+        'Instruction [$instructionName] not found in IDL. Available: [$availableIxs].',
+    [CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_ACCOUNT_ADDRESS]: 'Invalid account address [$accountName]: [$value].',
+    [CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_ARGUMENT_INPUT]:
+        'Invalid argument input [$argumentName]: [$value]. Expected [$expectedType].',
     [CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVARIANT_VIOLATION]: 'Internal invariant violation: [$message].',
     [CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__NODE_REFERENCE_NOT_FOUND]:
         'Referenced node [$referencedName] not found in [$instructionName].',

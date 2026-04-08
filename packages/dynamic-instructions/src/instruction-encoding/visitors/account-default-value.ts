@@ -217,7 +217,7 @@ export function createAccountDefaultValueVisitor(
 
             if (!isConvertibleAddress(result)) {
                 throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_ACCOUNT_ADDRESS, {
-                    name: ixAccountNode.name,
+                    accountName: ixAccountNode.name,
                     value: safeStringify(result),
                 });
             }

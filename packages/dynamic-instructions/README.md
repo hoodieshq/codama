@@ -182,7 +182,7 @@ Arguments with `defaultValueStrategy: 'omitted'` (e.g., discriminators) are auto
 
 ## Error Handling
 
-All errors are instances of `CodamaError` from `@codama/errors`, each with a unique error code:
+All errors are instances of `CodamaError` from `@codama/errors`:
 
 ```ts
 import {

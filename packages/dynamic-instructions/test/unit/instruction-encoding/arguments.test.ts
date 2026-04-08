@@ -160,7 +160,7 @@ describe('Instruction validation: remaining account arguments', () => {
 
         // m is a required number argument — passing a string should fail validation
         const validate = createArgumentsInputValidator(root, ix);
-        expect(() => validate({ m: 'invalid', signers: [ADDR_1] })).toThrow(CodamaError);
+        expect(() => validate({ m: 'invalid', signers: [ADDR_1] })).toThrow('Invalid argument "m"');
     });
 
     test('should not reject optional remaining account args when omitted', () => {

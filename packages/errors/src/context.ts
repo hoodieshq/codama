@@ -155,16 +155,17 @@ export type CodamaErrorContext = DefaultUnspecifiedErrorContextToUndefined<{
         message: string;
     };
     [CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INSTRUCTION_NOT_FOUND]: {
-        available: string;
+        availableIxs: string;
         instructionName: string;
     };
     [CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_ACCOUNT_ADDRESS]: {
-        name: CamelCaseString;
+        accountName: CamelCaseString;
         value: string;
     };
     [CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_ARGUMENT_INPUT]: {
         argumentName: CamelCaseString;
-        message: string;
+        expectedType: string;
+        value: string;
     };
     [CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVARIANT_VIOLATION]: {
         message: string;

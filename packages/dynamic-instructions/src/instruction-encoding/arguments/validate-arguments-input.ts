@@ -1,8 +1,4 @@
-import {
-    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__FAILED_TO_VALIDATE_INPUT,
-    CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_ARGUMENT_INPUT,
-    CodamaError,
-} from '@codama/errors';
+import { CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__FAILED_TO_VALIDATE_INPUT, CodamaError } from '@codama/errors';
 import type { InstructionNode, RootNode } from 'codama';
 import type { Failure } from 'superstruct';
 import { assert, StructError } from 'superstruct';
@@ -86,8 +82,7 @@ function formatFailureValue(value: unknown): string {
 function validateOmittedArguments(ixNode: InstructionNode, argumentsInput: ArgumentsInput = {}) {
     ixNode.arguments.filter(isOmittedArgument).forEach(ixArgumentNode => {
         if (Object.hasOwn(argumentsInput, ixArgumentNode.name)) {
-            throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_ARGUMENT_INPUT, {
-                argumentName: ixArgumentNode.name,
+            throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__FAILED_TO_VALIDATE_INPUT, {
                 message: 'Omitted argument must not be provided',
             });
         }
