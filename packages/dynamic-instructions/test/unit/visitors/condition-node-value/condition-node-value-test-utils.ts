@@ -1,18 +1,32 @@
+import type { InstructionNode, RootNode } from 'codama';
 import { instructionNode, programNode, rootNode } from 'codama';
 
+import type { ResolutionContext } from '../../../../src/instruction-encoding/resolvers/shared';
 import { createConditionNodeValueVisitor } from '../../../../src/instruction-encoding/visitors/condition-node-value';
+import { buildResolutionContext } from '../../test-utils';
 
-const rootNodeMock = rootNode(programNode({ name: 'test', publicKey: '11111111111111111111111111111111' }));
 const ixNodeStub = instructionNode({ name: 'testInstruction' });
 
-export function makeVisitor(overrides?: Partial<Parameters<typeof createConditionNodeValueVisitor>[0]>) {
-    return createConditionNodeValueVisitor({
-        accountsInput: undefined,
-        argumentsInput: undefined,
-        ixNode: ixNodeStub,
-        resolutionPath: [],
-        resolversInput: undefined,
-        root: rootNodeMock,
-        ...overrides,
-    });
+type MakeVisitorOverrides = {
+    accountsInput?: ResolutionContext['accountsInput'];
+    argumentsInput?: ResolutionContext['argumentsInput'];
+    ixNode?: InstructionNode;
+    resolutionPath?: ResolutionContext['resolutionPath'];
+    resolversInput?: ResolutionContext['resolversInput'];
+    root?: RootNode;
+};
+
+export function makeVisitor(overrides?: MakeVisitorOverrides) {
+    const ixNode = overrides?.ixNode ?? ixNodeStub;
+    const root =
+        overrides?.root ??
+        rootNode(programNode({ instructions: [ixNode], name: 'test', publicKey: '11111111111111111111111111111111' }));
+    return createConditionNodeValueVisitor(
+        buildResolutionContext(root, ixNode, {
+            accountsInput: overrides?.accountsInput,
+            argumentsInput: overrides?.argumentsInput,
+            resolutionPath: overrides?.resolutionPath,
+            resolversInput: overrides?.resolversInput,
+        }),
+    );
 }

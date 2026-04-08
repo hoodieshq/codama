@@ -6,6 +6,7 @@ import type { InstructionNode, PdaNode, RegisteredPdaSeedNode, RootNode, Variabl
 import { isNode, visitOrElse } from 'codama';
 
 import { createInputValueTransformer, createPdaSeedValueVisitor } from '../instruction-encoding';
+import { buildIxNodeStack, buildLinkables, type ResolutionContext } from '../instruction-encoding/resolvers/shared';
 import { toAddress } from '../shared/address';
 import { getMemoizedUtf8Encoder } from '../shared/codecs';
 import { AccountError } from '../shared/errors';
@@ -31,11 +32,15 @@ export async function deriveStandalonePDA(
     pdaNode: PdaNode,
     seedInputs: Record<string, unknown> = {},
 ): Promise<ProgramDerivedAddress> {
+    // Build LinkableDictionary and minimal stack.
+    const linkables = buildLinkables(root);
+    const stack = buildIxNodeStack(root, STANDALONE_IX_NODE);
+
     const programAddress = toAddress(pdaNode.programId || root.program.publicKey);
     const seedValues = await Promise.all(
         pdaNode.seeds.map(async (seedNode): Promise<ReadonlyUint8Array> => {
             if (seedNode.kind === 'constantPdaSeedNode') {
-                return await resolveStandaloneConstantSeed(root, programAddress, seedNode);
+                return await resolveStandaloneConstantSeed({ linkables, stack }, programAddress, seedNode);
             }
             if (seedNode.kind === 'variablePdaSeedNode') {
                 return await resolveStandaloneVariableSeed(root, seedNode, seedInputs);
@@ -50,7 +55,7 @@ export async function deriveStandalonePDA(
 }
 
 function resolveStandaloneConstantSeed(
-    root: RootNode,
+    env: Pick<ResolutionContext, 'linkables' | 'stack'>,
     programAddress: Address,
     seedNode: RegisteredPdaSeedNode,
 ): Promise<ReadonlyUint8Array> {
@@ -60,11 +65,11 @@ function resolveStandaloneConstantSeed(
     const visitor = createPdaSeedValueVisitor({
         accountsInput: undefined,
         argumentsInput: undefined,
-        ixNode: STANDALONE_IX_NODE,
+        linkables: env.linkables,
         programId: programAddress,
         resolutionPath: [],
         resolversInput: undefined,
-        root,
+        stack: env.stack,
     });
     return visitOrElse(seedNode.value, visitor, node => {
         throw new AccountError(`Unsupported constant PDA seed value node: ${node.kind}`);

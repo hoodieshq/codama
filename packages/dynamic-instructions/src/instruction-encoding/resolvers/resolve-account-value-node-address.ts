@@ -4,21 +4,22 @@ import type { AccountValueNode } from 'codama';
 import { toAddress } from '../../shared/address';
 import { AccountError } from '../../shared/errors';
 import { resolveAccountAddress } from './resolve-account-address';
-import type { BaseResolutionContext, ResolutionPath } from './types';
+import { getInstructionAccountFromCtx, getInstructionFromCtx, type ResolutionContext, ResolutionPath } from './shared';
 
 /**
  * Resolves an AccountValueNode reference to an Address.
  *
  * Shared logic for resolving account references across visitors:
  * Checks if the user provided the account address in accountsInput.
- * Finds the referenced InstructionAccountNode.
+ * Finds the referenced InstructionAccountNode via linkables.
  * Delegates to resolveAccountAddress for default value resolution.
  */
 export async function resolveAccountValueNodeAddress(
     node: AccountValueNode,
-    ctx: BaseResolutionContext,
+    ctx: ResolutionContext,
 ): Promise<Address | null> {
-    const { accountsInput, ixNode, resolutionPath } = ctx;
+    const { accountsInput } = ctx;
+    const ixNode = getInstructionFromCtx(ctx);
 
     // Check if user provided the account address.
     const providedAddress = accountsInput?.[node.name];
@@ -26,24 +27,20 @@ export async function resolveAccountValueNodeAddress(
         return toAddress(providedAddress);
     }
 
-    // Find the referenced account in the instruction.
-    const referencedIxAccountNode = ixNode.accounts.find(acc => acc.name === node.name);
+    // Find the referenced account in the instruction via linkables.
+    const referencedIxAccountNode = getInstructionAccountFromCtx(ctx, node.name);
     if (!referencedIxAccountNode) {
         throw new AccountError(`Referenced account "${node.name}" not found in instruction "${ixNode.name}"`);
     }
 
     // Detect circular dependencies before recursing.
-    detectCircularDependency(node.name, resolutionPath);
+    detectCircularDependency(node.name, ctx.resolutionPath);
 
     return await resolveAccountAddress({
+        ...ctx,
         accountAddressInput: providedAddress,
-        accountsInput: ctx.accountsInput,
-        argumentsInput: ctx.argumentsInput,
         ixAccountNode: referencedIxAccountNode,
-        ixNode,
-        resolutionPath: [...resolutionPath, node.name],
-        resolversInput: ctx.resolversInput,
-        root: ctx.root,
+        resolutionPath: [...ctx.resolutionPath, node.name],
     });
 }
 

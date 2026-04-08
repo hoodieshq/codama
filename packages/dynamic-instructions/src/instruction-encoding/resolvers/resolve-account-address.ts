@@ -1,46 +1,25 @@
 import type { Address } from '@solana/addresses';
-import type { InstructionAccountNode, InstructionNode, RootNode } from 'codama';
 import { visitOrElse } from 'codama';
 
-import { type AddressInput, toAddress } from '../../shared/address';
+import { toAddress } from '../../shared/address';
 import { AccountError } from '../../shared/errors';
 import { createAccountDefaultValueVisitor } from '../visitors/account-default-value';
-import type { BaseResolutionContext } from './types';
-
-type ResolveAccountAddressContext = BaseResolutionContext & {
-    accountAddressInput?: AddressInput | null | undefined;
-    ixAccountNode: InstructionAccountNode;
-};
+import { type AccountResolutionContext, getInstructionFromCtx, getProgramFromCtx } from './shared';
 
 /**
  * Resolves the address of an instruction account node via either defaultValue or optionalAccountStrategy.
  */
-export async function resolveAccountAddress({
-    root,
-    ixNode,
-    ixAccountNode,
-    argumentsInput,
-    accountsInput,
-    resolutionPath,
-    resolversInput,
-    accountAddressInput,
-}: ResolveAccountAddressContext): Promise<Address | null> {
+export async function resolveAccountAddress(ctx: AccountResolutionContext): Promise<Address | null> {
+    const { ixAccountNode, accountAddressInput } = ctx;
+    const ixNode = getInstructionFromCtx(ctx);
+
     // Optional accounts explicitly provided as null should be resolved based on optionalAccountStrategy
     if (accountAddressInput === null && ixAccountNode.isOptional) {
-        return resolveOptionalAccountWithStrategy(root, ixNode, ixAccountNode);
+        return resolveOptionalAccountWithStrategy(ctx);
     }
 
     if (ixAccountNode.defaultValue) {
-        const visitor = createAccountDefaultValueVisitor({
-            accountAddressInput,
-            accountsInput,
-            argumentsInput,
-            ixAccountNode,
-            ixNode,
-            resolutionPath,
-            resolversInput,
-            root,
-        });
+        const visitor = createAccountDefaultValueVisitor(ctx);
 
         const addressValue = await visitOrElse(ixAccountNode.defaultValue, visitor, node => {
             throw new AccountError(
@@ -51,7 +30,7 @@ export async function resolveAccountAddress({
         // conditionalValueNode with ifFalse branch returns null.
         // This should be resolved via optionalAccountStrategy for optional accounts.
         if (addressValue === null && ixAccountNode.isOptional) {
-            return resolveOptionalAccountWithStrategy(root, ixNode, ixAccountNode);
+            return resolveOptionalAccountWithStrategy(ctx);
         }
 
         return addressValue;
@@ -67,11 +46,11 @@ export async function resolveAccountAddress({
  * With "programId" strategy, optional accounts are resolved to programId.
  * With "omitted" strategy, optional accounts must be excluded from accounts list.
  */
-function resolveOptionalAccountWithStrategy(
-    root: RootNode,
-    ixNode: InstructionNode,
-    ixAccountNode: InstructionAccountNode,
-) {
+function resolveOptionalAccountWithStrategy(ctx: AccountResolutionContext) {
+    const { ixAccountNode } = ctx;
+    const ixNode = getInstructionFromCtx(ctx);
+    const program = getProgramFromCtx(ctx);
+
     if (!ixAccountNode.isOptional) {
         throw new AccountError(
             `Account ${ixAccountNode.name} of ${ixNode.name} instruction is not optional, cannot apply optional account strategy`,
@@ -81,7 +60,7 @@ function resolveOptionalAccountWithStrategy(
         case 'omitted':
             return null;
         case 'programId':
-            return toAddress(root.program.publicKey);
+            return toAddress(program.publicKey);
         default:
             throw new AccountError(
                 `Cannot resolve optional account: ${ixAccountNode.name} of ${ixNode.name} instruction with strategy: ${String(ixNode.optionalAccountStrategy)}`,

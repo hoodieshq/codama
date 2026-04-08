@@ -4,9 +4,9 @@ import { isNode, visitOrElse } from 'codama';
 import { AccountError } from '../../shared/errors';
 import { createConditionNodeValueVisitor } from '../visitors/condition-node-value';
 import { createValueNodeVisitor } from '../visitors/value-node-value';
-import type { BaseResolutionContext } from './types';
+import { getInstructionFromCtx, type ResolutionContext } from './shared';
 
-export type ResolveConditionalContext = BaseResolutionContext & {
+export type ResolveConditionalContext = ResolutionContext & {
     conditionalValueNode: ConditionalValueNode;
     ixAccountNode: InstructionAccountNode;
 };
@@ -15,16 +15,12 @@ export type ResolveConditionalContext = BaseResolutionContext & {
  * Evaluates a ConditionalValueNode's condition.
  * Returns the matching branch (ifTrue or ifFalse) as an InstructionInputValueNode or undefined if no branch matches.
  */
-export async function resolveConditionalValueNodeCondition({
-    root,
-    ixNode,
-    ixAccountNode,
-    conditionalValueNode,
-    argumentsInput,
-    accountsInput,
-    resolutionPath,
-    resolversInput,
-}: ResolveConditionalContext): Promise<InstructionInputValueNode | undefined> {
+export async function resolveConditionalValueNodeCondition(
+    ctx: ResolveConditionalContext,
+): Promise<InstructionInputValueNode | undefined> {
+    const { ixAccountNode, conditionalValueNode } = ctx;
+    const ixNode = getInstructionFromCtx(ctx);
+
     if (!isNode(conditionalValueNode, 'conditionalValueNode')) {
         throw new AccountError(`Expected conditionalValueNode in account ${ixAccountNode.name}`);
     }
@@ -35,14 +31,7 @@ export async function resolveConditionalValueNodeCondition({
     }
 
     // Resolve the condition value of ConditionalValueNode.
-    const conditionVisitor = createConditionNodeValueVisitor({
-        accountsInput,
-        argumentsInput,
-        ixNode,
-        resolutionPath,
-        resolversInput,
-        root,
-    });
+    const conditionVisitor = createConditionNodeValueVisitor(ctx);
     const actualProvidedValue = await visitOrElse(condition, conditionVisitor, condNode => {
         throw new AccountError(
             `Cannot resolve condition node: ${condNode.kind} in account ${ixAccountNode.name} of ${ixNode.name} instruction`,

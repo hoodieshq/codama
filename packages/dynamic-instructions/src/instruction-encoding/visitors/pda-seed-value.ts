@@ -25,10 +25,10 @@ import { getMemoizedAddressEncoder, getMemoizedBooleanEncoder, getMemoizedUtf8Co
 import { AccountError } from '../../shared/errors';
 import { safeStringify } from '../../shared/util';
 import { resolveAccountValueNodeAddress } from '../resolvers/resolve-account-value-node-address';
-import type { BaseResolutionContext } from '../resolvers/types';
+import { getInstructionFromCtx, getRootFromCtx, type ResolutionContext } from '../resolvers/shared';
 import { createInputValueTransformer } from './input-value-transformer';
 
-type PdaSeedValueVisitorContext = BaseResolutionContext & {
+type PdaSeedValueVisitorContext = ResolutionContext & {
     programId: Address;
     seedTypeNode?: TypeNode;
 };
@@ -56,20 +56,14 @@ export function createPdaSeedValueVisitor(
     | 'someValueNode'
     | 'stringValueNode'
 > {
-    const { root, ixNode, programId, seedTypeNode, resolversInput, resolutionPath } = ctx;
-    const accountsInput = ctx.accountsInput ?? {};
+    const { programId, seedTypeNode } = ctx;
+    const ixNode = getInstructionFromCtx(ctx);
+    const root = getRootFromCtx(ctx);
     const argumentsInput = ctx.argumentsInput ?? {};
 
     return {
         visitAccountValue: async (node: AccountValueNode) => {
-            const resolvedAddress = await resolveAccountValueNodeAddress(node, {
-                accountsInput,
-                argumentsInput,
-                ixNode,
-                resolutionPath,
-                resolversInput,
-                root,
-            });
+            const resolvedAddress = await resolveAccountValueNodeAddress(node, ctx);
 
             if (resolvedAddress === null) {
                 throw new AccountError(
@@ -99,7 +93,7 @@ export function createPdaSeedValueVisitor(
                 }
                 throw new AccountError(`Missing argument for PDA seed ${node.name} in ${ixNode.name} instruction`);
             }
-            const codec = getNodeCodec([root, root.program, ixNode, { ...ixArgumentNode, type: typeNode }]);
+            const codec = getNodeCodec([...ctx.stack.getPath(), { ...ixArgumentNode, type: typeNode }]);
             const transformer = createInputValueTransformer(typeNode, root, {
                 bytesEncoding: 'base16',
             });

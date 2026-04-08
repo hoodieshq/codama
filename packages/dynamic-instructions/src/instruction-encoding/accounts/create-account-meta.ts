@@ -8,6 +8,7 @@ import { AccountError } from '../../shared/errors';
 import type { AccountsInput, ArgumentsInput, EitherSigners, ResolversInput } from '../../shared/types';
 import { formatValueType } from '../../shared/util';
 import { resolveAccountAddress } from '../resolvers/resolve-account-address';
+import { buildIxNodeStack, buildLinkables, type ResolutionContext } from '../resolvers/shared';
 
 type ResolvedAccount = {
     address: Address | null;
@@ -30,7 +31,21 @@ export async function createAccountMeta(
     signers: EitherSigners = [],
     resolversInput: ResolversInput = {},
 ): Promise<AccountMeta[]> {
+    // Build static environment once per instruction resolution.
+    // Stack path [Root, Program, Instruction] is established here and never mutated.
+    const linkables = buildLinkables(root);
+    const stack = buildIxNodeStack(root, ixNode);
+
     const programAddress = toAddress(root.program.publicKey);
+    const ctx: ResolutionContext = {
+        accountsInput,
+        argumentsInput,
+        linkables,
+        resolutionPath: [],
+        resolversInput,
+        stack,
+    };
+
     const resolvedAccounts = await Promise.all(
         ixNode.accounts.map<Promise<ResolvedAccount>>(async ixAccountNode => {
             const accountAddressInput = accountsInput?.[ixAccountNode.name];
@@ -44,14 +59,9 @@ export async function createAccountMeta(
             let resolvedAccountAddress: Address | null = null;
             if (!isAccountProvided) {
                 resolvedAccountAddress = await resolveAccountAddress({
+                    ...ctx,
                     accountAddressInput,
-                    accountsInput,
-                    argumentsInput,
                     ixAccountNode,
-                    ixNode,
-                    resolutionPath: [],
-                    resolversInput,
-                    root,
                 });
             }
 

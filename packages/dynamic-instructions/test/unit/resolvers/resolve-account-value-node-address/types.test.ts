@@ -1,9 +1,9 @@
 import { describe, expectTypeOf, test } from 'vitest';
 
-import type { ResolutionPath } from '../../../../src/instruction-encoding/resolvers';
+import { ResolutionPath } from '../../../../src/instruction-encoding/resolvers/shared';
 
-describe('ResolutionPath', () => {
-    test('should be a readonly array of strings', () => {
+describe('ResolutionContext', () => {
+    test('ResolutionPath should be a readonly array of strings', () => {
         expectTypeOf<ResolutionPath>().toEqualTypeOf<readonly string[]>();
     });
 });

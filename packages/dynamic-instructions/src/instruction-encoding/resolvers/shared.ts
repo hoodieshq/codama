@@ -1,0 +1,99 @@
+import {
+    getRecordLinkablesVisitor,
+    InstructionAccountNode,
+    InstructionNode,
+    LinkableDictionary,
+    NodeStack,
+    ProgramNode,
+    RootNode,
+    visit,
+} from 'codama';
+import {
+    findFirstNodeFromPath,
+    findInstructionNodeFromPath,
+    findProgramNodeFromPath,
+    instructionAccountLinkNode,
+} from 'codama';
+
+import type { AddressInput } from '../../shared/address';
+import { AccountError } from '../../shared/errors';
+import type { AccountsInput, ArgumentsInput, ResolversInput } from '../../shared/types';
+
+// Array of node names being resolved to detect circular dependencies.
+export type ResolutionPath = readonly string[];
+
+/**
+ * Static environment created once per instruction resolution.
+ * The stack path is always [RootNode, ProgramNode, InstructionNode].
+ */
+type InstructionResolutionEnvironment = {
+    linkables: LinkableDictionary;
+    stack: NodeStack;
+};
+
+/**
+ * Runtime state per .instruction() invocation.
+ */
+type RuntimeResolutionState = {
+    accountsInput: AccountsInput | undefined;
+    argumentsInput: ArgumentsInput | undefined;
+    resolutionPath: ResolutionPath;
+    resolversInput: ResolversInput | undefined;
+};
+
+/**
+ * Combined context threaded through the resolution pipeline.
+ * Individual resolvers/visitors extend this with domain-specific fields.
+ */
+export type ResolutionContext = InstructionResolutionEnvironment & RuntimeResolutionState;
+
+/**
+ * Per-account extension of ResolutionContext.
+ */
+export type AccountResolutionContext = ResolutionContext & {
+    accountAddressInput?: AddressInput | null | undefined;
+    ixAccountNode: InstructionAccountNode;
+};
+
+// Stack extraction helpers. Stack path is [Root, Program, Instruction].
+export function getRootFromCtx(ctx: ResolutionContext): RootNode {
+    const node = findFirstNodeFromPath(ctx.stack.getPath(), 'rootNode');
+    if (!node) {
+        throw new AccountError('Expected RootNode at stack path[0]');
+    }
+    return node;
+}
+
+export function getProgramFromCtx(ctx: ResolutionContext): ProgramNode {
+    const node = findProgramNodeFromPath(ctx.stack.getPath());
+    if (!node) {
+        throw new AccountError('Expected ProgramNode at stack path[1]');
+    }
+    return node;
+}
+
+export function getInstructionFromCtx(ctx: ResolutionContext): InstructionNode {
+    const node = findInstructionNodeFromPath(ctx.stack.getPath());
+    if (!node) {
+        throw new AccountError('Expected InstructionNode at stack path[2]');
+    }
+    return node;
+}
+
+/**
+ * Looks up an instruction account via linkables.
+ * Uses `get()` (not `getOrThrow()`) — callers decide error semantics.
+ */
+export function getInstructionAccountFromCtx(ctx: ResolutionContext, name: string): InstructionAccountNode | undefined {
+    return ctx.linkables.get([...ctx.stack.getPath(), instructionAccountLinkNode(name)]);
+}
+
+export function buildLinkables(root: RootNode): LinkableDictionary {
+    const linkables = new LinkableDictionary();
+    visit(root, getRecordLinkablesVisitor(linkables));
+    return linkables;
+}
+
+export function buildIxNodeStack(root: RootNode, ixNode: InstructionNode) {
+    return new NodeStack([root, root.program, ixNode]);
+}
