@@ -9,18 +9,10 @@ import {
 import type { Address, ProgramDerivedAddress } from '@solana/addresses';
 import { address, getProgramDerivedAddress } from '@solana/addresses';
 import type { ReadonlyUint8Array } from '@solana/codecs';
-import type {
-    Node,
-    NodeKind,
-    PdaNode,
-    PdaSeedValueNode,
-    PdaValueNode,
-    RegisteredPdaSeedNode,
-    VariablePdaSeedNode,
-} from 'codama';
+import type { Node, PdaNode, PdaSeedValueNode, PdaValueNode, RegisteredPdaSeedNode, VariablePdaSeedNode } from 'codama';
 import { isNode, visitOrElse } from 'codama';
 
-import { safeStringify } from '../../shared/util';
+import { getMaybeNodeKind } from '../../shared/util';
 import { createPdaSeedValueVisitor, PDA_SEED_VALUE_SUPPORTED_NODE_KINDS } from '../visitors/pda-seed-value';
 import type { BaseResolutionContext } from './types';
 
@@ -44,7 +36,7 @@ export async function resolvePDAAddress({
     if (!isNode(pdaValueNode, 'pdaValueNode')) {
         throw new CodamaError(CODAMA_ERROR__UNEXPECTED_NODE_KIND, {
             expectedKinds: ['pdaValueNode'],
-            kind: (pdaValueNode as unknown as { kind: Node['kind'] })?.kind,
+            kind: getMaybeNodeKind(pdaValueNode),
             node: pdaValueNode,
         });
     }
@@ -93,7 +85,7 @@ export async function resolvePDAAddress({
             }
 
             throw new CodamaError(CODAMA_ERROR__UNRECOGNIZED_NODE_KIND, {
-                kind: safeStringify((seedNode as { kind?: string })?.kind),
+                kind: getMaybeNodeKind(seedNode) ?? 'unknown',
             });
         }),
     );
@@ -124,7 +116,7 @@ function resolvePdaNode(pdaDefaultValue: PdaValueNode, pdas: PdaNode[]): PdaNode
 
     throw new CodamaError(CODAMA_ERROR__UNEXPECTED_NODE_KIND, {
         expectedKinds: ['pdaLinkNode', 'pdaNode'],
-        kind: (pdaDefaultValue.pda as unknown as { kind: Node['kind'] })?.kind,
+        kind: getMaybeNodeKind(pdaDefaultValue.pda),
         node: pdaDefaultValue.pda,
     });
 }
@@ -148,7 +140,7 @@ function resolveVariablePdaSeed({
     if (!isNode(variableSeedValueNode, 'pdaSeedValueNode')) {
         throw new CodamaError(CODAMA_ERROR__UNEXPECTED_NODE_KIND, {
             expectedKinds: ['pdaSeedValueNode'],
-            kind: (variableSeedValueNode as { kind?: string }).kind as NodeKind,
+            kind: getMaybeNodeKind(variableSeedValueNode),
             node: variableSeedValueNode as Node,
         });
     }

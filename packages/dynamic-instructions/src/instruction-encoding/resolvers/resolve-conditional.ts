@@ -3,9 +3,10 @@ import {
     CODAMA_ERROR__UNEXPECTED_NODE_KIND,
     CodamaError,
 } from '@codama/errors';
-import type { ConditionalValueNode, InstructionAccountNode, InstructionInputValueNode, Node } from 'codama';
+import type { ConditionalValueNode, InstructionAccountNode, InstructionInputValueNode } from 'codama';
 import { isNode, visitOrElse } from 'codama';
 
+import { getMaybeNodeKind } from '../../shared/util';
 import { CONDITION_NODE_SUPPORTED_NODE_KINDS, createConditionNodeValueVisitor } from '../visitors/condition-node-value';
 import { createValueNodeVisitor, VALUE_NODE_SUPPORTED_NODE_KINDS } from '../visitors/value-node-value';
 import type { BaseResolutionContext } from './types';
@@ -32,7 +33,7 @@ export async function resolveConditionalValueNodeCondition({
     if (!isNode(conditionalValueNode, 'conditionalValueNode')) {
         throw new CodamaError(CODAMA_ERROR__UNEXPECTED_NODE_KIND, {
             expectedKinds: ['conditionalValueNode'],
-            kind: (conditionalValueNode as unknown as { kind: Node['kind'] })?.kind,
+            kind: getMaybeNodeKind(conditionalValueNode),
             node: conditionalValueNode,
         });
     }

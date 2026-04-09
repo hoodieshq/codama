@@ -19,7 +19,7 @@ import {
 } from '../instruction-encoding';
 import { toAddress } from '../shared/address';
 import { getMemoizedUtf8Encoder } from '../shared/codecs';
-import { formatValueType } from '../shared/util';
+import { formatValueType, getMaybeNodeKind } from '../shared/util';
 
 /**
  * Minimal InstructionNode stub to satisfy constant PDA seeds requirements.
@@ -51,7 +51,7 @@ export async function deriveStandalonePDA(
                 return await resolveStandaloneVariableSeed(root, seedNode, seedInputs);
             }
             throw new CodamaError(CODAMA_ERROR__UNRECOGNIZED_NODE_KIND, {
-                kind: (seedNode as { kind?: string }).kind ?? 'unknown',
+                kind: getMaybeNodeKind(seedNode) ?? 'unknown',
             });
         }),
     );
