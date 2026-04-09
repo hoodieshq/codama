@@ -84,9 +84,8 @@ export function createProgramClient<TClient = ProgramClient>(
                 const ixNode = instructions.get(prop);
                 if (!ixNode) {
                     if (prop in Object.prototype) return undefined;
-                    const availableIxs = [...instructions.keys()].join(', ');
                     throw new CodamaError(CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INSTRUCTION_NOT_FOUND, {
-                        availableIxs,
+                        availableIxs: [...instructions.keys()],
                         instructionName: prop,
                     });
                 }

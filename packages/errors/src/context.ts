@@ -155,7 +155,7 @@ export type CodamaErrorContext = DefaultUnspecifiedErrorContextToUndefined<{
         message: string;
     };
     [CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INSTRUCTION_NOT_FOUND]: {
-        availableIxs: string;
+        availableIxs: string[];
         instructionName: string;
     };
     [CODAMA_ERROR__DYNAMIC_INSTRUCTIONS__INVALID_ACCOUNT_ADDRESS]: {
