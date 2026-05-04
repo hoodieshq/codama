@@ -13,7 +13,8 @@ import type { Node, PdaNode, PdaSeedValueNode, PdaValueNode, RegisteredPdaSeedNo
 import { isNode, visitOrElse } from 'codama';
 
 import { getMaybeNodeKind } from '../shared/util';
-import { createPdaSeedValueVisitor, PDA_SEED_VALUE_SUPPORTED_NODE_KINDS } from '../visitors/pda-seed-value';
+import { PDA_SEED_VALUE_SUPPORTED_NODE_KINDS } from '../visitors/constant-pda-seed-value';
+import { createPdaSeedValueVisitor } from '../visitors/pda-seed-value';
 import type { BaseResolutionContext } from './types';
 
 export type ResolvePDAAddressContext = BaseResolutionContext & {

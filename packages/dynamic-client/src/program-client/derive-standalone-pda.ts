@@ -1,10 +1,5 @@
 import { getNodeCodec } from '@codama/dynamic-codecs';
-import {
-    createInputValueTransformer,
-    createPdaSeedValueVisitor,
-    PDA_SEED_VALUE_SUPPORTED_NODE_KINDS,
-    toAddress,
-} from '@codama/dynamic-instructions';
+import { createInputValueTransformer, resolveConstantPdaSeedValue, toAddress } from '@codama/dynamic-instructions';
 import {
     CODAMA_ERROR__DYNAMIC_CLIENT__ARGUMENT_MISSING,
     CODAMA_ERROR__DYNAMIC_CLIENT__UNEXPECTED_ARGUMENT_TYPE,
@@ -15,19 +10,8 @@ import {
 import type { Address, ProgramDerivedAddress } from '@solana/addresses';
 import { getProgramDerivedAddress } from '@solana/addresses';
 import { getUtf8Encoder, type ReadonlyUint8Array } from '@solana/codecs';
-import type { InstructionNode, NodeKind, PdaNode, RegisteredPdaSeedNode, RootNode, VariablePdaSeedNode } from 'codama';
-import { camelCase, isNode, visitOrElse } from 'codama';
-
-/**
- * Minimal InstructionNode stub to satisfy constant PDA seeds requirements.
- * Constant seeds only use programIdValue / publicKeyValue / bytesValue / stringValue, none of which reference instruction arguments or accounts
- */
-const STANDALONE_IX_NODE: InstructionNode = {
-    accounts: [],
-    arguments: [],
-    kind: 'instructionNode',
-    name: '__standalone__' as InstructionNode['name'],
-};
+import type { NodeKind, PdaNode, RegisteredPdaSeedNode, RootNode, VariablePdaSeedNode } from 'codama';
+import { camelCase, isNode } from 'codama';
 
 let utf8Encoder: ReturnType<typeof getUtf8Encoder> | undefined;
 
@@ -70,22 +54,7 @@ function resolveStandaloneConstantSeed(
             node: seedNode,
         });
     }
-    const visitor = createPdaSeedValueVisitor({
-        accountsInput: undefined,
-        argumentsInput: undefined,
-        ixNode: STANDALONE_IX_NODE,
-        programId: programAddress,
-        resolutionPath: [],
-        resolversInput: undefined,
-        root,
-    });
-    return visitOrElse(seedNode.value, visitor, node => {
-        throw new CodamaError(CODAMA_ERROR__UNEXPECTED_NODE_KIND, {
-            expectedKinds: Array.from(PDA_SEED_VALUE_SUPPORTED_NODE_KINDS),
-            kind: node.kind,
-            node,
-        });
-    });
+    return resolveConstantPdaSeedValue(seedNode.value, { programId: programAddress, root });
 }
 
 function resolveStandaloneVariableSeed(

@@ -2,50 +2,25 @@ import { getNodeCodec } from '@codama/dynamic-codecs';
 import {
     CODAMA_ERROR__DYNAMIC_CLIENT__ARGUMENT_MISSING,
     CODAMA_ERROR__DYNAMIC_CLIENT__FAILED_TO_DERIVE_PDA,
-    CODAMA_ERROR__DYNAMIC_CLIENT__INVARIANT_VIOLATION,
     CODAMA_ERROR__DYNAMIC_CLIENT__NODE_REFERENCE_NOT_FOUND,
-    CODAMA_ERROR__UNEXPECTED_NODE_KIND,
     CodamaError,
 } from '@codama/errors';
 import type { Address } from '@solana/addresses';
 import type { ReadonlyUint8Array } from '@solana/codecs';
-import type {
-    AccountValueNode,
-    ArgumentValueNode,
-    BooleanValueNode,
-    BytesValueNode,
-    ConstantValueNode,
-    NoneValueNode,
-    NumberValueNode,
-    ProgramIdValueNode,
-    PublicKeyValueNode,
-    SomeValueNode,
-    StringValueNode,
-    TypeNode,
-    Visitor,
-} from 'codama';
-import { isNode, visitOrElse } from 'codama';
+import type { AccountValueNode, ArgumentValueNode, TypeNode, Visitor } from 'codama';
+import { extendVisitor, isNode, visitOrElse } from 'codama';
 
 import { resolveAccountValueNodeAddress } from '../resolvers/resolve-account-value-node-address';
 import type { BaseResolutionContext } from '../resolvers/types';
-import { toAddress } from '../shared/address';
-import { getCodecFromBytesEncoding } from '../shared/bytes-encoding';
-import { getMemoizedAddressEncoder, getMemoizedBooleanEncoder, getMemoizedUtf8Codec } from '../shared/codecs';
+import { getMemoizedAddressEncoder } from '../shared/codecs';
+import {
+    createConstantPdaSeedValueVisitor,
+    PDA_SEED_VALUE_SUPPORTED_NODE_KINDS,
+    unexpectedPdaSeedNodeFallback,
+} from './constant-pda-seed-value';
 import { createInputValueTransformer } from './input-value-transformer';
 
-export const PDA_SEED_VALUE_SUPPORTED_NODE_KINDS = [
-    'accountValueNode',
-    'argumentValueNode',
-    'booleanValueNode',
-    'bytesValueNode',
-    'constantValueNode',
-    'noneValueNode',
-    'numberValueNode',
-    'programIdValueNode',
-    'publicKeyValueNode',
-    'someValueNode',
-    'stringValueNode',
-] as const;
+export { PDA_SEED_VALUE_SUPPORTED_NODE_KINDS };
 
 type PdaSeedValueSupportedNodeKind = (typeof PDA_SEED_VALUE_SUPPORTED_NODE_KINDS)[number];
 
@@ -68,7 +43,9 @@ export function createPdaSeedValueVisitor(
     const accountsInput = ctx.accountsInput ?? {};
     const argumentsInput = ctx.argumentsInput ?? {};
 
-    return {
+    const base = createConstantPdaSeedValueVisitor({ programId, root, seedTypeNode });
+
+    const visitor = extendVisitor(base, {
         visitAccountValue: async (node: AccountValueNode) => {
             const resolvedAddress = await resolveAccountValueNodeAddress(node, {
                 accountsInput,
@@ -120,58 +97,11 @@ export function createPdaSeedValueVisitor(
             const transformedInput = transformer(argInput);
             return await Promise.resolve(codec.encode(transformedInput));
         },
+    });
 
-        visitBooleanValue: async (node: BooleanValueNode) =>
-            await Promise.resolve(getMemoizedBooleanEncoder().encode(node.boolean)),
+    // Re-point constant/some recursion at the full visitor so nested account/argument values resolve correctly.
+    visitor.visitConstantValue = async node => await visitOrElse(node.value, visitor, unexpectedPdaSeedNodeFallback);
+    visitor.visitSomeValue = async node => await visitOrElse(node.value, visitor, unexpectedPdaSeedNodeFallback);
 
-        visitBytesValue: async (node: BytesValueNode) => {
-            const encodedValue = getCodecFromBytesEncoding(node.encoding).encode(node.data);
-            return await Promise.resolve(encodedValue);
-        },
-
-        visitConstantValue: async (node: ConstantValueNode) => {
-            const innerVisitor = createPdaSeedValueVisitor(ctx);
-            return await visitOrElse(node.value, innerVisitor, innerNode => {
-                throw new CodamaError(CODAMA_ERROR__UNEXPECTED_NODE_KIND, {
-                    expectedKinds: [...PDA_SEED_VALUE_SUPPORTED_NODE_KINDS],
-                    kind: innerNode.kind,
-                    node: innerNode,
-                });
-            });
-        },
-
-        visitNoneValue: async (_node: NoneValueNode) => await Promise.resolve(new Uint8Array(0)),
-
-        visitNumberValue: async (node: NumberValueNode) => {
-            // Sanity check: a violation here indicates a malformed IDL, not a user input error.
-            if (!Number.isInteger(node.number) || node.number < 0 || node.number > 0xff) {
-                throw new CodamaError(CODAMA_ERROR__DYNAMIC_CLIENT__INVARIANT_VIOLATION, {
-                    message: `NumberValueNode PDA seed is out of range: must be a valid u8 (0–255), got ${node.number}`,
-                });
-            }
-            return await Promise.resolve(new Uint8Array([node.number]));
-        },
-
-        visitProgramIdValue: async (_node: ProgramIdValueNode) => {
-            return await Promise.resolve(getMemoizedAddressEncoder().encode(toAddress(programId)));
-        },
-
-        visitPublicKeyValue: async (node: PublicKeyValueNode) => {
-            return await Promise.resolve(getMemoizedAddressEncoder().encode(toAddress(node.publicKey)));
-        },
-
-        visitSomeValue: async (node: SomeValueNode) => {
-            const innerVisitor = createPdaSeedValueVisitor(ctx);
-            return await visitOrElse(node.value, innerVisitor, innerNode => {
-                throw new CodamaError(CODAMA_ERROR__UNEXPECTED_NODE_KIND, {
-                    expectedKinds: [...PDA_SEED_VALUE_SUPPORTED_NODE_KINDS],
-                    kind: innerNode.kind,
-                    node: innerNode,
-                });
-            });
-        },
-
-        visitStringValue: async (node: StringValueNode) =>
-            await Promise.resolve(getMemoizedUtf8Codec().encode(node.string)),
-    };
+    return visitor;
 }

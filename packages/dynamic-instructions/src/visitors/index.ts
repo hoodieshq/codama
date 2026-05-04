@@ -1,6 +1,7 @@
 export { createAccountDefaultValueVisitor } from './account-default-value';
 export { createConditionNodeValueVisitor } from './condition-node-value';
 export { createDefaultValueEncoderVisitor, DEFAULT_VALUE_ENCODER_SUPPORTED_NODE_KINDS } from './default-value-encoder';
+export { createConstantPdaSeedValueVisitor } from './constant-pda-seed-value';
 export { createPdaSeedValueVisitor, PDA_SEED_VALUE_SUPPORTED_NODE_KINDS } from './pda-seed-value';
 export { createValueNodeVisitor } from './value-node-value';
 export { createInputValueTransformer, createInputValueTransformerVisitor } from './input-value-transformer';

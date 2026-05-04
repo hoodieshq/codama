@@ -4,12 +4,11 @@ export { createAccountMeta } from './accounts';
 // arguments
 export { resolveArgumentDefaultsFromCustomResolvers, encodeInstructionArguments } from './arguments';
 
-// visitors (TODO: consider removing. Currently used by standalone pda derivation)
-export {
-    createInputValueTransformer,
-    createPdaSeedValueVisitor,
-    PDA_SEED_VALUE_SUPPORTED_NODE_KINDS,
-} from './visitors';
+// visitors (TODO: consider better naming and moving into dynamic-codecs. Currently used by standalone pda derivation in dynamic-client)
+export { createInputValueTransformer } from './visitors';
+
+// resolvers
+export { resolveConstantPdaSeedValue } from './resolvers';
 
 // instructions
 export { createInstructionsBuilder } from './instructions-builder';
