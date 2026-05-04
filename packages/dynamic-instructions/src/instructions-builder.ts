@@ -1,3 +1,9 @@
+import type {
+    AccountsInput,
+    ArgumentsInput,
+    ResolverFnInput,
+    ResolversInput,
+} from '@codama/dynamic-address-resolution';
 import { address } from '@solana/addresses';
 import type { InstructionNode, RootNode } from 'codama';
 
@@ -7,14 +13,7 @@ import {
     encodeInstructionArguments,
     resolveArgumentDefaultsFromCustomResolvers,
 } from './arguments';
-import type {
-    AccountsInput,
-    ArgumentsInput,
-    EitherSigners,
-    InstructionsBuilderFn,
-    ResolverFn,
-    ResolversInput,
-} from './shared/types';
+import type { EitherSigners, InstructionsBuilderFn } from './shared/types';
 
 /**
  * Creates an async instruction builder function for a given `InstructionNode`.
@@ -33,8 +32,7 @@ export function createInstructionsBuilder<
     TArgs extends ArgumentsInput = ArgumentsInput,
     TAccounts extends AccountsInput = AccountsInput,
     TSigners extends EitherSigners = EitherSigners,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- ResolverFn<any, any> avoids contravariance issue.
-    TResolvers extends Record<string, ResolverFn<any, any>> = ResolversInput,
+    TResolvers extends ResolverFnInput = ResolversInput,
 >(root: RootNode, ixNode: InstructionNode): InstructionsBuilderFn<TArgs, TAccounts, TSigners, TResolvers> {
     const programAddress = address(root.program.publicKey);
     const validateArguments = createArgumentsInputValidator(root, ixNode);
@@ -48,7 +46,7 @@ export function createInstructionsBuilder<
         validateAccounts(accountsInput);
 
         // Resolve arguments that depend on custom resolvers.
-        const enrichedArgumentsInput = await resolveArgumentDefaultsFromCustomResolvers(
+        const enrichedArgumentsInput = await resolveArgumentDefaultsFromCustomResolvers<TArgs, TAccounts, TResolvers>(
             ixNode,
             argumentsInput,
             accountsInput,
@@ -56,9 +54,9 @@ export function createInstructionsBuilder<
         );
 
         // Encode arguments into buffer.
-        const argumentsData = encodeInstructionArguments(root, ixNode, enrichedArgumentsInput);
+        const argumentsData = encodeInstructionArguments<TArgs>(root, ixNode, enrichedArgumentsInput);
 
-        const accountsData = await createAccountMeta(
+        const accountsData = await createAccountMeta<TAccounts, TArgs, TResolvers>(
             root,
             ixNode,
             enrichedArgumentsInput,

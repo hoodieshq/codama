@@ -1,3 +1,4 @@
+import { resolveStandalonePda } from '@codama/dynamic-address-resolution';
 import type { AccountsInput, AddressInput, ArgumentsInput, ResolversInput } from '@codama/dynamic-instructions';
 import { toAddress } from '@codama/dynamic-instructions';
 import {
@@ -11,7 +12,6 @@ import type { InstructionNode, RootNode } from 'codama';
 import { createFromJson, updateProgramsVisitor } from 'codama';
 
 import { collectPdaNodes } from './collect-pdas';
-import { deriveStandalonePDA } from './derive-standalone-pda';
 import { MethodsBuilder } from './methods-builder';
 
 export type IdlInput = object | string;
@@ -118,7 +118,7 @@ export function createProgramClient<TClient = ProgramClient>(
                               });
                           }
 
-                          return (seeds?: Record<string, unknown>) => deriveStandalonePDA(root, pdaNode, seeds);
+                          return (seeds?: Record<string, unknown>) => resolveStandalonePda(root, pdaNode, seeds);
                       },
                       has(target, prop) {
                           return Reflect.has(target, prop) || (typeof prop === 'string' && pdaNodes.has(prop));

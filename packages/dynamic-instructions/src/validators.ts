@@ -1,4 +1,6 @@
+import { isPublicKeyLike } from '@codama/dynamic-address-resolution';
 import { isAddress } from '@solana/addresses';
+import { getUtf8Encoder } from '@solana/codecs';
 import type {
     ArrayTypeNode,
     CountNode,
@@ -23,8 +25,6 @@ import {
     tuple,
 } from 'superstruct';
 
-import { isPublicKeyLike } from './shared/address';
-import { getMemoizedUtf8Encoder } from './shared/codecs';
 import { formatValueType, getMaybeNodeKind, safeStringify } from './shared/util';
 
 type StructUnknown = Struct<unknown, unknown>;
@@ -230,7 +230,7 @@ function StringValidatorForFixedSize(maxSize: number): StructUnknown {
         if (typeof value !== 'string') {
             return `Expected a string, received: ${formatValueType(value)}`;
         }
-        const encoder = getMemoizedUtf8Encoder();
+        const encoder = getUtf8Encoder();
         const bytes = encoder.encode(value);
         return (
             bytes.length <= maxSize ||

@@ -79,8 +79,33 @@ importers:
         specifier: ^2.4.9
         version: 2.4.9
 
+  packages/dynamic-address-resolution:
+    dependencies:
+      '@codama/dynamic-codecs':
+        specifier: workspace:*
+        version: link:../dynamic-codecs
+      '@codama/errors':
+        specifier: workspace:*
+        version: link:../errors
+      '@solana/addresses':
+        specifier: ^5.3.0
+        version: 5.5.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)
+      '@solana/codecs':
+        specifier: ^5.3.0
+        version: 5.5.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)
+      codama:
+        specifier: workspace:*
+        version: link:../library
+    devDependencies:
+      '@solana/kit':
+        specifier: 6.5.0
+        version: 6.5.0(bufferutil@4.1.0)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)(utf-8-validate@6.0.6)
+
   packages/dynamic-client:
     dependencies:
+      '@codama/dynamic-address-resolution':
+        specifier: workspace:*
+        version: link:../dynamic-address-resolution
       '@codama/dynamic-codecs':
         specifier: workspace:*
         version: link:../dynamic-codecs
@@ -151,6 +176,9 @@ importers:
 
   packages/dynamic-instructions:
     dependencies:
+      '@codama/dynamic-address-resolution':
+        specifier: workspace:*
+        version: link:../dynamic-address-resolution
       '@codama/dynamic-codecs':
         specifier: workspace:*
         version: link:../dynamic-codecs
