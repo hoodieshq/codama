@@ -1,7 +1,7 @@
 {
     "name": "@codama/dynamic-client",
     "version": "0.1.0",
-    "description": "Tool to dynamically build instructions based on Codama IDLs",
+    "description": "Client to dynamically interact with Solana programs using Codama IDLs",
     "license": "MIT",
     "repository": {
         "type": "git",
@@ -65,13 +65,13 @@
     },
     "dependencies": {
         "@codama/dynamic-codecs": "workspace:*",
+        "@codama/dynamic-instructions": "workspace:*",
         "@codama/errors": "workspace:*",
         "@solana/addresses": "^5.3.0",
         "@solana/codecs": "^5.3.0",
         "@solana/instructions": "^5.3.0",
         "codama": "workspace:*",
-        "commander": "^14.0.2",
-        "superstruct": "^2.0.2"
+        "commander": "^14.0.2"
     },
     "devDependencies": {
         "@codama/nodes-from-anchor": "workspace:*",

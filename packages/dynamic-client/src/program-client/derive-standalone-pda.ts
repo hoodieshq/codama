@@ -1,5 +1,11 @@
 import { getNodeCodec } from '@codama/dynamic-codecs';
 import {
+    createInputValueTransformer,
+    createPdaSeedValueVisitor,
+    PDA_SEED_VALUE_SUPPORTED_NODE_KINDS,
+    toAddress,
+} from '@codama/dynamic-instructions';
+import {
     CODAMA_ERROR__DYNAMIC_CLIENT__ARGUMENT_MISSING,
     CODAMA_ERROR__DYNAMIC_CLIENT__UNEXPECTED_ARGUMENT_TYPE,
     CODAMA_ERROR__UNEXPECTED_NODE_KIND,
@@ -8,18 +14,9 @@ import {
 } from '@codama/errors';
 import type { Address, ProgramDerivedAddress } from '@solana/addresses';
 import { getProgramDerivedAddress } from '@solana/addresses';
-import type { ReadonlyUint8Array } from '@solana/codecs';
-import type { InstructionNode, PdaNode, RegisteredPdaSeedNode, RootNode, VariablePdaSeedNode } from 'codama';
+import { getUtf8Encoder, type ReadonlyUint8Array } from '@solana/codecs';
+import type { InstructionNode, NodeKind, PdaNode, RegisteredPdaSeedNode, RootNode, VariablePdaSeedNode } from 'codama';
 import { camelCase, isNode, visitOrElse } from 'codama';
-
-import {
-    createInputValueTransformer,
-    createPdaSeedValueVisitor,
-    PDA_SEED_VALUE_SUPPORTED_NODE_KINDS,
-} from '../instruction-encoding';
-import { toAddress } from '../shared/address';
-import { getMemoizedUtf8Encoder } from '../shared/codecs';
-import { formatValueType, getMaybeNodeKind } from '../shared/util';
 
 /**
  * Minimal InstructionNode stub to satisfy constant PDA seeds requirements.
@@ -31,6 +28,8 @@ const STANDALONE_IX_NODE: InstructionNode = {
     kind: 'instructionNode',
     name: '__standalone__' as InstructionNode['name'],
 };
+
+let utf8Encoder: ReturnType<typeof getUtf8Encoder> | undefined;
 
 /**
  * Derives a PDA from a standalone `PdaNode` and user-supplied seed values,
@@ -51,7 +50,7 @@ export async function deriveStandalonePDA(
                 return await resolveStandaloneVariableSeed(root, seedNode, seedInputs);
             }
             throw new CodamaError(CODAMA_ERROR__UNRECOGNIZED_NODE_KIND, {
-                kind: getMaybeNodeKind(seedNode) ?? 'unknown',
+                kind: (seedNode as { kind: NodeKind })?.kind ?? 'unknown',
             });
         }),
     );
@@ -112,12 +111,15 @@ function resolveStandaloneVariableSeed(
     if (isNode(typeNode, 'stringTypeNode')) {
         if (typeof input !== 'string') {
             throw new CodamaError(CODAMA_ERROR__DYNAMIC_CLIENT__UNEXPECTED_ARGUMENT_TYPE, {
-                actualType: formatValueType(input),
+                actualType: formatInputType(input),
                 expectedType: 'string',
                 nodeKind: 'stringTypeNode',
             });
         }
-        return Promise.resolve(getMemoizedUtf8Encoder().encode(input));
+        if (!utf8Encoder) {
+            utf8Encoder = getUtf8Encoder();
+        }
+        return Promise.resolve(utf8Encoder.encode(input));
     }
 
     // Create a synthetic instructionArgumentNode so getNodeCodec can resolve the type.
@@ -136,4 +138,12 @@ function createSyntheticArgNode(seedNode: VariablePdaSeedNode) {
         name: seedNode.name,
         type: seedNode.type,
     };
+}
+
+function formatInputType(value: unknown): string {
+    if (value === null) return 'null';
+    if (Array.isArray(value)) return `array (length ${value.length})`;
+    if (value instanceof Uint8Array) return `Uint8Array (length ${value.length})`;
+    if (typeof value === 'object') return 'object';
+    return typeof value;
 }

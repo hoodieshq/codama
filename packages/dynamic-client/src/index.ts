@@ -1,7 +1,7 @@
 export type { ProgramDerivedAddress } from '@solana/addresses';
 
-export { isPublicKeyLike, toAddress } from './shared/address';
-export type { AddressInput, PublicKeyLike } from './shared/address';
+export { isPublicKeyLike, toAddress } from '@codama/dynamic-instructions';
+export type { AddressInput, PublicKeyLike } from '@codama/dynamic-instructions';
 
 export { CodamaError, isCodamaError } from '@codama/errors';
 export {
@@ -27,7 +27,7 @@ export {
     CODAMA_ERROR__DYNAMIC_CLIENT__FAILED_TO_VALIDATE_INPUT,
 } from '@codama/errors';
 
-export type { AccountsInput, ArgumentsInput } from './shared/types';
+export type { AccountsInput, ArgumentsInput } from '@codama/dynamic-instructions';
 
 export { createProgramClient } from './program-client/create-program-client';
 export type {

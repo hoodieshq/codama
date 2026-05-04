@@ -1,20 +1,12 @@
-import type {
-    DefinedTypeNode,
-    InstructionAccountNode,
-    InstructionInputValueNode,
-    InstructionNode,
-    PdaNode,
-    RootNode,
-    TypeNode,
-} from 'codama';
-
-import { OPTIONAL_NODE_KINDS } from '../../../shared/nodes';
+import { OPTIONAL_NODE_KINDS } from '@codama/dynamic-instructions';
+import { codamaTypeToTS, collectResolverNames, isAccountAutoResolvable } from '@codama/dynamic-instructions/codegen';
+import { pascalCase, type PdaNode, type RootNode } from 'codama';
 
 /**
  * Generate TypeScript type for program client.
  */
 export function generateClientTypes(idl: RootNode): string {
-    const programName = toPascalCase(idl.program.name);
+    const programName = pascalCase(idl.program.name);
     const definedTypes = idl.program.definedTypes ?? [];
 
     const pdaMap = collectPdaNodesFromIdl(idl);
@@ -53,7 +45,7 @@ export type MethodBuilder<TAccounts, TSigners extends string[], TResolvers = Rec
 `;
 
     for (const ix of idl.program.instructions) {
-        const typeName = toPascalCase(ix.name);
+        const typeName = pascalCase(ix.name);
 
         // Build args interface
         const args = ix.arguments.filter(arg => arg.defaultValueStrategy !== 'omitted');
@@ -77,12 +69,6 @@ export type MethodBuilder<TAccounts, TSigners extends string[], TResolvers = Rec
         }
 
         // Build accounts interface
-        // these ValueNodes don't have default value and must be provided if required.
-        const nonResolvableValueNodes = ['payerValueNode', 'identityValueNode'];
-        function isAccAutoResolvable(acc: InstructionAccountNode): boolean {
-            if (acc.defaultValue == null) return false;
-            return !nonResolvableValueNodes.includes(acc.defaultValue.kind);
-        }
         const accountsInterfaceName = `${typeName}Accounts`;
         if (ix.accounts.length > 0) {
             output += `export type ${accountsInterfaceName} = {\n`;
@@ -90,7 +76,7 @@ export type MethodBuilder<TAccounts, TSigners extends string[], TResolvers = Rec
                 // Omittable accounts have a defaultValue that can be auto-resolved, so they can be omitted from .accounts().
                 // When null: resolved via optionalAccountStrategy.
                 // When undefined: resolved via defaultValue.
-                const omittable = isAccAutoResolvable(acc) ? '?' : '';
+                const omittable = isAccountAutoResolvable(acc) ? '?' : '';
                 const type = acc.isOptional ? 'Address | null' : 'Address';
                 output += `    ${acc.name}${omittable}: ${type};\n`;
             }
@@ -135,7 +121,7 @@ export type MethodBuilder<TAccounts, TSigners extends string[], TResolvers = Rec
 export type ${programName}Methods = {\n`;
 
     for (const ix of idl.program.instructions) {
-        const typeName = toPascalCase(ix.name);
+        const typeName = pascalCase(ix.name);
         output += `    ${ix.name}: ${typeName}Method;\n`;
     }
 
@@ -144,7 +130,7 @@ export type ${programName}Methods = {\n`;
     // Generate PDA seed types and pdas namespace
     if (pdaMap.size > 0) {
         for (const [pdaName, pdaNode] of pdaMap) {
-            const typeName = toPascalCase(pdaName);
+            const typeName = pascalCase(pdaName);
             const variableSeeds = (pdaNode.seeds ?? []).filter(s => s.kind === 'variablePdaSeedNode');
             if (variableSeeds.length > 0) {
                 output += `export type ${typeName}PdaSeeds = {\n`;
@@ -159,7 +145,7 @@ export type ${programName}Methods = {\n`;
         output += `/**\n * Strongly-typed PDAs for ${programName}.\n */\n`;
         output += `export type ${programName}Pdas = {\n`;
         for (const [pdaName, pdaNode] of pdaMap) {
-            const typeName = toPascalCase(pdaName);
+            const typeName = pascalCase(pdaName);
             const variableSeeds = (pdaNode.seeds ?? []).filter(s => s.kind === 'variablePdaSeedNode');
             const seedsParam =
                 variableSeeds.length > 0 ? `seeds: ${typeName}PdaSeeds` : `seeds?: Record<string, unknown>`;
@@ -183,100 +169,6 @@ ${pdasProp}    programAddress: Address;
     return output;
 }
 
-/**
- * Convert Codama type to TypeScript type string.
- */
-function codamaTypeToTS(type: TypeNode | undefined, definedTypes: DefinedTypeNode[]): string {
-    if (!type || typeof type !== 'object') return 'unknown';
-
-    switch (type.kind) {
-        case 'numberTypeNode':
-            return ['u64', 'u128', 'i64', 'i128'].includes(type.format ?? '') ? 'number | bigint' : 'number';
-        case 'publicKeyTypeNode':
-            return 'Address';
-        case 'stringTypeNode':
-            return 'string';
-        case 'booleanTypeNode':
-            return 'boolean';
-        case 'optionTypeNode':
-            return `${codamaTypeToTS(type.item, definedTypes)} | null`;
-        case 'remainderOptionTypeNode':
-        case 'zeroableOptionTypeNode':
-            return `${codamaTypeToTS(type.item, definedTypes)} | null`;
-        case 'bytesTypeNode':
-            return 'Uint8Array';
-        case 'fixedSizeTypeNode':
-        case 'sizePrefixTypeNode':
-        case 'hiddenPrefixTypeNode':
-        case 'preOffsetTypeNode':
-        case 'postOffsetTypeNode':
-        case 'hiddenSuffixTypeNode':
-        case 'sentinelTypeNode':
-            return codamaTypeToTS(type.type, definedTypes);
-        case 'amountTypeNode':
-        case 'solAmountTypeNode':
-            return 'number | bigint';
-        case 'structTypeNode': {
-            if (!type.fields || type.fields.length === 0) return '{}';
-            const fields = type.fields
-                .filter(f => f.defaultValueStrategy !== 'omitted')
-                .map(f => `${f.name}: ${codamaTypeToTS(f.type, definedTypes)}`);
-            if (fields.length === 0) return '{}';
-            return `{ ${fields.join('; ')} }`;
-        }
-        case 'enumTypeNode': {
-            if (!type.variants || type.variants.length === 0) return 'unknown';
-            const allEmpty = type.variants.every(v => v.kind === 'enumEmptyVariantTypeNode');
-            if (allEmpty) {
-                return type.variants.map(v => `'${v.name}'`).join(' | ');
-            }
-            // Enum with struct/tuple variants — discriminated union
-            const variantTypes = type.variants.map(v => {
-                if (v.kind === 'enumEmptyVariantTypeNode') {
-                    return `{ __kind: '${v.name}' }`;
-                }
-                if (v.kind === 'enumStructVariantTypeNode' && v.struct) {
-                    const inner = codamaTypeToTS(v.struct, definedTypes);
-                    return `{ __kind: '${v.name}' } & ${inner}`;
-                }
-                if (v.kind === 'enumTupleVariantTypeNode' && v.tuple) {
-                    const inner = codamaTypeToTS(v.tuple, definedTypes);
-                    return `{ __kind: '${v.name}'; fields: ${inner} }`;
-                }
-                return `{ __kind: '${v.name}' }`;
-            });
-            return variantTypes.join(' | ');
-        }
-        case 'tupleTypeNode': {
-            if (!type.items || type.items.length === 0) return '[]';
-            const items = type.items.map(i => codamaTypeToTS(i, definedTypes));
-            return `[${items.join(', ')}]`;
-        }
-        case 'arrayTypeNode':
-        case 'setTypeNode': {
-            const itemType = codamaTypeToTS(type.item, definedTypes);
-            const needsParens = itemType.includes(' | ') || itemType.includes(' & ');
-            return needsParens ? `(${itemType})[]` : `${itemType}[]`;
-        }
-        case 'mapTypeNode': {
-            const v = codamaTypeToTS(type.value, definedTypes);
-            return `Record<string, ${v}>`;
-        }
-        case 'definedTypeLinkNode': {
-            if (!type.name) return 'unknown';
-            const def = definedTypes.find(d => d.name === type.name);
-            if (!def) return 'unknown';
-            return codamaTypeToTS(def.type, definedTypes);
-        }
-        case 'dateTimeTypeNode': {
-            return codamaTypeToTS(type.number, definedTypes);
-        }
-        default:
-            type['kind'] satisfies never;
-            return 'unknown';
-    }
-}
-
 function collectPdaNodesFromIdl(idl: RootNode): Map<string, PdaNode> {
     const pdas = new Map<string, PdaNode>();
 
@@ -296,38 +188,4 @@ function collectPdaNodesFromIdl(idl: RootNode): Map<string, PdaNode> {
     }
 
     return pdas;
-}
-
-/**
- * Collects all unique resolverValueNode names from an instruction's accounts and arguments.
- */
-function collectResolverNames(ix: InstructionNode): Set<string> {
-    const names = new Set<string>();
-
-    function extractResolverNodeName(node: InstructionInputValueNode | undefined): void {
-        if (!node) return;
-        if (node.kind === 'resolverValueNode' && node.name) {
-            names.add(node.name);
-        } else if (node.kind === 'conditionalValueNode') {
-            extractResolverNodeName(node.condition);
-            extractResolverNodeName(node.ifTrue);
-            extractResolverNodeName(node.ifFalse);
-        }
-    }
-
-    for (const acc of ix.accounts) {
-        extractResolverNodeName(acc.defaultValue);
-    }
-    for (const arg of ix.arguments) {
-        extractResolverNodeName(arg.defaultValue);
-    }
-
-    return names;
-}
-
-function toPascalCase(str: string): string {
-    return str
-        .split(/[-_]/)
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-        .join('');
 }

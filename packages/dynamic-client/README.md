@@ -7,7 +7,7 @@
 [npm-image]: https://img.shields.io/npm/v/@codama/dynamic-client.svg?style=flat&label=%40codama%2Fdynamic-client
 [npm-url]: https://www.npmjs.com/package/@codama/dynamic-client
 
-This package provides a runtime Solana instruction builder that dynamically constructs `Instruction` (`@solana/instructions`) from Codama IDL and provides type generation for full TypeScript type safety.
+This package provides a runtime Solana program client to dynamically interact with Solana programs using Codama IDLs — with optional TypeScript type generation for full type safety. It contains PDA derivation, and an instruction builder powered by [@codama/dynamic-instructions](../dynamic-instructions/README.md).
 
 ## Installation
 
