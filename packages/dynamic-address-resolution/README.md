@@ -24,11 +24,32 @@ pnpm install @codama/dynamic-address-resolution
 - `ResolverFn`, `ResolversInput`, `ResolverFnInput` — user-supplied custom resolver functions.
 - `AddressInput`, `PublicKeyLike` — accepted address-like inputs (modern `Address` strings, base58 strings, or legacy `PublicKey`-like objects with `.toBase58()`).
 
-### Types generation
+## Types generation
 
-Functions in this package accept generic parameters `<TAccounts, TArgs, TResolvers>` so code can be strongly typed against a specific IDL. The matching `*Args`, `*Accounts`, `*Resolvers` types are produced by `@codama/dynamic-instructions` — see [Types generation](../dynamic-instructions/README.md#types-generation) for the CLI and programmatic API.
+This package can generate per-instruction (`*Args`, `*Accounts`, `*Resolvers`) and per-PDA (`*PdaSeeds`, `${Program}Pdas`) TypeScript types from a Codama IDL. The generated types can then be passed as generics to [`resolveInstructionAccountAddress`](#resolveinstructionaccountaddressinput) and [`resolveStandalonePda`](#resolvestandalonepdaroot-pdanode-seedinputs) below for end-to-end narrowing of arguments, accounts, custom resolvers, and PDA seeds.
 
-The generated types can then be passed as generics to functions — see [`resolveInstructionAccountAddress`](#resolveinstructionaccountaddressinput) below.
+Packages ([`@codama/dynamic-instructions`](../dynamic-instructions/README.md#types-generation), [`@codama/dynamic-client`](../dynamic-client/README.md)) compose this output with their own.
+
+### CLI
+
+```sh
+npx @codama/dynamic-address-resolution generate-types ./idl/codama.json ./generated
+```
+
+Reads the Codama IDL JSON and writes a `<idl-name>-address-resolution-types.ts` file containing PDA seed types, per-instruction Arguments, Accounts and Resolvers.
+
+### Programmatic
+
+```ts
+import { generateTypes } from '@codama/dynamic-address-resolution/codegen';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { createFromJson } from 'codama';
+
+const root = createFromJson(readFileSync('./idl/codama.json', 'utf-8')).getRoot();
+writeFileSync('./generated/types.ts', generateTypes(root));
+```
+
+The `/codegen` entry also exposes the building blocks individually — `generatePdaTypes`, `generateInstructionTypes`, `codamaTypeToTS`, `collectPdaNodesFromIdl`, `collectResolverNames`, `isAccountAutoResolvable`.
 
 ## Functions
 

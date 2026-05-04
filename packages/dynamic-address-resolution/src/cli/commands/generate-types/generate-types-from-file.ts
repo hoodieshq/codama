@@ -3,9 +3,9 @@ import path from 'node:path';
 
 import { createFromJson, type RootNode } from 'codama';
 
-import { generateInstructionTypes, INSTRUCTION_TYPES_FILE_HEADER } from './generate-instruction-types';
+import { generateTypes } from '../../../codegen/generate-types';
 
-export function generateInstructionTypesFromFile(codamaIdlPath: string, outputDirPath: string) {
+export function generateTypesFromFile(codamaIdlPath: string, outputDirPath: string) {
     const idlPath = path.resolve(codamaIdlPath);
     const outputDir = path.resolve(outputDirPath);
 
@@ -36,17 +36,17 @@ export function generateInstructionTypesFromFile(codamaIdlPath: string, outputDi
 
     let types: string = '';
     try {
-        console.log(`Generating instruction types for program: ${idl.program.name}`);
-        types = INSTRUCTION_TYPES_FILE_HEADER + generateInstructionTypes(idl);
+        console.log(`Generating address-resolution types for program: ${idl.program.name}`);
+        types = generateTypes(idl);
     } catch (err) {
-        console.error(`Error generating instruction types: ${err instanceof Error ? err.message : String(err)}`);
+        console.error(`Error generating types: ${err instanceof Error ? err.message : String(err)}`);
         process.exit(1);
     }
 
     try {
         mkdirSync(outputDir, { recursive: true });
         const fileName = path.basename(idlPath);
-        const outputFile = fileName.replace(/\.json$/, '-instruction-types.ts');
+        const outputFile = fileName.replace(/\.json$/, '-address-resolution-types.ts');
         const outputPath = path.join(outputDir, outputFile);
 
         console.log(`Writing types to: ${outputPath}`);

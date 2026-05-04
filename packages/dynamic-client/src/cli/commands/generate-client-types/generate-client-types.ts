@@ -1,17 +1,20 @@
-import { OPTIONAL_NODE_KINDS } from '@codama/dynamic-instructions';
-import { codamaTypeToTS, collectResolverNames, isAccountAutoResolvable } from '@codama/dynamic-instructions/codegen';
-import { pascalCase, type PdaNode, type RootNode } from 'codama';
+import { OPTIONAL_NODE_KINDS } from '@codama/dynamic-address-resolution';
+import {
+    collectResolverNames,
+    generateInstructionTypes,
+    generatePdaTypes,
+} from '@codama/dynamic-address-resolution/codegen';
+import { generateSignerTypes } from '@codama/dynamic-instructions/codegen';
+import { pascalCase, type RootNode } from 'codama';
 
 /**
  * Generate TypeScript type for program client.
  */
 export function generateClientTypes(idl: RootNode): string {
     const programName = pascalCase(idl.program.name);
-    const definedTypes = idl.program.definedTypes ?? [];
 
-    const pdaMap = collectPdaNodesFromIdl(idl);
-
-    const hasPdas = pdaMap.size > 0;
+    const { mapTypeName: pdasMapTypeName, typeBlock: pdaTypeBlock } = generatePdaTypes(idl);
+    const hasPdas = pdasMapTypeName !== null;
     const addressImports = hasPdas ? 'Address, ProgramDerivedAddress' : 'Address';
 
     let output = `/**
@@ -44,74 +47,26 @@ export type MethodBuilder<TAccounts, TSigners extends string[], TResolvers = Rec
 
 `;
 
+    output += generateInstructionTypes(idl);
+    output += generateSignerTypes(idl);
+
     for (const ix of idl.program.instructions) {
         const typeName = pascalCase(ix.name);
-
-        // Build args interface
         const args = ix.arguments.filter(arg => arg.defaultValueStrategy !== 'omitted');
         const remainingAccountArgs = (ix.remainingAccounts ?? []).filter(ra => ra.value.kind === 'argumentValueNode');
-        let argsRef = 'void';
-        if (args.length > 0 || remainingAccountArgs.length > 0) {
-            const argsInterfaceName = `${typeName}Args`;
-            output += `export type ${argsInterfaceName} = {\n`;
-            for (const arg of args) {
-                const tsType = codamaTypeToTS(arg.type, definedTypes);
-                const isOptional = OPTIONAL_NODE_KINDS.includes(arg.type.kind);
-                const sep = isOptional ? '?:' : ':';
-                output += `    ${arg.name}${sep} ${tsType};\n`;
-            }
-            for (const ra of remainingAccountArgs) {
-                const sep = ra.isOptional ? '?:' : ':';
-                output += `    ${ra.value.name}${sep} Address[];\n`;
-            }
-            output += '};\n\n';
-            argsRef = argsInterfaceName;
-        }
+        const hasArgs = args.length > 0 || remainingAccountArgs.length > 0;
+        const argsRef = hasArgs ? `${typeName}Args` : 'void';
+        const accountsRef = `${typeName}Accounts`;
+        const eitherSignerCount = ix.accounts.filter(acc => acc.isSigner === 'either').length;
+        const signersGeneric = eitherSignerCount > 0 ? `${typeName}Signers` : 'string[]';
+        const resolversRef = collectResolverNames(ix).size > 0 ? `${typeName}Resolvers` : '';
 
-        // Build accounts interface
-        const accountsInterfaceName = `${typeName}Accounts`;
-        if (ix.accounts.length > 0) {
-            output += `export type ${accountsInterfaceName} = {\n`;
-            for (const acc of ix.accounts) {
-                // Omittable accounts have a defaultValue that can be auto-resolved, so they can be omitted from .accounts().
-                // When null: resolved via optionalAccountStrategy.
-                // When undefined: resolved via defaultValue.
-                const omittable = isAccountAutoResolvable(acc) ? '?' : '';
-                const type = acc.isOptional ? 'Address | null' : 'Address';
-                output += `    ${acc.name}${omittable}: ${type};\n`;
-            }
-            output += '} & Record<string, Address | null | undefined>;\n\n';
-        } else {
-            output += `export type ${accountsInterfaceName} = Record<string, Address | null | undefined>;\n\n`;
-        }
-
-        // Collect all ambiguous isSigner: "either" account names
-        const eitherSignerAccounts = ix.accounts.filter(acc => acc.isSigner === 'either').map(acc => `'${acc.name}'`);
-        if (eitherSignerAccounts.length > 0) {
-            output += `export type ${typeName}Signers = (${eitherSignerAccounts.join(' | ')})[];\n\n`;
-        }
-
-        // Collect resolver names for this instruction
-        const resolverNames = collectResolverNames(ix);
-        let resolversRef = '';
-        if (resolverNames.size > 0) {
-            const resolversTypeName = `${typeName}Resolvers`;
-            output += `export type ${resolversTypeName} = {\n`;
-            for (const name of resolverNames) {
-                output += `    ${name}: ResolverFn<${argsRef === 'void' ? 'Record<string, unknown>' : argsRef}, ${accountsInterfaceName}>;\n`;
-            }
-            output += '};\n\n';
-            resolversRef = resolversTypeName;
-        }
-
-        // Generate method type
         const hasRequiredArgs = args.some(arg => !OPTIONAL_NODE_KINDS.includes(arg.type.kind));
         const hasRequiredRemainingAccounts = remainingAccountArgs.some(ra => !ra.isOptional);
         const allArgsOptional = !hasRequiredArgs && !hasRequiredRemainingAccounts;
         const argsParam = argsRef === 'void' ? '' : allArgsOptional ? `args?: ${argsRef}` : `args: ${argsRef}`;
-        const signersGeneric = eitherSignerAccounts.length > 0 ? `${typeName}Signers` : 'string[]';
         const resolversGeneric = resolversRef ? `, ${resolversRef}` : '';
-        const methodSignature = `(${argsParam}) => MethodBuilder<${accountsInterfaceName}, ${signersGeneric}${resolversGeneric}>`;
+        const methodSignature = `(${argsParam}) => MethodBuilder<${accountsRef}, ${signersGeneric}${resolversGeneric}>`;
         output += `export type ${typeName}Method = ${methodSignature};\n\n`;
     }
 
@@ -127,34 +82,9 @@ export type ${programName}Methods = {\n`;
 
     output += '};\n\n';
 
-    // Generate PDA seed types and pdas namespace
-    if (pdaMap.size > 0) {
-        for (const [pdaName, pdaNode] of pdaMap) {
-            const typeName = pascalCase(pdaName);
-            const variableSeeds = (pdaNode.seeds ?? []).filter(s => s.kind === 'variablePdaSeedNode');
-            if (variableSeeds.length > 0) {
-                output += `export type ${typeName}PdaSeeds = {\n`;
-                for (const seed of variableSeeds) {
-                    const tsType = seed.type ? codamaTypeToTS(seed.type, definedTypes) : 'unknown';
-                    output += `    ${seed.name}: ${tsType};\n`;
-                }
-                output += '};\n\n';
-            }
-        }
+    output += pdaTypeBlock;
 
-        output += `/**\n * Strongly-typed PDAs for ${programName}.\n */\n`;
-        output += `export type ${programName}Pdas = {\n`;
-        for (const [pdaName, pdaNode] of pdaMap) {
-            const typeName = pascalCase(pdaName);
-            const variableSeeds = (pdaNode.seeds ?? []).filter(s => s.kind === 'variablePdaSeedNode');
-            const seedsParam =
-                variableSeeds.length > 0 ? `seeds: ${typeName}PdaSeeds` : `seeds?: Record<string, unknown>`;
-            output += `    ${pdaName}: (${seedsParam}) => Promise<ProgramDerivedAddress>;\n`;
-        }
-        output += '};\n\n';
-    }
-
-    const pdasProp = pdaMap.size > 0 ? `    pdas: ${programName}Pdas;\n` : '';
+    const pdasProp = pdasMapTypeName ? `    pdas: ${pdasMapTypeName};\n` : '';
     output += `/**
  * Strongly-typed program client for ${programName}.
  */
@@ -167,25 +97,4 @@ ${pdasProp}    programAddress: Address;
 `;
 
     return output;
-}
-
-function collectPdaNodesFromIdl(idl: RootNode): Map<string, PdaNode> {
-    const pdas = new Map<string, PdaNode>();
-
-    for (const pda of idl.program.pdas ?? []) {
-        pdas.set(pda.name, pda);
-    }
-
-    for (const ix of idl.program.instructions) {
-        for (const acc of ix.accounts) {
-            if (!acc.defaultValue || acc.defaultValue.kind !== 'pdaValueNode') continue;
-            const pdaDef = acc.defaultValue.pda;
-            if (!pdaDef || pdaDef.kind !== 'pdaNode') continue;
-            if (!pdas.has(pdaDef.name)) {
-                pdas.set(pdaDef.name, pdaDef);
-            }
-        }
-    }
-
-    return pdas;
 }

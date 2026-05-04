@@ -10,7 +10,6 @@ export {
     type AddressInput,
     type ArgumentsInput,
     isPublicKeyLike,
-    OPTIONAL_NODE_KINDS,
     type PublicKeyLike,
     type ResolverFn,
     type ResolverFnInput,

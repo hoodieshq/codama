@@ -22,10 +22,10 @@ import { resolveConstantPdaSeedValue } from './resolve-constant-pda-seed-value';
  * Derives a PDA from a standalone `PdaNode` and user-supplied seed values,
  * without requiring an instruction context.
  */
-export async function resolveStandalonePda(
+export async function resolveStandalonePda<TSeeds extends Record<string, unknown> = Record<string, unknown>>(
     root: RootNode,
     pdaNode: PdaNode,
-    seedInputs: Record<string, unknown> = {},
+    seedInputs?: TSeeds,
 ): Promise<ProgramDerivedAddress> {
     const programAddress = toAddress(pdaNode.programId || root.program.publicKey);
     const seedValues = await Promise.all(
@@ -34,7 +34,7 @@ export async function resolveStandalonePda(
                 return await resolveStandaloneConstantSeed(root, programAddress, seedNode);
             }
             if (seedNode.kind === 'variablePdaSeedNode') {
-                return await resolveStandaloneVariableSeed(root, seedNode, seedInputs);
+                return await resolveStandaloneVariableSeed(root, seedNode, seedInputs || {});
             }
             throw new CodamaError(CODAMA_ERROR__UNRECOGNIZED_NODE_KIND, {
                 kind: (seedNode as { kind: NodeKind })?.kind ?? 'unknown',
