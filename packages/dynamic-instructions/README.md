@@ -41,7 +41,7 @@ const instruction = await build(args, accounts, signers, resolvers);
 > Types are generated via [`generate-client-types`](#types-generation).
 
 ```ts
-import type { CreateItemAccounts, CreateItemArgs, CreateItemResolvers } from './generated/<idl-name>-idl-types';
+import type { CreateItemAccounts, CreateItemArgs, CreateItemResolvers } from './generated/<idl-name>-instruction-types';
 
 const build = createInstructionsBuilder<CreateItemArgs, CreateItemAccounts, [], CreateItemResolvers>(root, ixNode);
 const instruction = await build({ name: 'item' }, { authority }, [], {
@@ -64,7 +64,7 @@ const accountMetas = await createAccountMeta(root, ixNode, args, accounts, ['own
 > Types are generated via [`generate-client-types`](#types-generation).
 
 ```ts
-import type { CreateItemAccounts, CreateItemArgs, CreateItemResolvers } from './generated/<idl-name>-idl-types';
+import type { CreateItemAccounts, CreateItemArgs, CreateItemResolvers } from './generated/<idl-name>-instruction-types';
 
 const accountMetas = await createAccountMeta<CreateItemAccounts, CreateItemArgs, CreateItemResolvers>(
     root,
@@ -91,7 +91,7 @@ const data = encodeInstructionArguments(root, ixNode, { amount: 1_000_000_000 })
 > Types are generated via [`generate-client-types`](#types-generation).
 
 ```ts
-import type { TransferArgs } from './generated/<idl-name>-idl-types';
+import type { TransferArgs } from './generated/<idl-name>-instruction-types';
 
 const data = encodeInstructionArguments<TransferArgs>(root, ixNode, { amount: 1_000_000_000n });
 ```
