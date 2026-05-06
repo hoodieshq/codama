@@ -22,14 +22,14 @@ import { createAccountMeta } from '../../src/accounts/create-account-meta';
 const ADDR_1 = address('11111111111111111111111111111111');
 const ADDR_2 = address('22222222222222222222222222222222222222222222');
 const ADDR_3 = address('33333333333333333333333333333333333333333333');
-const MULTISIG_ADDR = address('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA');
+const MULTISIG_ADDR = address('ALUceMetVMsZCKsVmB5JhmvswTFsbkAgmj8fGLLv2wwL');
 const PROGRAM_KEY = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA';
 
 function makeRoot(ix: InstructionNode) {
     return rootNode(programNode({ instructions: [ix], name: 'test', publicKey: PROGRAM_KEY }));
 }
 
-// -- initializeMultisig: 2 accounts + remainingAccounts(signers) --
+// initializeMultisig: 2 accounts + remainingAccounts(signers)
 const initMultisigIx = instructionNode({
     accounts: [
         instructionAccountNode({ isSigner: false, isWritable: true, name: 'multisig' }),
@@ -48,7 +48,7 @@ const initMultisigIx = instructionNode({
 });
 const initMultisigRoot = makeRoot(initMultisigIx);
 
-// -- transfer: 3 accounts + optional remainingAccounts(multiSigners, isSigner) --
+// transfer: 3 accounts + optional remainingAccounts(multiSigners, isSigner)
 const transferIx = instructionNode({
     accounts: [
         instructionAccountNode({ isSigner: false, isWritable: true, name: 'source' }),
@@ -68,7 +68,7 @@ const transferIx = instructionNode({
 });
 const transferRoot = makeRoot(transferIx);
 
-// -- initializeMint: 2 accounts, no remainingAccounts --
+// initializeMint: 2 accounts, no remainingAccounts
 const initMintIx = instructionNode({
     accounts: [
         instructionAccountNode({ isSigner: false, isWritable: true, name: 'mint' }),
