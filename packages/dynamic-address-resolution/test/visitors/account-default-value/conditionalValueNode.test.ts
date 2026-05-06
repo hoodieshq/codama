@@ -6,14 +6,19 @@ import {
     publicKeyValueNode,
     resolverValueNode,
 } from 'codama';
-import { describe, expect, test } from 'vitest';
+import { beforeAll, describe, expect, test } from 'vitest';
 
 import { generateAddress } from '../../test-utils';
 import { ixAccountNodeStub, makeVisitor } from './account-default-value-test-utils';
 
-describe('account-default-value: visitConditionalValue', async () => {
-    const ifTrueAddress = await generateAddress();
-    const ifFalseAddress = await generateAddress();
+describe('account-default-value: visitConditionalValue', () => {
+    let ifTrueAddress: Awaited<ReturnType<typeof generateAddress>>;
+    let ifFalseAddress: Awaited<ReturnType<typeof generateAddress>>;
+
+    beforeAll(async () => {
+        ifTrueAddress = await generateAddress();
+        ifFalseAddress = await generateAddress();
+    });
 
     test('should resolve ifTrue branch when argument condition is truthy', async () => {
         const node = conditionalValueNode({

@@ -1,11 +1,16 @@
 import { accountValueNode, instructionAccountNode, instructionNode, publicKeyValueNode } from 'codama';
-import { describe, expect, test } from 'vitest';
+import { beforeAll, describe, expect, test } from 'vitest';
 
 import { generateAddress } from '../../test-utils';
 import { makeVisitor } from './account-default-value-test-utils';
 
-describe('account-default-value: visitAccountValue', async () => {
-    const refAddress = await generateAddress();
+describe('account-default-value: visitAccountValue', () => {
+    let refAddress: Awaited<ReturnType<typeof generateAddress>>;
+
+    beforeAll(async () => {
+        refAddress = await generateAddress();
+    });
+
     const ixNodeWithAccount = instructionNode({
         accounts: [
             instructionAccountNode({

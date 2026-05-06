@@ -16,13 +16,17 @@ import {
     stringValueNode,
     variablePdaSeedNode,
 } from 'codama';
-import { describe, expect, test } from 'vitest';
+import { beforeAll, describe, expect, test } from 'vitest';
 
 import { generateAddress } from '../../test-utils';
 import { ixNodeStub, makeVisitor } from './account-default-value-test-utils';
 
-describe('account-default-value: visitPdaValue', async () => {
-    const testProgramAddress = await generateAddress();
+describe('account-default-value: visitPdaValue', () => {
+    let testProgramAddress: Awaited<ReturnType<typeof generateAddress>>;
+
+    beforeAll(async () => {
+        testProgramAddress = await generateAddress();
+    });
 
     test('should derive PDA with constant seed', async () => {
         const pda = pdaNode({
