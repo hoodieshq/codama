@@ -2,6 +2,7 @@ import {
     type ArgumentsInput,
     createCodecInputTransformer,
     createDefaultValueEncoderVisitor,
+    DEFAULT_VALUE_ENCODER_SUPPORTED_NODE_KINDS,
 } from '@codama/dynamic-address-resolution';
 import { getNodeCodec, type ReadonlyUint8Array } from '@codama/dynamic-codecs';
 import {
@@ -61,15 +62,7 @@ function encodeOmittedArgument(
     const visitor = createDefaultValueEncoderVisitor(nodeCodec);
     return visitOrElse(defaultValue, visitor, node => {
         throw new CodamaError(CODAMA_ERROR__UNEXPECTED_NODE_KIND, {
-            expectedKinds: [
-                'booleanValueNode',
-                'bytesValueNode',
-                'enumValueNode',
-                'noneValueNode',
-                'numberValueNode',
-                'publicKeyValueNode',
-                'stringValueNode',
-            ],
+            expectedKinds: [...DEFAULT_VALUE_ENCODER_SUPPORTED_NODE_KINDS],
             kind: node.kind,
             node,
         });

@@ -2,7 +2,11 @@
 export { resolveInstructionAccountAddress, resolveStandalonePda } from './resolvers';
 
 // Visitors
-export { createCodecInputTransformer, createDefaultValueEncoderVisitor } from './visitors';
+export {
+    createCodecInputTransformer,
+    createDefaultValueEncoderVisitor,
+    DEFAULT_VALUE_ENCODER_SUPPORTED_NODE_KINDS,
+} from './visitors';
 
 // Helpers
 export { isPublicKeyLike, isAddressConvertible, toAddress } from './shared/address';
