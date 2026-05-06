@@ -1,3 +1,8 @@
+import {
+    type ArgumentsInput,
+    createCodecInputTransformer,
+    createDefaultValueEncoderVisitor,
+} from '@codama/dynamic-address-resolution';
 import { getNodeCodec, type ReadonlyUint8Array } from '@codama/dynamic-codecs';
 import {
     CODAMA_ERROR__DYNAMIC_CLIENT__ARGUMENT_MISSING,
@@ -10,12 +15,6 @@ import { type Codec, mergeBytes } from '@solana/codecs';
 import type { InstructionNode, RootNode } from 'codama';
 import { visitOrElse } from 'codama';
 
-import type { ArgumentsInput } from '../../shared/types';
-import {
-    createDefaultValueEncoderVisitor,
-    createInputValueTransformer,
-    DEFAULT_VALUE_ENCODER_SUPPORTED_NODE_KINDS,
-} from '../visitors';
 import { isOmittedArgument, isOptionalArgument } from './shared';
 
 /**
@@ -62,7 +61,15 @@ function encodeOmittedArgument(
     const visitor = createDefaultValueEncoderVisitor(nodeCodec);
     return visitOrElse(defaultValue, visitor, node => {
         throw new CodamaError(CODAMA_ERROR__UNEXPECTED_NODE_KIND, {
-            expectedKinds: [...DEFAULT_VALUE_ENCODER_SUPPORTED_NODE_KINDS],
+            expectedKinds: [
+                'booleanValueNode',
+                'bytesValueNode',
+                'enumValueNode',
+                'noneValueNode',
+                'numberValueNode',
+                'publicKeyValueNode',
+                'stringValueNode',
+            ],
             kind: node.kind,
             node,
         });
@@ -99,7 +106,7 @@ function encodeRequiredArgument(
         });
     }
 
-    const transformer = createInputValueTransformer(ixArgumentNode.type, root, {
+    const transformer = createCodecInputTransformer(ixArgumentNode.type, root, {
         bytesEncoding: 'base16',
     });
     const transformedInput = transformer(input);
