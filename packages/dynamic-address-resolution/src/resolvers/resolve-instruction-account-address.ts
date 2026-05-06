@@ -35,20 +35,22 @@ export async function resolveInstructionAccountAddress<
     const isAccountProvided = accountAddressInput !== undefined && accountAddressInput !== null;
 
     // Accounts values (with default or with optionalAccountStrategy) can be omitted, as they are auto-resolved.
-    // [AccountStatus + HasDefaultValue + UserInput] combinations:
+    // [AccountStatus + HasDefaultValue + UserInput]:
     // - Required + no default + undefined: throws.
     // - Required + no default + null: throws.
     // - Required + default + undefined: resolves from default value.
+    // - Required + default + null: resolves from default value.
     // - Optional + no default + undefined: throws.
     // - Optional + no default + null: resolves from optionalAccountStrategy (programId or omitted).
     // - Optional + default + undefined: resolves from default value.
-    if (!isAccountProvided && !ixAccountNode.defaultValue) {
-        if (!ixAccountNode.isOptional || accountAddressInput !== null) {
-            throw new CodamaError(CODAMA_ERROR__DYNAMIC_CLIENT__ACCOUNT_MISSING, {
-                accountName: ixAccountNode.name,
-                instructionName: ixNode.name,
-            });
-        }
+    // - Optional + default + null: resolves from optionalAccountStrategy (programId or omitted).
+    const canAutoResolve = !!ixAccountNode.defaultValue || (ixAccountNode.isOptional && accountAddressInput === null);
+
+    if (!isAccountProvided && !canAutoResolve) {
+        throw new CodamaError(CODAMA_ERROR__DYNAMIC_CLIENT__ACCOUNT_MISSING, {
+            accountName: ixAccountNode.name,
+            instructionName: ixNode.name,
+        });
     }
 
     if (isAccountProvided) {

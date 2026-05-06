@@ -37,6 +37,14 @@ describe('resolveInstructionAccountAddress', () => {
         name: 'myAccount',
     });
 
+    const optionalAccountWithDefaultNode = instructionAccountNode({
+        defaultValue: programIdValueNode(),
+        isOptional: true,
+        isSigner: false,
+        isWritable: false,
+        name: 'myAccount',
+    });
+
     test('should return the address when accountsInput contains an Address', async () => {
         const addr = await generateAddress();
         const result = await resolveInstructionAccountAddress({
@@ -82,7 +90,7 @@ describe('resolveInstructionAccountAddress', () => {
         ).rejects.toThrow(/Missing account \[myAccount\] in \[testInstruction\] instruction/);
     });
 
-    test('throws ACCOUNT_MISSING error for required account with no default', async () => {
+    test('should throw ACCOUNT_MISSING error for required account with no default', async () => {
         await expect(
             resolveInstructionAccountAddress({
                 accountsInput: {},
@@ -112,6 +120,62 @@ describe('resolveInstructionAccountAddress', () => {
         const result = await resolveInstructionAccountAddress({
             accountsInput: { myAccount: null },
             ixAccountNode: optionalAccountNode,
+            ixNode: ixNodeOmitted,
+            root,
+        });
+        expect(result).toBeNull();
+    });
+
+    test('should throw ACCOUNT_MISSING error for required account with no default when null is provided', async () => {
+        await expect(
+            resolveInstructionAccountAddress({
+                accountsInput: { myAccount: null },
+                ixAccountNode: requiredAccountNode,
+                ixNode,
+                root,
+            }),
+        ).rejects.toThrow(CodamaError);
+    });
+
+    test('should resolve from defaultValue for required account when null is provided', async () => {
+        const result = await resolveInstructionAccountAddress({
+            accountsInput: { myAccount: null },
+            ixAccountNode: requiredAccountWithDefaultNode,
+            ixNode,
+            root,
+        });
+        expect(result).toBe(programAddress);
+    });
+
+    test('should resolve from defaultValue for optional account when input is omitted', async () => {
+        const result = await resolveInstructionAccountAddress({
+            accountsInput: {},
+            ixAccountNode: optionalAccountWithDefaultNode,
+            ixNode,
+            root,
+        });
+        expect(result).toBe(programAddress);
+    });
+
+    test('should resolve via programId strategy for optional account with default when null is provided', async () => {
+        const ixNodeProgramId = instructionNode({
+            name: 'testInstruction',
+            optionalAccountStrategy: 'programId',
+        });
+        const result = await resolveInstructionAccountAddress({
+            accountsInput: { myAccount: null },
+            ixAccountNode: optionalAccountWithDefaultNode,
+            ixNode: ixNodeProgramId,
+            root,
+        });
+        expect(result).toBe(programAddress);
+    });
+
+    test('should resolve via omitted strategy for optional account with default when null is provided', async () => {
+        const ixNodeOmitted = instructionNode({ name: 'testInstruction', optionalAccountStrategy: 'omitted' });
+        const result = await resolveInstructionAccountAddress({
+            accountsInput: { myAccount: null },
+            ixAccountNode: optionalAccountWithDefaultNode,
             ixNode: ixNodeOmitted,
             root,
         });
