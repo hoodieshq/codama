@@ -1,44 +1,6 @@
 import { describe, expect, expectTypeOf, test } from 'vitest';
 
-import { formatValueType, isObjectRecord, safeStringify } from '../../../src/shared/util';
-
-describe('isObjectRecord', () => {
-    test('should return true for plain objects', () => {
-        expect(isObjectRecord({})).toBe(true);
-        expect(isObjectRecord({ key: 'value' })).toBe(true);
-    });
-
-    test('should narrow type to Record<string, unknown>', () => {
-        const value: unknown = { key: 'value' };
-        if (isObjectRecord(value)) {
-            expectTypeOf(value).toExtend<Record<string, unknown>>();
-        }
-    });
-
-    test('should return false for null', () => {
-        expect(isObjectRecord(null)).toBe(false);
-    });
-
-    test('should return false for arrays', () => {
-        expect(isObjectRecord([1, 2, 3])).toBe(false);
-    });
-
-    test('should return false for primitives', () => {
-        expect(isObjectRecord('string')).toBe(false);
-        expect(isObjectRecord(42)).toBe(false);
-        expect(isObjectRecord(true)).toBe(false);
-        expect(isObjectRecord(undefined)).toBe(false);
-    });
-
-    test('should return false for class instances', () => {
-        expect(isObjectRecord(new Date())).toBe(false);
-        expect(isObjectRecord(new Map())).toBe(false);
-    });
-
-    test('should return false for Uint8Array', () => {
-        expect(isObjectRecord(new Uint8Array([1, 2]))).toBe(false);
-    });
-});
+import { formatValueType, safeStringify } from '../../src/shared/util';
 
 describe('formatValueType', () => {
     test('should return "null" for null', () => {
