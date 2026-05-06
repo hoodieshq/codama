@@ -4,8 +4,9 @@ import { address } from '@solana/addresses';
 import { instructionAccountNode, instructionNode, programIdValueNode, programNode, rootNode } from 'codama';
 import { describe, expect, expectTypeOf, test } from 'vitest';
 
-import { resolveInstructionAccountAddress, ResolverFn } from '../../src';
-import { ResolveInstructionAccountAddressInput } from '../../src/resolvers/resolve-instruction-account-address';
+import type { ResolverFn } from '../../src';
+import type { ResolveInstructionAccountAddressInput } from '../../src/resolvers';
+import { resolveInstructionAccountAddress } from '../../src/resolvers';
 import { generateAddress } from '../test-utils';
 
 const PROGRAM_PUBLIC_KEY = '11111111111111111111111111111111';

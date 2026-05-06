@@ -1,5 +1,6 @@
 export { resolveAccountAddress } from './resolve-account-address';
 export { resolveInstructionAccountAddress } from './resolve-instruction-account-address';
+export type { ResolveInstructionAccountAddressInput } from './resolve-instruction-account-address';
 export { resolveAccountValueNodeAddress } from './resolve-account-value-node-address';
 export { resolveConditionalValueNodeCondition } from './resolve-conditional';
 export { resolvePDAAddress } from './resolve-pda-address';
