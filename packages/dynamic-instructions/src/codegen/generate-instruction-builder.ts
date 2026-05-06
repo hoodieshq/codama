@@ -21,7 +21,7 @@ export type ${programName}InstructionBuilders = {\n`;
         const args = ix.arguments.filter(arg => arg.defaultValueStrategy !== 'omitted');
         const remainingAccountArgs = (ix.remainingAccounts ?? []).filter(ra => ra.value.kind === 'argumentValueNode');
         const hasArgs = args.length > 0 || remainingAccountArgs.length > 0;
-        const argsGeneric = hasArgs ? `${typeName}Args` : 'void';
+        const argsGeneric = hasArgs ? `${typeName}Args` : 'Record<string, never>';
         const accountsGeneric = `${typeName}Accounts`;
         const resolversGeneric = resolverNames.size > 0 ? `, ${typeName}Resolvers` : '';
 

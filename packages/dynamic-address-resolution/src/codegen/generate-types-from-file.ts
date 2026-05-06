@@ -18,7 +18,7 @@ export type GenerateTypesFromFileOptions = {
  * Shared CLI helper:
  * - Reads a Codama IDL JSON.
  * - Runs a generator function.
- * - Writes the result to `<output-dir>/<idl-name><outputFileSuffix>`.
+ * - Writes the result to `<output-dir>/<idl-filename>-<outputFileSuffix>.ts`
  */
 export function generateTypesFromFile(opts: GenerateTypesFromFileOptions): void {
     const { codamaIdlPath, outputDirPath, generate, outputFileSuffix } = opts;
@@ -27,8 +27,7 @@ export function generateTypesFromFile(opts: GenerateTypesFromFileOptions): void 
     const outputDir = path.resolve(outputDirPath);
 
     if (!existsSync(idlPath)) {
-        console.error(`Error: IDL file not found: ${idlPath}`);
-        process.exit(1);
+        throw new Error(`IDL file not found: ${idlPath}`);
     }
 
     console.log(`Reading IDL from: ${idlPath}`);
@@ -37,18 +36,16 @@ export function generateTypesFromFile(opts: GenerateTypesFromFileOptions): void 
     try {
         idlJson = readFileSync(idlPath, 'utf-8');
     } catch (err) {
-        console.error(`Error reading IDL file: ${err instanceof Error ? err.message : String(err)}`);
-        process.exit(1);
+        throw new Error(`Error reading IDL file: ${idlPath}`, { cause: err });
     }
 
     let idl: RootNode;
     try {
         idl = createFromJson(idlJson).getRoot();
     } catch (err) {
-        console.error(
-            `Error: ${idlPath} is not valid Codama JSON: ${err instanceof Error ? err.message : String(err)}`,
-        );
-        process.exit(1);
+        throw new Error(`${idlPath} is not valid Codama JSON`, {
+            cause: err,
+        });
     }
 
     let types: string;
@@ -56,8 +53,9 @@ export function generateTypesFromFile(opts: GenerateTypesFromFileOptions): void 
         console.log(`Generating types for program: ${idl.program.name}`);
         types = generate(idl);
     } catch (err) {
-        console.error(`Error generating types: ${err instanceof Error ? err.message : String(err)}`);
-        process.exit(1);
+        throw new Error(`Error generating types for IDL: ${idlPath}`, {
+            cause: err,
+        });
     }
 
     try {
@@ -70,7 +68,6 @@ export function generateTypesFromFile(opts: GenerateTypesFromFileOptions): void 
         writeFileSync(outputPath, types, 'utf-8');
         console.log('Done!');
     } catch (err) {
-        console.error(`Error writing generated types: ${err instanceof Error ? err.message : String(err)}`);
-        process.exit(1);
+        throw new Error(`Error writing generated types`, { cause: err });
     }
 }

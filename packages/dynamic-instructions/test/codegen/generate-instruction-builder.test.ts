@@ -25,6 +25,6 @@ describe('generateInstructionBuildersMap', () => {
         const output = generateInstructionBuildersMap(root);
         expect(output).toContain('export type TokenInstructionBuilders');
         expect(output).toContain('transfer: InstructionsBuilderFn<TransferArgs, TransferAccounts, string[]>;');
-        expect(output).toContain('close: InstructionsBuilderFn<void, CloseAccounts, string[]>;');
+        expect(output).toContain('close: InstructionsBuilderFn<Record<string, never>, CloseAccounts, string[]>;');
     });
 });

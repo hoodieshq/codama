@@ -65,7 +65,7 @@ const address = await resolveInstructionAccountAddress({
 **Typed:**
 
 ```ts
-import type { TransferSolAccounts, TransferSolArgs } from './generated/system-program-address-resolution-types';
+import type { TransferSolAccounts, TransferSolArgs } from './generated/system-program-idl-address-resolution-types';
 
 const address = await resolveInstructionAccountAddress<TransferSolAccounts, TransferSolArgs>({
     accountsInput: { source, destination },

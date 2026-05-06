@@ -11,6 +11,11 @@ export function registerGenerateTypesCommand(program: Command): void {
         .argument('<codama-idl>', 'Path to a Codama IDL JSON file (e.g., ./idl/codama.json)')
         .argument('<output-dir>', 'Path to the output directory for the generated .ts file, e.g., ./generated')
         .action((idlArg: string, outputDirArg: string) => {
-            generateTypesFromFile(idlArg, outputDirArg);
+            try {
+                generateTypesFromFile(idlArg, outputDirArg);
+            } catch (err) {
+                console.error(`Error: ${err instanceof Error ? err.message : String(err)}`);
+                process.exit(1);
+            }
         });
 }
