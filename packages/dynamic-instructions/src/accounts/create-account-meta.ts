@@ -17,7 +17,7 @@ import type { AccountMeta } from '@solana/instructions';
 import { AccountRole } from '@solana/instructions';
 import { type InstructionAccountNode, type InstructionNode, isNode, type RootNode } from 'codama';
 
-import { EitherSigners } from '../shared/types';
+import type { EitherSigners } from '../shared/types';
 import { formatValueType, safeStringify } from '../shared/util';
 
 type ResolvedAccount = {
