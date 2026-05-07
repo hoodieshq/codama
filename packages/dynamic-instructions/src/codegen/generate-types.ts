@@ -6,8 +6,8 @@ import { generateSignerTypes } from './generate-signer-types';
 
 /**
  * Generate a self-contained TypeScript file with all instruction types for a Codama IDL:
- * - Per-instruction `${Name}Args`, `${Name}Accounts`, `${Name}Resolvers` (from dar),
- * - Per-instruction `${Name}Signers` aliases,
+ * - Per-instruction `${Name}Args`, `${Name}Accounts`, `${Name}Resolvers`.
+ * - Per-instruction `${Name}Signers` aliases.
  * - The aggregate `${Program}InstructionBuilders` map.
  */
 export function generateTypes(idl: RootNode): string {

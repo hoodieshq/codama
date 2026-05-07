@@ -36,7 +36,7 @@ export function generateTypesFromFile(opts: GenerateTypesFromFileOptions): void 
     try {
         idlJson = readFileSync(idlPath, 'utf-8');
     } catch (err) {
-        throw new Error(`Error reading IDL file: ${idlPath}`, { cause: err });
+        throw new Error(`Cannot read IDL file: ${idlPath}`, { cause: err });
     }
 
     let idl: RootNode;
@@ -53,7 +53,7 @@ export function generateTypesFromFile(opts: GenerateTypesFromFileOptions): void 
         console.log(`Generating types for program: ${idl.program.name}`);
         types = generate(idl);
     } catch (err) {
-        throw new Error(`Error generating types for IDL: ${idlPath}`, {
+        throw new Error(`Cannot generate types for IDL: ${idlPath}`, {
             cause: err,
         });
     }
@@ -68,6 +68,6 @@ export function generateTypesFromFile(opts: GenerateTypesFromFileOptions): void 
         writeFileSync(outputPath, types, 'utf-8');
         console.log('Done!');
     } catch (err) {
-        throw new Error(`Error writing generated types`, { cause: err });
+        throw new Error(`Cannot write generated types`, { cause: err });
     }
 }

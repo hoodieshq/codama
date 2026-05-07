@@ -12,7 +12,7 @@ export function registerGenerateClientTypesCommand(program: Command): void {
             try {
                 generateClientTypesFromFile(idlArg, outputDirArg);
             } catch (err) {
-                console.error(`Error: ${err instanceof Error ? err.message : String(err)}`);
+                console.error(err);
                 process.exit(1);
             }
         });

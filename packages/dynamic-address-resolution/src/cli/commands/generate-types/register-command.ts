@@ -14,7 +14,7 @@ export function registerGenerateTypesCommand(program: Command): void {
             try {
                 generateTypesFromFile(idlArg, outputDirArg);
             } catch (err) {
-                console.error(`Error: ${err instanceof Error ? err.message : String(err)}`);
+                console.error(err);
                 process.exit(1);
             }
         });

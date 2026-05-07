@@ -25,7 +25,9 @@ export function generatePdaTypes(idl: RootNode): { mapTypeName: string | null; t
         if (variableSeeds.length > 0) {
             output += `export type ${typeName}PdaSeeds = {\n`;
             for (const seed of variableSeeds) {
-                const tsType = seed.type ? codamaTypeToTS(seed.type, definedTypes) : 'unknown';
+                const tsType = seed.type
+                    ? codamaTypeToTS(seed.type, definedTypes)
+                    : 'unknown/** missing type in variablePdaSeedNode */';
                 output += `    ${seed.name}: ${tsType};\n`;
             }
             output += '};\n\n';
