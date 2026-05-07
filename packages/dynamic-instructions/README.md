@@ -20,6 +20,7 @@ pnpm install @codama/dynamic-instructions
 
 ## Types generation
 
+> [!NOTE]
 > For now, per-instruction types (`*Args`, `*Accounts`, `*Resolvers`) can be produced via [`@codama/dynamic-client`](../dynamic-client/README.md)'s `generate-client-types` command, which emits a `<idl-name>-idl-types.ts` file. A type generation for this package will be added in a follow-up release.
 
 ## Functions
