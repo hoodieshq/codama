@@ -19,19 +19,26 @@ describe('shared codecs (memoized):', () => {
         expect(result.length).toBe(32);
     });
 
-    test('should encode a string to utf8 bytes (getMemoizedUtf8Encoder)', () => {
-        const encoder = getMemoizedUtf8Encoder();
-        expect(encoder.encode('Hello')).toEqual(new Uint8Array([72, 101, 108, 108, 111]));
-    });
-
     test('should encode true to a single byte (getMemoizedBooleanEncoder)', () => {
         const encoder = getMemoizedBooleanEncoder();
         expect(encoder.encode(true)).toEqual(new Uint8Array([1]));
     });
 
-    test('should encode a string to utf8 bytes (getMemoizedUtf8Codec)', () => {
-        const codec = getMemoizedUtf8Codec();
-        expect(codec.encode('Hi')).toEqual(new Uint8Array([72, 105]));
+    test.each([
+        {
+            expected: new Uint8Array([72, 101, 108, 108, 111]),
+            getCodec: getMemoizedUtf8Encoder,
+            input: 'Hello',
+            name: 'getMemoizedUtf8Encoder',
+        },
+        {
+            expected: new Uint8Array([72, 105]),
+            getCodec: getMemoizedUtf8Codec,
+            input: 'Hi',
+            name: 'getMemoizedUtf8Codec',
+        },
+    ])('should encode a string to utf8 bytes ($name)', ({ getCodec, input, expected }) => {
+        expect(getCodec().encode(input)).toEqual(expected);
     });
 
     test('should encode a hex string to bytes (getMemoizedBase16Codec)', () => {
