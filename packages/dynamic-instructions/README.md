@@ -38,6 +38,8 @@ const instruction = await build(args, accounts, signers, resolvers);
 
 **Typed:**
 
+> Types are generated via [`generate-client-types`](#types-generation).
+
 ```ts
 import type { CreateItemAccounts, CreateItemArgs, CreateItemResolvers } from './generated/<idl-name>-idl-types';
 
@@ -58,6 +60,8 @@ const accountMetas = await createAccountMeta(root, ixNode, args, accounts, ['own
 ```
 
 **Typed:**
+
+> Types are generated via [`generate-client-types`](#types-generation).
 
 ```ts
 import type { CreateItemAccounts, CreateItemArgs, CreateItemResolvers } from './generated/<idl-name>-idl-types';
@@ -83,6 +87,8 @@ const data = encodeInstructionArguments(root, ixNode, { amount: 1_000_000_000 })
 ```
 
 **Typed:**
+
+> Types are generated via [`generate-client-types`](#types-generation).
 
 ```ts
 import type { TransferArgs } from './generated/<idl-name>-idl-types';
