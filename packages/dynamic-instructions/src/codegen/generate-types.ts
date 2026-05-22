@@ -1,4 +1,4 @@
-import { generateInstructionTypes } from '@codama/dynamic-address-resolution/codegen';
+import { generateResolutionInputTypes } from '@codama/dynamic-address-resolution/codegen';
 import type { RootNode } from 'codama';
 
 import { generateInstructionBuildersMap } from './generate-instruction-builder';
@@ -13,7 +13,7 @@ import { generateSignerTypes } from './generate-signer-types';
 export function generateTypes(idl: RootNode): string {
     return (
         INSTRUCTION_TYPES_FILE_HEADER +
-        generateInstructionTypes(idl) +
+        generateResolutionInputTypes(idl) +
         generateSignerTypes(idl) +
         generateInstructionBuildersMap(idl)
     );
@@ -25,6 +25,6 @@ const INSTRUCTION_TYPES_FILE_HEADER = `/**
  */
 
 import type { Address } from '@solana/addresses';
-import type { InstructionsBuilderFn, ResolverFn } from '@codama/dynamic-instructions';
+import type { InstructionsBuilderFn } from '@codama/dynamic-instructions';
 
 `;

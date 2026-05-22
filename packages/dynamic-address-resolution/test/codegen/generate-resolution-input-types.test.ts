@@ -7,10 +7,10 @@ import {
 } from 'codama';
 import { describe, expect, test } from 'vitest';
 
-import { generateInstructionTypes } from '../../src/codegen/generate-instruction-types';
+import { generateResolutionInputTypes } from '../../src/codegen/generate-resolution-input-types';
 import { makeRoot } from '../test-utils';
 
-describe('generateInstructionTypes', () => {
+describe('generateResolutionInputTypes', () => {
     test('should generate Args type with correct TS types', () => {
         const root = makeRoot([
             instructionNode({
@@ -27,7 +27,7 @@ describe('generateInstructionTypes', () => {
                 name: 'transfer',
             }),
         ]);
-        const output = generateInstructionTypes(root);
+        const output = generateResolutionInputTypes(root);
         expect(output).toContain('export type TransferArgs');
         expect(output).toContain('amount: number | bigint;');
         expect(output).toContain('memo: string;');
@@ -51,7 +51,7 @@ describe('generateInstructionTypes', () => {
                 name: 'init',
             }),
         ]);
-        const output = generateInstructionTypes(root);
+        const output = generateResolutionInputTypes(root);
         expect(output).toContain('visible: number;');
         expect(output).not.toContain('hidden');
     });
@@ -63,7 +63,7 @@ describe('generateInstructionTypes', () => {
                 name: 'noArgs',
             }),
         ]);
-        const output = generateInstructionTypes(root);
+        const output = generateResolutionInputTypes(root);
         expect(output).not.toContain('NoArgsArgs');
     });
 
@@ -91,7 +91,7 @@ describe('generateInstructionTypes', () => {
                 name: 'create',
             }),
         ]);
-        const output = generateInstructionTypes(root);
+        const output = generateResolutionInputTypes(root);
         expect(output).toContain('export type CreateAccounts');
         expect(output).toContain('payer: Address;');
         expect(output).toContain('systemProgram?: Address;');
@@ -112,7 +112,7 @@ describe('generateInstructionTypes', () => {
                 name: 'maybeClose',
             }),
         ]);
-        const output = generateInstructionTypes(root);
+        const output = generateResolutionInputTypes(root);
         expect(output).toContain('closeAuthority: Address | null;');
     });
 
@@ -130,7 +130,7 @@ describe('generateInstructionTypes', () => {
                 name: 'customResolve',
             }),
         ]);
-        const output = generateInstructionTypes(root);
+        const output = generateResolutionInputTypes(root);
         expect(output).toContain('export type CustomResolveResolvers');
         expect(output).toContain('computeValue: ResolverFn<CustomResolveArgs, CustomResolveAccounts>;');
     });
@@ -151,7 +151,7 @@ describe('generateInstructionTypes', () => {
                 name: 'optionalArgs',
             }),
         ]);
-        const output = generateInstructionTypes(root);
+        const output = generateResolutionInputTypes(root);
         expect(output).toContain('maybeValue?: number | null;');
     });
 
@@ -167,14 +167,14 @@ describe('generateInstructionTypes', () => {
                 ],
             }),
         ]);
-        const output = generateInstructionTypes(root);
+        const output = generateResolutionInputTypes(root);
         expect(output).toContain('export type MultiSigArgs');
         expect(output).toContain('multiSigners: Address[];');
     });
 
     test('should emit empty Accounts fallback for instructions without accounts', () => {
         const root = makeRoot([instructionNode({ name: 'noAccounts' })]);
-        const output = generateInstructionTypes(root);
+        const output = generateResolutionInputTypes(root);
         expect(output).toContain('export type NoAccountsAccounts = Record<string, Address | null | undefined>;');
     });
 
@@ -185,7 +185,7 @@ describe('generateInstructionTypes', () => {
                 name: 'transfer',
             }),
         ]);
-        const output = generateInstructionTypes(root);
+        const output = generateResolutionInputTypes(root);
         expect(output).not.toContain('TransferSigners');
         expect(output).not.toContain('InstructionBuilders');
     });

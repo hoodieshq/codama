@@ -1,4 +1,4 @@
-import { pascalCase, type RootNode } from 'codama';
+import { pascalCase, type PdaNode, type RootNode, type VariablePdaSeedNode } from 'codama';
 
 import { codamaTypeToTS } from './codama-type-to-ts';
 import { collectPdaNodesFromIdl } from './collect-pda-nodes';
@@ -20,18 +20,17 @@ export function generatePdaTypes(idl: RootNode): { mapTypeName: string | null; t
     let output = '';
 
     for (const [pdaName, pdaNode] of pdaMap) {
+        const variableSeeds = getVariableSeedNodes(pdaNode);
+        if (variableSeeds.length === 0) continue;
         const typeName = pascalCase(pdaName);
-        const variableSeeds = (pdaNode.seeds ?? []).filter(s => s.kind === 'variablePdaSeedNode');
-        if (variableSeeds.length > 0) {
-            output += `export type ${typeName}PdaSeeds = {\n`;
-            for (const seed of variableSeeds) {
-                const tsType = seed.type
-                    ? codamaTypeToTS(seed.type, definedTypes)
-                    : 'unknown/** missing type in variablePdaSeedNode */';
-                output += `    ${seed.name}: ${tsType};\n`;
-            }
-            output += '};\n\n';
+        output += `export type ${typeName}PdaSeeds = {\n`;
+        for (const seed of variableSeeds) {
+            const tsType = seed.type
+                ? codamaTypeToTS(seed.type, definedTypes)
+                : 'unknown/** missing type in variablePdaSeedNode */';
+            output += `    ${seed.name}: ${tsType};\n`;
         }
+        output += '};\n\n';
     }
 
     const mapTypeName = `${programName}Pdas`;
@@ -39,11 +38,15 @@ export function generatePdaTypes(idl: RootNode): { mapTypeName: string | null; t
     output += `export type ${mapTypeName} = {\n`;
     for (const [pdaName, pdaNode] of pdaMap) {
         const typeName = pascalCase(pdaName);
-        const variableSeeds = (pdaNode.seeds ?? []).filter(s => s.kind === 'variablePdaSeedNode');
-        const seedsParam = variableSeeds.length > 0 ? `seeds: ${typeName}PdaSeeds` : `seeds?: Record<string, unknown>`;
+        const seedsParam =
+            getVariableSeedNodes(pdaNode).length > 0 ? `seeds: ${typeName}PdaSeeds` : `seeds?: Record<string, unknown>`;
         output += `    ${pdaName}: (${seedsParam}) => Promise<ProgramDerivedAddress>;\n`;
     }
     output += '};\n\n';
 
     return { mapTypeName, typeBlock: output };
+}
+
+function getVariableSeedNodes(pdaNode: PdaNode): VariablePdaSeedNode[] {
+    return (pdaNode.seeds ?? []).filter(s => s.kind === 'variablePdaSeedNode');
 }

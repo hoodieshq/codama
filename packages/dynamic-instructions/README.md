@@ -20,7 +20,9 @@ pnpm install @codama/dynamic-instructions
 
 ## Types generation
 
-This package can emit TypeScript types for instructions: per-instruction `${Name}Args`, `${Name}Accounts`, `${Name}Resolvers`, and `${Name}Signers` aliases, plus an aggregate `${Program}InstructionBuilders` map.
+This package can emit TypeScript types per-instruction - `${Name}Args`, `${Name}Accounts`, `${Name}Resolvers`, and `${Name}Signers` aliases, plus an aggregate `${Program}InstructionBuilders` map.
+
+The `${Name}Args` / `${Name}Accounts` / `${Name}Resolvers` type contracts that resolvers operate on are emitted by [`@codama/dynamic-address-resolution/codegen`](../dynamic-address-resolution/README.md) and re-used here. The builder depends on resolution because the input shape it accepts (e.g. optional auto-resolvable accounts) is a direct consequence of resolution rules.
 
 ### CLI
 

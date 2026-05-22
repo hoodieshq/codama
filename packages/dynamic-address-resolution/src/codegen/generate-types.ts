@@ -1,7 +1,7 @@
 import type { RootNode } from 'codama';
 
-import { generateInstructionTypes } from './generate-instruction-types';
 import { generatePdaTypes } from './generate-pda-types';
+import { generateResolutionInputTypes } from './generate-resolution-input-types';
 
 /**
  * Generate a self-contained TypeScript file with all address-resolution types for a Codama IDL:
@@ -10,7 +10,7 @@ import { generatePdaTypes } from './generate-pda-types';
  */
 export function generateTypes(idl: RootNode): string {
     const { typeBlock: pdaBlock, mapTypeName } = generatePdaTypes(idl);
-    return getTypesFileHeader(mapTypeName !== null) + pdaBlock + generateInstructionTypes(idl);
+    return getTypesFileHeader(mapTypeName !== null) + pdaBlock + generateResolutionInputTypes(idl);
 }
 
 const getTypesFileHeader = (importPdaTypes: boolean): string => {
@@ -21,11 +21,6 @@ const getTypesFileHeader = (importPdaTypes: boolean): string => {
  */
 
 import type { ${addressImports} } from '@solana/addresses';
-
-export type ResolverFn<
-    TArgumentsInput = Record<string, unknown>,
-    TAccountsInput = Record<string, unknown>
-> = (argumentsInput: TArgumentsInput, accountsInput: TAccountsInput) => Promise<unknown>;
 
 `;
 };

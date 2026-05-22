@@ -26,7 +26,7 @@ pnpm install @codama/dynamic-address-resolution
 
 ## Types generation
 
-This package can emit TypeScript types (Args, Accounts, Resolvers, PDA seeds) for any Codama IDL — useful when consuming `resolveInstructionAccountAddress` / `resolveStandalonePda` directly without `@codama/dynamic-client`.
+This package can emit TypeScript the input types required for address resolution of each instruction — `${Name}Args`, `${Name}Accounts`, `${Name}Resolvers`.
 
 ### CLI
 

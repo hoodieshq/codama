@@ -1,5 +1,7 @@
-import { collectResolverNames } from '@codama/dynamic-address-resolution/codegen';
+import { getResolutionRefs } from '@codama/dynamic-address-resolution/codegen';
 import { pascalCase, type RootNode } from 'codama';
+
+import { getInstructionSignerRef } from './generate-signer-types';
 
 /**
  * Generate the `${Program}InstructionBuilders` aggregate map type.
@@ -13,19 +15,12 @@ export function generateInstructionBuildersMap(idl: RootNode): string {
 export type ${programName}InstructionBuilders = {\n`;
 
     for (const ix of idl.program.instructions) {
-        const typeName = pascalCase(ix.name);
-        const eitherSignerAccounts = ix.accounts.filter(acc => acc.isSigner === 'either');
-        const resolverNames = collectResolverNames(ix);
-
-        const signersGeneric = eitherSignerAccounts.length > 0 ? `${typeName}Signers` : 'string[]';
-        const args = ix.arguments.filter(arg => arg.defaultValueStrategy !== 'omitted');
-        const remainingAccountArgs = (ix.remainingAccounts ?? []).filter(ra => ra.value.kind === 'argumentValueNode');
-        const hasArgs = args.length > 0 || remainingAccountArgs.length > 0;
-        const argsGeneric = hasArgs ? `${typeName}Args` : 'Record<string, never>';
-        const accountsGeneric = `${typeName}Accounts`;
-        const resolversGeneric = resolverNames.size > 0 ? `, ${typeName}Resolvers` : '';
-
-        output += `    ${ix.name}: InstructionsBuilderFn<${argsGeneric}, ${accountsGeneric}, ${signersGeneric}${resolversGeneric}>;\n`;
+        const refs = getResolutionRefs(ix);
+        const signerRef = getInstructionSignerRef(ix);
+        const argsGeneric = refs.argsRef ?? 'Record<string, never>';
+        const signersGeneric = signerRef.signersRef ?? 'string[]';
+        const resolversGeneric = refs.resolversRef ? `, ${refs.resolversRef}` : '';
+        output += `    ${ix.name}: InstructionsBuilderFn<${argsGeneric}, ${refs.accountsRef}, ${signersGeneric}${resolversGeneric}>;\n`;
     }
 
     output += '};\n';

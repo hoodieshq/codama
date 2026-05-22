@@ -27,9 +27,7 @@ describe('generateTypes', () => {
         const output = generateTypes(root);
         // Header
         expect(output).toContain('Auto-generated instruction types');
-        expect(output).toContain(
-            "import type { InstructionsBuilderFn, ResolverFn } from '@codama/dynamic-instructions';",
-        );
+        expect(output).toContain("import type { InstructionsBuilderFn } from '@codama/dynamic-instructions';");
         expect(output).toContain('export type TransferArgs');
         expect(output).toContain('export type TransferAccounts');
         expect(output).toContain("export type TransferSigners = ('authority')[];");

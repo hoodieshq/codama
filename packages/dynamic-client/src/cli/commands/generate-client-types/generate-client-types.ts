@@ -1,10 +1,9 @@
-import { OPTIONAL_NODE_KINDS } from '@codama/dynamic-address-resolution';
 import {
-    collectResolverNames,
-    generateInstructionTypes,
     generatePdaTypes,
+    generateResolutionInputTypes,
+    getResolutionRefs,
 } from '@codama/dynamic-address-resolution/codegen';
-import { generateSignerTypes } from '@codama/dynamic-instructions/codegen';
+import { generateSignerTypes, getInstructionSignerRef } from '@codama/dynamic-instructions/codegen';
 import { pascalCase, type RootNode } from 'codama';
 
 /**
@@ -30,11 +29,6 @@ import type { InstructionNode, RootNode } from 'codama';
 import type { ${addressImports} } from '@solana/addresses';
 import type { Instruction } from '@solana/instructions';
 
-export type ResolverFn<
-    TArgumentsInput = Record<string, unknown>,
-    TAccountsInput = Record<string, unknown>
-> = (argumentsInput: TArgumentsInput, accountsInput: TAccountsInput) => Promise<unknown>;
-
 /**
  * Method builder interface.
  */
@@ -47,26 +41,23 @@ export type MethodBuilder<TAccounts, TSigners extends string[], TResolvers = Rec
 
 `;
 
-    output += generateInstructionTypes(idl);
+    output += generateResolutionInputTypes(idl);
     output += generateSignerTypes(idl);
 
     for (const ix of idl.program.instructions) {
         const typeName = pascalCase(ix.name);
-        const args = ix.arguments.filter(arg => arg.defaultValueStrategy !== 'omitted');
-        const remainingAccountArgs = (ix.remainingAccounts ?? []).filter(ra => ra.value.kind === 'argumentValueNode');
-        const hasArgs = args.length > 0 || remainingAccountArgs.length > 0;
-        const argsRef = hasArgs ? `${typeName}Args` : 'void';
-        const accountsRef = `${typeName}Accounts`;
-        const eitherSignerCount = ix.accounts.filter(acc => acc.isSigner === 'either').length;
-        const signersGeneric = eitherSignerCount > 0 ? `${typeName}Signers` : 'string[]';
-        const resolversRef = collectResolverNames(ix).size > 0 ? `${typeName}Resolvers` : '';
+        const refs = getResolutionRefs(ix);
+        const signerRef = getInstructionSignerRef(ix);
+        const signersGeneric = signerRef.signersRef ?? 'string[]';
+        const resolversGeneric = refs.resolversRef ? `, ${refs.resolversRef}` : '';
 
-        const hasRequiredArgs = args.some(arg => !OPTIONAL_NODE_KINDS.includes(arg.type.kind));
-        const hasRequiredRemainingAccounts = remainingAccountArgs.some(ra => !ra.isOptional);
-        const allArgsOptional = !hasRequiredArgs && !hasRequiredRemainingAccounts;
-        const argsParam = argsRef === 'void' ? '' : allArgsOptional ? `args?: ${argsRef}` : `args: ${argsRef}`;
-        const resolversGeneric = resolversRef ? `, ${resolversRef}` : '';
-        const methodSignature = `(${argsParam}) => MethodBuilder<${accountsRef}, ${signersGeneric}${resolversGeneric}>`;
+        let argsParam = '';
+        if (refs.argsRef) {
+            const allArgsOptional = !refs.hasRequiredArgs && !refs.hasRequiredRemainingAccounts;
+            argsParam = allArgsOptional ? `args?: ${refs.argsRef}` : `args: ${refs.argsRef}`;
+        }
+
+        const methodSignature = `(${argsParam}) => MethodBuilder<${refs.accountsRef}, ${signersGeneric}${resolversGeneric}>`;
         output += `export type ${typeName}Method = ${methodSignature};\n\n`;
     }
 
