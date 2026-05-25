@@ -6,6 +6,9 @@ import { getInstructionSignerRef } from './generate-signer-types';
 /**
  * Generate the `${Program}InstructionBuilders` aggregate map type.
  * Keys each instruction name to its `InstructionsBuilderFn` signature.
+ *
+ * NOTE: it is intentionally NOT exported as public method.
+ * Use `generateTypes` instead.
  */
 export function generateInstructionBuildersMap(idl: RootNode): string {
     const programName = pascalCase(idl.program.name);

@@ -12,6 +12,11 @@ import { isAccountAutoResolvable } from './is-account-auto-resolvable';
  * must remain identical to the runtime `ResolverFn` exported from
  * `@codama/dynamic-address-resolution`; a type-level test in this package
  * locks the two together.
+ *
+ * @internal Exported only for a drift test that pins this string to the
+ * runtime `ResolverFn` type. Do not consume from downstream codegen — call
+ * `generateResolutionInputTypes` instead, which inlines this declaration
+ * into the emitted output.
  */
 export const RESOLVER_FN_DECLARATION =
     'type ResolverFn<TArgumentsInput, TAccountsInput> = (argumentsInput: TArgumentsInput, accountsInput: TAccountsInput) => Promise<unknown>;\n\n';

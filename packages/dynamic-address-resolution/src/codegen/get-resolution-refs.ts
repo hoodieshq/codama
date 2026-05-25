@@ -14,12 +14,19 @@ import { collectResolverNames } from './collect-resolver-names';
  * Lives here because resolution rules decide which of these symbols exist.
  */
 export type ResolutionRefs = {
+    /** Identifier of the emitted `${Name}Accounts` type. */
     accountsRef: string;
+    /** Identifier of the emitted `${Name}Args` type, or `null` if no args type is emitted. */
     argsRef: string | null;
+    /** `true` when the instruction has any arguments (mirrors `argsRef !== null`). */
     hasArgs: boolean;
+    /** `true` when at least one argument is non-optional. */
     hasRequiredArgs: boolean;
+    /** `true` when at least one remaining-account argument is non-optional. */
     hasRequiredRemainingAccounts: boolean;
+    /** `true` when the instruction has any custom resolvers (mirrors `resolversRef !== null`). */
     hasResolvers: boolean;
+    /** Identifier of the emitted `${Name}Resolvers` type, or `null` if no resolvers type is emitted. */
     resolversRef: string | null;
 };
 
