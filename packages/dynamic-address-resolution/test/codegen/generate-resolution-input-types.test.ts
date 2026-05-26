@@ -175,7 +175,10 @@ describe('generateResolutionInputTypes', () => {
     test('should emit empty Accounts fallback for instructions without accounts', () => {
         const root = makeRoot([instructionNode({ name: 'noAccounts' })]);
         const output = generateResolutionInputTypes(root);
-        expect(output).toContain('export type NoAccountsAccounts = Record<string, Address | null | undefined>;');
+        expect(output).toContain('export type NoAccountsAccounts = Record<string, never>;');
+        expect(output).toContain(
+            'export type NoAccountsAccountsWithData = Record<string, Address | null | undefined>;',
+        );
     });
 
     test('should not emit Signers or InstructionBuilders blocks', () => {

@@ -14,8 +14,13 @@ import { collectResolverNames } from './collect-resolver-names';
  * Lives here because resolution rules decide which of these symbols exist.
  */
 export type ResolutionRefs = {
-    /** Identifier of the emitted `${Name}Accounts` type. */
+    /** Identifier of the emitted `${Name}Accounts` type (strict, IDL-named keys only). */
     accountsRef: string;
+    /**
+     * Identifier of the emitted `${Name}AccountsWithData` type.
+     * Widened with `Record<string, Address | null | undefined>`.
+     */
+    accountsWithDataRef: string;
     /** Identifier of the emitted `${Name}Args` type, or `null` if no args type is emitted. */
     argsRef: string | null;
     /** `true` when the instruction has any arguments (mirrors `argsRef !== null`). */
@@ -43,6 +48,7 @@ export function getResolutionRefs(ix: InstructionNode): ResolutionRefs {
 
     return {
         accountsRef: `${typeName}Accounts`,
+        accountsWithDataRef: `${typeName}AccountsWithData`,
         argsRef: hasArgs ? `${typeName}Args` : null,
         hasArgs,
         hasRequiredArgs,

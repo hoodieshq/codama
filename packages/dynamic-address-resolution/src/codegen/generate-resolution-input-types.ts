@@ -66,9 +66,12 @@ function generateTypeBlockForInstruction(ix: InstructionNode, definedTypes: Defi
             const type = acc.isOptional ? 'Address | null' : 'Address';
             output += `    ${acc.name}${omittable}: ${type};\n`;
         }
-        output += '} & Record<string, Address | null | undefined>;\n\n';
+        output += '};\n\n';
+        output += `export type ${refs.accountsWithDataRef} = ${refs.accountsRef} & Record<string, Address | null | undefined>;\n\n`;
     } else {
-        output += `export type ${refs.accountsRef} = Record<string, Address | null | undefined>;\n\n`;
+        // No IDL-declared accounts: emit the strict and loose forms independently.
+        output += `export type ${refs.accountsRef} = Record<string, never>;\n\n`;
+        output += `export type ${refs.accountsWithDataRef} = Record<string, Address | null | undefined>;\n\n`;
     }
 
     if (refs.resolversRef) {
