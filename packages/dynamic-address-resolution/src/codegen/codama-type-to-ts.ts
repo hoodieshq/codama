@@ -8,7 +8,7 @@ export function codamaTypeToTS(type: TypeNode | undefined, definedTypes: Defined
 
     switch (type.kind) {
         case 'numberTypeNode':
-            return ['u64', 'u128', 'i64', 'i128'].includes(type.format ?? '') ? 'number | bigint' : 'number';
+            return ['u64', 'u128', 'i64', 'i128'].includes(type.format) ? 'number | bigint' : 'number';
         case 'publicKeyTypeNode':
             return 'Address';
         case 'stringTypeNode':
