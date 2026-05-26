@@ -42,7 +42,7 @@ export function codamaTypeToTS(type: TypeNode | undefined, definedTypes: Defined
             return `{ ${fields.join('; ')} }`;
         }
         case 'enumTypeNode': {
-            if (!type.variants || type.variants.length === 0) return 'unknown/** empty variants in enumTypeNode */';
+            if (!type.variants || type.variants.length === 0) return 'unknown /** empty variants in enumTypeNode */';
             const allEmpty = type.variants.every(v => v.kind === 'enumEmptyVariantTypeNode');
             if (allEmpty) {
                 return type.variants.map(v => `'${v.name}'`).join(' | ');
@@ -79,9 +79,9 @@ export function codamaTypeToTS(type: TypeNode | undefined, definedTypes: Defined
             return `Record<string, ${v}>`;
         }
         case 'definedTypeLinkNode': {
-            if (!type.name) return 'unknown/** name missing in definedTypeLinkNode */';
+            if (!type.name) return 'unknown /** name missing in definedTypeLinkNode */';
             const def = definedTypes.find(d => d.name === type.name);
-            if (!def) return 'unknown/** DefinedTypeNode not found for definedTypeLinkNode */';
+            if (!def) return 'unknown /** DefinedTypeNode not found for definedTypeLinkNode */';
             return codamaTypeToTS(def.type, definedTypes);
         }
         case 'dateTimeTypeNode': {

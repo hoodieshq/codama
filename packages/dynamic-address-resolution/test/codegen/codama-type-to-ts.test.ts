@@ -112,7 +112,7 @@ describe('codamaTypeToTS', () => {
 
     test('should fall back to unknown for unknown definedTypeLinkNode', () => {
         expect(codamaTypeToTS({ kind: 'definedTypeLinkNode', name: camelCase('missing') }, NO_DEFINED)).toBe(
-            'unknown/** DefinedTypeNode not found for definedTypeLinkNode */',
+            'unknown /** DefinedTypeNode not found for definedTypeLinkNode */',
         );
     });
 });
