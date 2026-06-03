@@ -5,12 +5,15 @@ import path from 'node:path';
 export const PROGRAMS = ['example', 'blog'];
 
 /**
- * Copies the freshly built `.so` files into the committed `dumps/` directory.
- * Writes the source-hash file.
+ * Copies the freshly built `.so` files into the committed `dumps/` directory, ensuring the `dumps/`
+ * and `artifacts/` directories exist, and writes the artifact file mapping each program to its
+ * `{ source, binary }` hashes.
  *
  * @param {string} [packageRoot] Defaults to `process.cwd()` (the package root when invoked via a pnpm script).
- * @returns {{ hashes: Record<string, string>, artifactPath: string }}
- * @throws {Error} if a built `.so` is missing (the Anchor build has not run).
+ * @returns {{ hashes: Record<string, { source: string, binary: string }>, artifactPath: string }}
+ *   `hashes` is sorted by program name.
+ * @throws {Error} if a built `.so` is missing (the Anchor build has not run), or if a required source
+ *   input is missing (propagated from {@link hashProgramSource}).
  */
 export function syncAnchorBuilds(packageRoot = process.cwd()) {
     const anchorPath = path.join(packageRoot, 'test', 'programs', 'anchor');
@@ -33,8 +36,12 @@ export function syncAnchorBuilds(packageRoot = process.cwd()) {
 
     const hashes = {};
     for (const program of PROGRAMS) {
-        copyFileSync(path.join(binariesPath, `${program}.so`), path.join(dumpsPath, `${program}.so`));
-        hashes[program] = hashProgramSource(path.join(anchorPath, 'programs', program));
+        const builtSoPath = path.join(binariesPath, `${program}.so`);
+        copyFileSync(builtSoPath, path.join(dumpsPath, `${program}.so`));
+        hashes[program] = {
+            binary: hashFileBytes(builtSoPath),
+            source: hashProgramSource(path.join(anchorPath, 'programs', program)),
+        };
     }
 
     // Sort program names for consistency.
@@ -49,14 +56,13 @@ export function syncAnchorBuilds(packageRoot = process.cwd()) {
 
 /**
  * Deterministic SHA-256 of a program's build-affecting source inputs.
- *
- * Inputs: `programs/<name>/src/**\/*.rs`, `programs/<name>/Cargo.toml`, the
- * shared `anchor/Anchor.toml`, and the shared `anchor/Cargo.lock`.
- *
  * Determinism: file contents are line-ending normalized (CRLF -> LF) and the
  * resulting blobs are sorted before hashing, so the digest depends only on the
- * multiset of file contents — not on filesystem read order, paths, or OS line
- * endings.
+ * multiset of file contents — independent of filesystem read order and OS line
+ * endings. Note this is also independent of filenames/paths: renaming a file
+ * without changing its bytes does not change the digest. That is a deliberate
+ * trade-off for cross-OS stability; the committed `.so` binary hash (see
+ * {@link syncAnchorBuilds}) is what ultimately catches a changed build output.
  *
  * @param {string} programDir Absolute path to `programs/<name>`.
  * @returns {string} lowercase hex SHA-256.
@@ -76,6 +82,7 @@ export function hashProgramSource(programDir) {
     const inputs = [
         ...srcFiles,
         path.join(programDir, 'Cargo.toml'),
+        path.join(anchorRoot, 'Cargo.toml'),
         path.join(anchorRoot, 'Anchor.toml'),
         path.join(anchorRoot, 'Cargo.lock'),
     ];
@@ -93,4 +100,9 @@ export function hashProgramSource(programDir) {
         hash.update('\0');
     }
     return hash.digest('hex');
+}
+
+/** Use for binary `.so` files). */
+export function hashFileBytes(filePath) {
+    return createHash('sha256').update(readFileSync(filePath)).digest('hex');
 }

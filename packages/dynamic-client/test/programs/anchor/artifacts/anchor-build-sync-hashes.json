@@ -1,4 +1,10 @@
 {
-    "blog": "ab434f52305b856f07f5a272afe0c80682a0b04a284f70711b08369e7a420403",
-    "example": "64fdfae8900b0b48527154046e6cb75194e466c74146d5a94b9f28e5daa7dd7d"
+    "blog": {
+        "binary": "2a746fac4b76cc40fa6c7f0fc9b440aebcdadc4b4ff49412fda73667183ce1d0",
+        "source": "a9aaaa4f6b273efd892cac4e024bbb2fad4d350cf5ce13767a9e13ba76deb0f2"
+    },
+    "example": {
+        "binary": "e28e45d458d89bea22014d22a8cba7eaa46a252aa54f62f8f14df6b45f8ed6a9",
+        "source": "39429ce52cd265654736a2c50a67aa33a78f112d76f7221f6225e3bad23a69f3"
+    }
 }
