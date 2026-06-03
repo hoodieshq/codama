@@ -21,9 +21,13 @@ Existing programs can be modified or or new program can be added if new test cas
     - Regenerates the Codama IDLs
     - Regenerates the generated types
     - Refreshes the source-hash file
-3. Commit the refreshed artifacts (`dumps/*.so`, `idls/*.json`).
+3. Commit the refreshed artifacts (`dumps/*.so`, `idls/*.json`, `anchor/artifacts/anchor-build-sync-hashes.json`).
 
 **Required toolchain:**
 
 - Anchor 0.32.1
 - Solana 3.1.8
+
+### Program build drift test guard
+
+Cheap test [tests/anchor-build-sync.test.ts](./tests/anchor-build-sync.test.ts) makes sure program builds are up-to-date by comparing computed hashes with produced [artifacts/anchor-build-sync-hashes.json](./artifacts/anchor-build-sync-hashes.json).
