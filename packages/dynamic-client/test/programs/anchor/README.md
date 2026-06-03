@@ -4,7 +4,7 @@
 
 Contains custom anchor program for testing edge cases or anything that can't be covered by Solana native programs. Such programs give the `dynamic-client` test suite real Anchor-generated IDLs and on-chain programs to exercise the runtime instruction builder against genuine Anchor output rather than hand-written fixtures.
 
-Currently we have `example` and `blog` programs with misc instrucitons.
+Currently we have `example` and `blog` programs with misc instructions.
 
 ## Tests
 
@@ -12,7 +12,7 @@ The tests do **not** build these programs. They load prebuilt `.so` binaries com
 
 ## Workflow when changing a program
 
-Existing programs can be modified or or new program can be added if new test case needed.
+Existing programs can be modified, or a new program can be added if a new test case is needed.
 
 1. Edit/add the program under `programs/<name>/`.
 2. Run `pnpm anchor:sync:build`

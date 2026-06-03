@@ -28,6 +28,7 @@ export function syncAnchorBuilds(packageRoot = process.cwd()) {
         );
     }
 
+    mkdirSync(dumpsPath, { recursive: true });
     mkdirSync(artifactsPath, { recursive: true });
 
     const hashes = {};
