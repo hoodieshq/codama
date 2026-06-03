@@ -30,4 +30,4 @@ Existing programs can be modified, or a new program can be added if a new test c
 
 ### Program build drift test guard
 
-Cheap test [tests/anchor-build-sync.test.ts](./tests/anchor-build-sync.test.ts) makes sure the committed builds are in sync by comparing each program's recomputed source hash and its committed `.so` binary hash against [artifacts/anchor-build-sync-hashes.json](./artifacts/anchor-build-sync-hashes.json). It does not rebuild — refreshing the artifacts requires `pnpm anchor:sync:build` with the pinned toolchain.
+Cheap test [tests/anchor-build-sync.test.ts](./tests/anchor-build-sync.test.ts) makes sure the committed builds are in sync by comparing each program's recomputed source hash and its committed `.so` binary hash against [artifacts/anchor-build-sync-hashes.json](./artifacts/anchor-build-sync-hashes.json). It does not rebuild — refreshing the artifacts requires `pnpm anchor:sync:build`.

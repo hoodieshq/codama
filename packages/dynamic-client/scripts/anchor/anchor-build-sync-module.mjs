@@ -56,13 +56,16 @@ export function syncAnchorBuilds(packageRoot = process.cwd()) {
 
 /**
  * Deterministic SHA-256 of a program's build-affecting source inputs.
- * Determinism: file contents are line-ending normalized (CRLF -> LF) and the
- * resulting blobs are sorted before hashing, so the digest depends only on the
- * multiset of file contents — independent of filesystem read order and OS line
- * endings. Note this is also independent of filenames/paths: renaming a file
- * without changing its bytes does not change the digest. That is a deliberate
- * trade-off for cross-OS stability; the committed `.so` binary hash (see
- * {@link syncAnchorBuilds}) is what ultimately catches a changed build output.
+ *
+ * The digest is taken over sorted `(relativePath, content)` entries:
+ *   - `relativePath` is taken relative to the anchor root and normalized to forward
+ *     slashes, so the digest is identical across OSes but still sensitive to a file's
+ *     *name and location*. Renaming `nested_example.rs` or moving a module changes the
+ *     digest even when the bytes are unchanged — which matters because Rust module paths
+ *     are build-significant, so a rename can change the compiled `.so` without changing
+ *     any file's content.
+ *   - `content` is CRLF -> LF normalized so line endings don't affect the digest.
+ *   - sorting by `relativePath` makes the digest independent of filesystem read order.
  *
  * @param {string} programDir Absolute path to `programs/<name>`.
  * @returns {string} lowercase hex SHA-256.
@@ -92,10 +95,17 @@ export function hashProgramSource(programDir) {
         }
     }
 
-    const contents = inputs.map(file => readFileSync(file, 'utf8').replace(/\r\n/g, '\n')).sort();
+    const entries = inputs
+        .map(file => ({
+            content: readFileSync(file, 'utf8').replace(/\r\n/g, '\n'),
+            relPath: path.relative(anchorRoot, file).split(path.sep).join('/'),
+        }))
+        .sort((a, b) => (a.relPath < b.relPath ? -1 : a.relPath > b.relPath ? 1 : 0));
 
     const hash = createHash('sha256');
-    for (const content of contents) {
+    for (const { relPath, content } of entries) {
+        hash.update(relPath);
+        hash.update('\0');
         hash.update(content);
         hash.update('\0');
     }

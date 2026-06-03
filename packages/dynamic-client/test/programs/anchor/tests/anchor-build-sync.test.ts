@@ -13,7 +13,8 @@ const committedHashes = JSON.parse(
 
 // This guard proves the committed program source and the committed `.so` binary are mutually consistent with the recorded artifact.
 // It does NOT rebuild — a genuine refresh still requires `pnpm anchor:sync:build` with the pinned toolchain (see the anchor README).
-describe('should keep anchor build dumps in sync with their source', () => {
+// Pure filesystem/crypto guard — nothing platform-specific. Run it once under the Node.
+describe.runIf(__NODEJS__)('should keep anchor build dumps in sync with their source', () => {
     test('the artifact records exactly the known PROGRAMS', () => {
         expect(Object.keys(committedHashes).sort()).toStrictEqual([...PROGRAMS].sort());
     });
