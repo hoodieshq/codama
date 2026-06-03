@@ -25,8 +25,8 @@ Existing programs can be modified, or a new program can be added if a new test c
 
 **Required toolchain:**
 
-- Anchor 0.32.1
-- Solana 3.1.8
+- Anchor 1.0.2
+- Solana 3.1.14
 
 ### Program build drift test guard
 
