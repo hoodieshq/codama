@@ -10,10 +10,7 @@ export const PROGRAMS = ['example', 'blog'];
  * `{ source, binary }` hashes.
  *
  * @param {string} [packageRoot] Defaults to `process.cwd()` (the package root when invoked via a pnpm script).
- * @returns {{ hashes: Record<string, { source: string, binary: string }>, artifactPath: string }}
- *   `hashes` is sorted by program name.
- * @throws {Error} if a built `.so` is missing (the Anchor build has not run), or if a required source
- *   input is missing (propagated from {@link hashProgramSource}).
+ * @returns {{ hashes: Record<ProgramName, { source: string, binary: string }>, artifactPath: string }}
  */
 export function syncAnchorBuilds(packageRoot = process.cwd()) {
     const anchorPath = path.join(packageRoot, 'test', 'programs', 'anchor');
@@ -60,16 +57,13 @@ export function syncAnchorBuilds(packageRoot = process.cwd()) {
  * The digest is taken over sorted `(relativePath, content)` entries:
  *   - `relativePath` is taken relative to the anchor root and normalized to forward
  *     slashes, so the digest is identical across OSes but still sensitive to a file's
- *     *name and location*. Renaming `nested_example.rs` or moving a module changes the
- *     digest even when the bytes are unchanged — which matters because Rust module paths
- *     are build-significant, so a rename can change the compiled `.so` without changing
- *     any file's content.
+ *     *name and location*. Renaming `.rs` or moving a module changes the
+ *     digest even when the bytes are unchanged.
  *   - `content` is CRLF -> LF normalized so line endings don't affect the digest.
  *   - sorting by `relativePath` makes the digest independent of filesystem read order.
  *
  * @param {string} programDir Absolute path to `programs/<name>`.
  * @returns {string} lowercase hex SHA-256.
- * @throws {Error} if the source directory or any required input is missing.
  */
 export function hashProgramSource(programDir) {
     const srcPath = path.join(programDir, 'src');
@@ -112,7 +106,6 @@ export function hashProgramSource(programDir) {
     return hash.digest('hex');
 }
 
-/** Use for binary `.so` files). */
 export function hashFileBytes(filePath) {
     return createHash('sha256').update(readFileSync(filePath)).digest('hex');
 }

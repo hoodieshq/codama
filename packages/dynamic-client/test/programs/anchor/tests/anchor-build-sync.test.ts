@@ -19,7 +19,7 @@ describe.runIf(__NODEJS__)('should keep anchor build dumps in sync with their so
         expect(Object.keys(committedHashes).sort()).toStrictEqual([...PROGRAMS].sort());
     });
 
-    test.each(PROGRAMS)('%s source hash matches the committed snapshot', program => {
+    test.each(PROGRAMS)('%s source hash matches the committed artifact', program => {
         const actual = hashProgramSource(path.join(anchorDir, 'programs', program));
         expect(
             actual,
@@ -27,7 +27,7 @@ describe.runIf(__NODEJS__)('should keep anchor build dumps in sync with their so
         ).toBe(committedHashes[program].source);
     });
 
-    test.each(PROGRAMS)('%s binary hash matches the committed snapshot', program => {
+    test.each(PROGRAMS)('%s binary hash matches the committed artifact', program => {
         const actual = hashFileBytes(path.join(dumpsDir, `${program}.so`));
         expect(
             actual,

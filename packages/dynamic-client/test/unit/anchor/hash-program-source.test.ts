@@ -8,8 +8,10 @@ import { hashProgramSource } from '../../../scripts/anchor/anchor-build-sync-mod
 
 /**
  * Writes the file layout `hashProgramSource` expects under `root`:
- * `programs/example/src/<...>.rs`, `programs/example/Cargo.toml`, and the anchor-root
- * `Cargo.toml` / `Anchor.toml` / `Cargo.lock`. Returns the program directory.
+ *  - `programs/example/src/<...>.rs`
+ *  - `programs/example/Cargo.toml`
+ *  - the anchor-root: `Cargo.toml` / `Anchor.toml` / `Cargo.lock`
+ * Returns the program directory.
  */
 function writeProgramFixture(root: string, srcFiles: Record<string, string>, opts: { skip?: string[] } = {}): string {
     const skip = new Set(opts.skip ?? []);

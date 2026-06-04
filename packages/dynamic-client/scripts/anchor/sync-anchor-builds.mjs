@@ -7,7 +7,7 @@ try {
         console.log(`  ${program}: ${hash}`);
     }
 } catch (error) {
-    console.error('[sync-anchor-builds] Failed to sync anchor builds:');
+    console.error('[sync-anchor-builds] Failed to sync anchor builds!');
     console.error(error);
     process.exitCode = 1;
 }
