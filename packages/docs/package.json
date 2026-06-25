@@ -1,0 +1,39 @@
+{
+    "name": "@codama/docs",
+    "version": "0.0.0",
+    "private": true,
+    "description": "Codama documentation site — spec-driven Fumadocs with local TS extensions",
+    "type": "module",
+    "scripts": {
+        "build:content": "tsx src/buildContent.ts",
+        "verify:merge": "tsx src/verifyMerge.ts",
+        "postinstall": "pnpm build:content && fumadocs-mdx",
+        "predev": "pnpm build:content && fumadocs-mdx",
+        "dev": "next dev",
+        "prebuild": "pnpm build:content && fumadocs-mdx",
+        "build": "next build",
+        "start": "next start"
+    },
+    "dependencies": {
+        "@codama/spec": "file:../../../hoodies-codama-idl-spec",
+        "fumadocs-core": "^16.10.5",
+        "fumadocs-ui": "^16.10.5",
+        "next": "^16.2.9",
+        "react": "^19.2.0",
+        "react-dom": "^19.2.0"
+    },
+    "devDependencies": {
+        "@tailwindcss/postcss": "^4.1.0",
+        "@types/mdx": "^2.0.13",
+        "@types/node": "^25",
+        "@types/react": "^19",
+        "@types/react-dom": "^19",
+        "fumadocs-mdx": "^15.0.12",
+        "tailwindcss": "^4.1.0",
+        "tsx": "^4.21.0",
+        "typescript": "^5.9.3"
+    },
+    "engines": {
+        "node": ">=20.18.0"
+    }
+}
