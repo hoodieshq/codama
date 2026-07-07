@@ -1,0 +1,66 @@
+# `EventNode`
+
+A program event: its data shape and optional discriminators used to identify it on the wire.
+
+## Attributes
+
+### Data
+
+| Attribute | Type                    | Description                           |
+| --------- | ----------------------- | ------------------------------------- |
+| `kind`    | `"eventNode"`           | The node discriminator.               |
+| `name`    | `CamelCaseString`       | The name of the event.                |
+| `docs`    | `string[]` _(optional)_ | Markdown documentation for the event. |
+
+### Children
+
+| Attribute        | Type                                                                            | Description                                                                                                             |
+| ---------------- | ------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `data`           | [`TypeNode`](./typeNodes/TypeNode.md)                                           | The type describing the event payload.                                                                                  |
+| `discriminators` | [`DiscriminatorNode`](./discriminatorNodes/DiscriminatorNode.md)[] _(optional)_ | Discriminators that distinguish this event from others. When multiple are listed, they are combined with a logical AND. |
+
+## Functions
+
+### `eventNode(input)`
+
+Helper function that creates an `EventNode` object from an input object.
+
+```ts
+const node = eventNode({
+    name: 'transferEvent',
+    data: structTypeNode([
+        structFieldTypeNode({ name: 'authority', type: publicKeyTypeNode() }),
+        structFieldTypeNode({ name: 'amount', type: numberTypeNode('u64') }),
+    ]),
+});
+```
+
+## Examples
+
+### An event with a struct payload
+
+```ts
+eventNode({
+    name: 'transferEvent',
+    data: structTypeNode([
+        structFieldTypeNode({ name: 'authority', type: publicKeyTypeNode() }),
+        structFieldTypeNode({ name: 'amount', type: numberTypeNode('u64') }),
+    ]),
+});
+```
+
+### An event with a hidden prefix discriminator
+
+```ts
+eventNode({
+    name: 'transferEvent',
+    data: hiddenPrefixTypeNode(structTypeNode([structFieldTypeNode({ name: 'amount', type: numberTypeNode('u64') })]), [
+        constantValueNode(fixedSizeTypeNode(bytesTypeNode(), 8), bytesValueNode('base16', '0102030405060708')),
+    ]),
+    discriminators: [
+        constantDiscriminatorNode(
+            constantValueNode(fixedSizeTypeNode(bytesTypeNode(), 8), bytesValueNode('base16', '0102030405060708')),
+        ),
+    ],
+});
+```

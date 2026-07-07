@@ -1,0 +1,66 @@
+# `InstructionAccountNode`
+
+An account participating in an instruction, with its name, signing/writability flags, and an optional default value.
+
+![Diagram](https://github.com/codama-idl/codama/assets/3642397/4656a08b-2f89-49c2-b428-5378cb1a0b9e)
+
+## Attributes
+
+### Data
+
+| Attribute    | Type                       | Description                                         |
+| ------------ | -------------------------- | --------------------------------------------------- | --------- | ---------------------------------------------- |
+| `kind`       | `"instructionAccountNode"` | The node discriminator.                             |
+| `name`       | `CamelCaseString`          | The name of the account.                            |
+| `isWritable` | `boolean`                  | Whether the instruction may write to the account.   |
+| `isSigner`   | `true                      | false                                               | "either"` | Whether the account must sign the transaction. |
+| `isOptional` | `boolean` _(optional)_     | Whether the account slot may be omitted by callers. |
+| `docs`       | `string[]` _(optional)_    | Markdown documentation for the account slot.        |
+
+### Children
+
+| Attribute      | Type                                                                                            | Description                                                                                                                      |
+| -------------- | ----------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `defaultValue` | [`InstructionInputValueNode`](./contextualValueNodes/InstructionInputValueNode.md) _(optional)_ | A default value used to fill the slot when the caller does not provide one.                                                      |
+| `accountLink`  | [`AccountLinkNode`](./linkNodes/AccountLinkNode.md) _(optional)_                                | A reference to the account's data layout. Required for consumers (e.g. `accountFieldValueNode`) to read fields from the account. |
+| `display`      | [`InstructionAccountDisplayNode`](./displayNodes/InstructionAccountDisplayNode.md) _(optional)_ | Display metadata describing how the account is presented.                                                                        |
+
+## Functions
+
+### `instructionAccountNode(input)`
+
+Helper function that creates a `InstructionAccountNode` object from an input object.
+
+```ts
+const node = instructionAccountNode({
+    name: 'authority',
+    isWritable: false,
+    isSigner: true,
+    docs: ['This account that has the authority to perform this instruction.'],
+});
+```
+
+## Examples
+
+### An optional account
+
+```ts
+instructionAccountNode({
+    name: 'freezeAuthority',
+    isWritable: false,
+    isSigner: false,
+    isOptional: true,
+    docs: ['The freeze authority to set on the asset, if any.'],
+});
+```
+
+### An optional signer account
+
+```ts
+instructionAccountNode({
+    name: 'owner',
+    isWritable: true,
+    isSigner: 'either',
+    docs: ['The owner of the asset. The owner must only sign the transaction if the asset is being updated.'],
+});
+```

@@ -1,0 +1,31 @@
+# `ErrorNode`
+
+A program error — a numeric code paired with a name and human-readable message.
+
+![Diagram](https://github.com/codama-idl/codama/assets/3642397/0bde98ea-0327-404b-bf38-137d105826b0)
+
+## Attributes
+
+### Data
+
+| Attribute | Type                    | Description                                     |
+| --------- | ----------------------- | ----------------------------------------------- |
+| `kind`    | `"errorNode"`           | The node discriminator.                         |
+| `name`    | `CamelCaseString`       | The name of the error.                          |
+| `code`    | `u32`                   | The numeric error code returned by the program. |
+| `message` | `string`                | A human-readable description of the error.      |
+| `docs`    | `string[]` _(optional)_ | Markdown documentation for the error.           |
+
+## Functions
+
+### `errorNode(input)`
+
+Helper function that creates a `ErrorNode` object from an input object.
+
+```ts
+const node = errorNode({
+    name: 'invalidAmountArgument',
+    code: 1,
+    message: 'The amount argument is invalid.',
+});
+```

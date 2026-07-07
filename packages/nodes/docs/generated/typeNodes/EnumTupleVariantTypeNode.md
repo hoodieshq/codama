@@ -1,0 +1,30 @@
+# `EnumTupleVariantTypeNode`
+
+A variant of an enum that carries a tuple payload (positional fields).
+
+## Attributes
+
+### Data
+
+| Attribute       | Type                         | Description                                                                                          |
+| --------------- | ---------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `kind`          | `"enumTupleVariantTypeNode"` | The node discriminator.                                                                              |
+| `name`          | `CamelCaseString`            | The name of the variant.                                                                             |
+| `discriminator` | `u32` _(optional)_           | Explicit discriminator value. When omitted, the discriminator is inferred from the variant position. |
+
+### Children
+
+| Attribute | Type                                                                               | Description                                               |
+| --------- | ---------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| `tuple`   | [`NestedTypeNode`](./NestedTypeNode.md)<[`TupleTypeNode`](./TupleTypeNode.md)>     | The tuple of positional fields carried by the variant.    |
+| `display` | [`EnumVariantDisplayNode`](../displayNodes/EnumVariantDisplayNode.md) _(optional)_ | Display metadata describing how the variant is presented. |
+
+## Functions
+
+### `enumTupleVariantTypeNode(name, tuple, discriminator?)`
+
+Helper function that creates a `EnumTupleVariantTypeNode` object from its name and data.
+
+```ts
+const node = enumTupleVariantTypeNode('coordinates', tupleTypeNode([numberTypeNode('u32'), numberTypeNode('u32')]));
+```
