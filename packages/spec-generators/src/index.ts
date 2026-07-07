@@ -1,15 +1,18 @@
 import { joinPath } from '@codama/fragments/javascript';
 import { getSpec } from '@codama/spec';
 
-import { generateNodes, NODE_CONFIGS } from './nodes';
-import { generateNodeTypes } from './nodeTypes';
-import { CATEGORY_DIRECTORIES, GENERIC_PARAM_ORDER, getRepoDirectory, NARROWABLE_DATA_ATTRIBUTES } from './shared';
-import {
-    generateVisitorsCore,
-    IDENTITY_VISITOR_WALK_ORDER,
-    MERGE_VISITOR_WALK_ORDER,
-    UNION_ALIAS_NAMES,
-} from './visitorsCore';
+import { generateNodesDocs } from './docs';
+import { getRepoDirectory } from './shared';
+// TEMPORARY: imports for the disabled generators below - restore alongside their blocks once the spec bump lands.
+// import { generateNodes, NODE_CONFIGS } from './nodes';
+// import { generateNodeTypes } from './nodeTypes';
+// import { CATEGORY_DIRECTORIES, GENERIC_PARAM_ORDER, NARROWABLE_DATA_ATTRIBUTES } from './shared';
+// import {
+//     generateVisitorsCore,
+//     IDENTITY_VISITOR_WALK_ORDER,
+//     MERGE_VISITOR_WALK_ORDER,
+//     UNION_ALIAS_NAMES,
+// } from './visitorsCore';
 
 export interface GenerateResult {
     /** One entry per generator that ran, in the order they ran. */
@@ -26,40 +29,49 @@ export function generate(): GenerateResult {
     const outputs: { generator: string; outputDir: string }[] = [];
     const spec = getSpec();
 
-    {
-        const outputDir = joinPath(getRepoDirectory(), 'packages', 'node-types', 'src', 'generated');
-        generateNodeTypes(spec, {
-            genericParamOrder: GENERIC_PARAM_ORDER,
-            narrowableDataAttributes: NARROWABLE_DATA_ATTRIBUTES,
-            outputDir,
-            targetSpecMajor: 1,
-        });
-        outputs.push({ generator: 'nodeTypes', outputDir });
-    }
+    // TEMPORARY: the local `@codama/spec` (file:../../../codama-idl-spec) is ahead of these generators - it adds a
+    // `display` node category and an `anyNode` type-expr kind they do not handle yet, so they throw at runtime.
+    // Disabled only to exercise the docs generator end-to-end. Re-enable once the spec bump is caught up.
+    // {
+    //     const outputDir = joinPath(getRepoDirectory(), 'packages', 'node-types', 'src', 'generated');
+    //     generateNodeTypes(spec, {
+    //         genericParamOrder: GENERIC_PARAM_ORDER,
+    //         narrowableDataAttributes: NARROWABLE_DATA_ATTRIBUTES,
+    //         outputDir,
+    //         targetSpecMajor: 1,
+    //     });
+    //     outputs.push({ generator: 'nodeTypes', outputDir });
+    // }
+
+    // {
+    //     const outputDir = joinPath(getRepoDirectory(), 'packages', 'nodes', 'src', 'generated');
+    //     generateNodes(spec, {
+    //         categoryDirectories: CATEGORY_DIRECTORIES,
+    //         genericParamOrder: GENERIC_PARAM_ORDER,
+    //         narrowableDataAttributes: NARROWABLE_DATA_ATTRIBUTES,
+    //         nodeConfigs: NODE_CONFIGS,
+    //         outputDir,
+    //         targetSpecMajor: 1,
+    //     });
+    //     outputs.push({ generator: 'nodes', outputDir });
+    // }
+
+    // {
+    //     const outputDir = joinPath(getRepoDirectory(), 'packages', 'visitors-core', 'src', 'generated');
+    //     generateVisitorsCore(spec, {
+    //         identityVisitorWalkOrder: IDENTITY_VISITOR_WALK_ORDER,
+    //         mergeVisitorWalkOrder: MERGE_VISITOR_WALK_ORDER,
+    //         outputDir,
+    //         targetSpecMajor: 1,
+    //         unionAliasNames: UNION_ALIAS_NAMES,
+    //     });
+    //     outputs.push({ generator: 'visitorsCore', outputDir });
+    // }
 
     {
-        const outputDir = joinPath(getRepoDirectory(), 'packages', 'nodes', 'src', 'generated');
-        generateNodes(spec, {
-            categoryDirectories: CATEGORY_DIRECTORIES,
-            genericParamOrder: GENERIC_PARAM_ORDER,
-            narrowableDataAttributes: NARROWABLE_DATA_ATTRIBUTES,
-            nodeConfigs: NODE_CONFIGS,
-            outputDir,
-            targetSpecMajor: 1,
-        });
-        outputs.push({ generator: 'nodes', outputDir });
-    }
-
-    {
-        const outputDir = joinPath(getRepoDirectory(), 'packages', 'visitors-core', 'src', 'generated');
-        generateVisitorsCore(spec, {
-            identityVisitorWalkOrder: IDENTITY_VISITOR_WALK_ORDER,
-            mergeVisitorWalkOrder: MERGE_VISITOR_WALK_ORDER,
-            outputDir,
-            targetSpecMajor: 1,
-            unionAliasNames: UNION_ALIAS_NAMES,
-        });
-        outputs.push({ generator: 'visitorsCore', outputDir });
+        const outputDir = joinPath(getRepoDirectory(), 'packages', 'nodes', 'docs', 'generated');
+        generateNodesDocs(spec, { outputDir, targetSpecMajor: 1 });
+        outputs.push({ generator: 'docs', outputDir });
     }
 
     return { outputs };
