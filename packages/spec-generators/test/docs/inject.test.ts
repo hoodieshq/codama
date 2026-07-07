@@ -33,9 +33,26 @@ describe('inject overlays', () => {
     it('omits both sections for a node kind with no overlay entry', () => {
         const noOverlay = getFromRenderMap(
             getRenderMap(getSpec(), { targetSpecMajor: 1 }),
-            'typeNodes/BooleanTypeNode.md',
+            'displayNodes/StringDisplayNode.md',
         ).content;
+        expect(noOverlay).not.toContain('## Functions');
         expect(noOverlay).not.toContain('## Examples');
+    });
+});
+
+describe('ported overlay coverage', () => {
+    const map = getRenderMap(getSpec(), { targetSpecMajor: 1 });
+
+    it('renders NumberTypeNode Functions with the type-guard helpers', () => {
+        const number = getFromRenderMap(map, 'typeNodes/NumberTypeNode.md').content;
+        expect(number).toContain('## Functions');
+        expect(number).toContain('### `isSignedInteger(node)`');
+        expect(number).toContain('## Examples');
+    });
+
+    it('renders Examples for a node other than AccountNode', () => {
+        const event = getFromRenderMap(map, 'EventNode.md').content;
+        expect(event).toContain('## Examples');
     });
 });
 
