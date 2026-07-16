@@ -1,28 +1,27 @@
 # `BytesValueNode`
 
-A node that represents a value in bytes — e.g. `0x010203`.
+A concrete bytes value, encoded as text in the chosen encoding.
 
 ## Attributes
 
 ### Data
 
-| Attribute  | Type                                         | Description                           |
-| ---------- | -------------------------------------------- | ------------------------------------- |
-| `kind`     | `"bytesValueNode"`                           | The node discriminator.               |
-| `encoding` | `"base16" \| "base58" \| "base64" \| "utf8"` | The encoding of the `data` attribute. |
-| `data`     | `string`                                     | The encoded data.                     |
+| Attribute | Type               | Description                                                      |
+| --------- | ------------------ | ---------------------------------------------------------------- |
+| `kind`    | `"bytesValueNode"` | The node discriminator.                                          |
+| `data`    | `string`           | The bytes encoded as a text string per the `encoding` attribute. |
 
 ### Children
 
-_This node has no children._
+| Attribute  | Type                                               | Description                                       |
+| ---------- | -------------------------------------------------- | ------------------------------------------------- |
+| `encoding` | [`BytesEncoding`](../sharedNodes/BytesEncoding.md) | The encoding used to represent the bytes as text. |
 
-## Functions
+## Examples
 
-### `bytesValueNode(encoding, data)`
+### Create a bytes value node from an encoding and data
 
-Helper function that creates a `BytesValueNode` object from an encoding and an encoded data string.
-
-```ts
+```typescript
 const node = bytesValueNode('base16', '010203');
 const utf8Node = bytesValueNode('utf8', 'Hello');
 ```

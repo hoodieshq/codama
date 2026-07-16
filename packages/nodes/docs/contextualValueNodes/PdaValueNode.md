@@ -1,6 +1,6 @@
 # `PdaValueNode`
 
-A node that represents a PDA value. It alone can be used to derive the PDA address.
+Resolves to a PDA derived from a list of seed values.
 
 ## Attributes
 
@@ -12,29 +12,26 @@ A node that represents a PDA value. It alone can be used to derive the PDA addre
 
 ### Children
 
-| Attribute | Type                                                                       | Description                                                                                                                                                                                          |
-| --------- | -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `pda`     | [`PdaLinkNode`](../linkNodes/PdaLinkNode.md) \| [`PdaNode`](../PdaNode.md) | The PDA definition to use. It can either be a `PdaLinkNode` — therefore pointing to an existing PDA definition on the `ProgramNode` — or a direct `PdaNode` if we want to inline the PDA definition. |
-| `seeds`   | [`PdaSeedValueNode`](./PdaSeedValueNode.md)[]                              | The values of all variable seeds in the PDA.                                                                                                                                                         |
+| Attribute   | Type                                                       | Description                                                                              |
+| ----------- | ---------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `pda`       | [`PdaValuePda`](./PdaValuePda.md)                          | The PDA being derived — either a link to a defined PDA or an inline `pdaNode`.           |
+| `seeds`     | [`PdaSeedValueNode`](./PdaSeedValueNode.md)[]              | The seed values used to derive the PDA, paired with their seed names.                    |
+| `programId` | [`PdaValueProgramId`](./PdaValueProgramId.md) _(optional)_ | The program ID used to derive the PDA. When omitted, the PDA’s declared program is used. |
 
-## Functions
+## Examples
 
-### `pdaValueNode(pda, seeds)`
+### Create a PDA value node from a PDA definition and seed values
 
-Helper function that creates a `PdaValueNode` object from a PDA definition and an array of seed values. When a `string` is provided as the `pda` definition, it is used as a `PdaLinkNode`.
-
-```ts
+```typescript
 const node = pdaValueNode('associatedToken', [
     pdaSeedValueNode('mint', publicKeyValueNode('G345gmp34svbGxyXuCvKVVHDbqJQ66y65vVrx7m7FmBE')),
     pdaSeedValueNode('owner', publicKeyValueNode('Nzgr9bYfMRq5768bHfXsXoPTnLWAXgQNosRBxK63jRH')),
 ]);
 ```
 
-## Examples
-
 ### A PDA value whose seeds point to other accounts
 
-```ts
+```typescript
 pdaValueNode('associatedToken', [
     pdaSeedValueNode('mint', accountValueNode('mint')),
     pdaSeedValueNode('owner', accountValueNode('authority')),
@@ -43,7 +40,7 @@ pdaValueNode('associatedToken', [
 
 ### A PDA value with an inlined PDA definition
 
-```ts
+```typescript
 const inlinedPdaNode = pdaNode({
     name: 'associatedToken',
     seeds: [

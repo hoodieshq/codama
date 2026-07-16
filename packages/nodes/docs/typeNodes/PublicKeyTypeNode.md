@@ -1,6 +1,6 @@
 # `PublicKeyTypeNode`
 
-A node that represents a 32-byte public key.
+A 32-byte Solana public key.
 
 ## Attributes
 
@@ -10,16 +10,10 @@ A node that represents a 32-byte public key.
 | --------- | --------------------- | ----------------------- |
 | `kind`    | `"publicKeyTypeNode"` | The node discriminator. |
 
-### Children
+## Examples
 
-_This node has no children._
+### Create a public key type node
 
-## Functions
-
-### `publicKeyTypeNode()`
-
-Helper function that creates a `PublicKeyTypeNode` object.
-
-```ts
+```typescript
 const node = publicKeyTypeNode();
 ```

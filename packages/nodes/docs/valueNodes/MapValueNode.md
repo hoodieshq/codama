@@ -1,6 +1,6 @@
 # `MapValueNode`
 
-A node that represents the value of a map.
+A concrete map value: a list of (key, value) entries.
 
 ## Attributes
 
@@ -12,17 +12,15 @@ A node that represents the value of a map.
 
 ### Children
 
-| Attribute | Type                                            | Description                          |
-| --------- | ----------------------------------------------- | ------------------------------------ |
-| `entries` | [`MapEntryValueNode`](./MapEntryValueNode.md)[] | The value of all entries in the map. |
+| Attribute | Type                                            | Description                       |
+| --------- | ----------------------------------------------- | --------------------------------- |
+| `entries` | [`MapEntryValueNode`](./MapEntryValueNode.md)[] | The entries of the map, in order. |
 
-## Functions
+## Examples
 
-### `mapValueNode(entries)`
+### Create a map value node from entries
 
-Helper function that creates a `MapValueNode` object from an array of `MapEntryValueNode` objects. Each object represents a key-value pair in the map.
-
-```ts
+```typescript
 const node = mapValueNode([
     mapEntryValueNode(stringValueNode('apples'), numberValueNode(12)),
     mapEntryValueNode(stringValueNode('bananas'), numberValueNode(34)),

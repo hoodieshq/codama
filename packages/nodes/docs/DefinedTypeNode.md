@@ -1,6 +1,6 @@
 # `DefinedTypeNode`
 
-This node defines a named type that can be reused in other types using a [`DefinedTypeLinkNode`](./linkNodes/DefinedTypeLinkNode.md).
+A reusable named type that can be referenced by `definedTypeLinkNode` from elsewhere in the IDL.
 
 ![Diagram](https://github.com/codama-idl/codama/assets/3642397/6049cf77-9a70-4915-8276-dd571d2f8828)
 
@@ -8,25 +8,23 @@ This node defines a named type that can be reused in other types using a [`Defin
 
 ### Data
 
-| Attribute | Type                | Description                          |
-| --------- | ------------------- | ------------------------------------ |
-| `kind`    | `"definedTypeNode"` | The node discriminator.              |
-| `name`    | `CamelCaseString`   | The name of the reusable type.       |
-| `docs`    | `string[]`          | Markdown documentation for the type. |
+| Attribute | Type                    | Description                          |
+| --------- | ----------------------- | ------------------------------------ |
+| `kind`    | `"definedTypeNode"`     | The node discriminator.              |
+| `name`    | `CamelCaseString`       | The name of the defined type.        |
+| `docs`    | `string[]` _(optional)_ | Markdown documentation for the type. |
 
 ### Children
 
-| Attribute | Type                                | Description                   |
-| --------- | ----------------------------------- | ----------------------------- |
-| `type`    | [`TypeNode`](./typeNodes/README.md) | The concrete type definition. |
+| Attribute | Type                                  | Description          |
+| --------- | ------------------------------------- | -------------------- |
+| `type`    | [`TypeNode`](./typeNodes/TypeNode.md) | The type definition. |
 
-## Functions
+## Examples
 
-### `definedTypeNode(input)`
+### Create a defined type node from an input object
 
-Helper function that creates a `DefinedTypeNode` object from an input object.
-
-```ts
+```typescript
 const node = definedTypeNode({
     name: 'person',
     docs: ['This type describes a Person.'],

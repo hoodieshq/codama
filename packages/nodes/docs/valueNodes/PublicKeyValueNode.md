@@ -1,27 +1,21 @@
 # `PublicKeyValueNode`
 
-A node that represents the value of a 32-bytes public key.
+A concrete public key, with an optional symbolic identifier for the address.
 
 ## Attributes
 
 ### Data
 
-| Attribute    | Type                   | Description                                  |
-| ------------ | ---------------------- | -------------------------------------------- |
-| `kind`       | `"publicKeyValueNode"` | The node discriminator.                      |
-| `publicKey`  | `string`               | The base58 encoded public key.               |
-| `identifier` | `string`               | (Optional) An identifier for the public key. |
+| Attribute    | Type                           | Description                                                       |
+| ------------ | ------------------------------ | ----------------------------------------------------------------- |
+| `kind`       | `"publicKeyValueNode"`         | The node discriminator.                                           |
+| `publicKey`  | `Address`                      | The base58-encoded public key.                                    |
+| `identifier` | `CamelCaseString` _(optional)_ | A symbolic name for the address, useful in generated client code. |
 
-### Children
+## Examples
 
-_This node has no children._
+### Create a public key value node from a base58 public key
 
-## Functions
-
-### `publicKeyValueNode(publicKey, identifier?)`
-
-Helper function that creates a `PublicKeyValueNode` object from a base58 encoded public key and an optional identifier.
-
-```ts
+```typescript
 const node = publicKeyValueNode('7rA1KcBdW5hKmMasQdRVBFsD6T1nLtYuR6y59TJNgevR');
 ```

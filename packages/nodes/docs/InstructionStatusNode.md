@@ -1,34 +1,27 @@
 # `InstructionStatusNode`
 
-This node represents the status of an instruction along with an optional message.
+The lifecycle stage of an instruction (draft, live, deprecated, archived) with an optional accompanying message.
 
 ## Attributes
 
 ### Data
 
-| Attribute   | Type                                                    | Description                                                                                                                                                                                                                                      |
-| ----------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `kind`      | `"instructionStatusNode"`                               | The node discriminator.                                                                                                                                                                                                                          |
-| `lifecycle` | `"live"` \| `"deprecated"` \| `"archived"` \| `"draft"` | The lifecycle status of the instruction. `"live"` means accessible (the default), `"deprecated"` means about to be archived, `"archived"` means no longer accessible but kept for historical parsing, `"draft"` means not fully implemented yet. |
-| `message`   | `string`                                                | (Optional) Additional information about the current status for program consumers.                                                                                                                                                                |
+| Attribute | Type                      | Description                                                                                  |
+| --------- | ------------------------- | -------------------------------------------------------------------------------------------- |
+| `kind`    | `"instructionStatusNode"` | The node discriminator.                                                                      |
+| `message` | `string` _(optional)_     | Free-form prose accompanying the status — e.g. a deprecation notice with migration guidance. |
 
-## Functions
+### Children
 
-### `instructionStatusNode(lifecycle, message?)`
-
-Helper function that creates an `InstructionStatusNode` object.
-
-```ts
-const statusNode = instructionStatusNode('deprecated', 'Use the newInstruction instead');
-```
+| Attribute   | Type                                                            | Description          |
+| ----------- | --------------------------------------------------------------- | -------------------- |
+| `lifecycle` | [`InstructionLifecycle`](./sharedNodes/InstructionLifecycle.md) | The lifecycle stage. |
 
 ## Examples
 
 ### A live instruction (no status needed)
 
-For live instructions, you typically don't need to set a status at all:
-
-```ts
+```typescript
 instructionNode({
     name: 'transfer',
     accounts: [...],
@@ -38,7 +31,7 @@ instructionNode({
 
 ### A deprecated instruction
 
-```ts
+```typescript
 instructionNode({
     name: 'oldTransfer',
     status: instructionStatusNode('deprecated', 'Use the `transfer` instruction instead. This will be removed in v3.0.0.'),
@@ -49,7 +42,7 @@ instructionNode({
 
 ### An archived instruction
 
-```ts
+```typescript
 instructionNode({
     name: 'legacyTransfer',
     status: instructionStatusNode('archived', 'This instruction was removed in v2.0.0. It is kept here for historical parsing.'),
@@ -60,7 +53,7 @@ instructionNode({
 
 ### A draft instruction
 
-```ts
+```typescript
 instructionNode({
     name: 'experimentalFeature',
     status: instructionStatusNode('draft', 'This instruction is under development and may change.'),
@@ -71,7 +64,7 @@ instructionNode({
 
 ### Status without a message
 
-```ts
+```typescript
 instructionNode({
     name: 'someInstruction',
     status: instructionStatusNode('deprecated'),

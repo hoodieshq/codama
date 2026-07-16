@@ -1,6 +1,6 @@
 # `BooleanValueNode`
 
-A node that represents a boolean value — e.g. `true`.
+A concrete boolean value.
 
 ## Attributes
 
@@ -11,16 +11,10 @@ A node that represents a boolean value — e.g. `true`.
 | `kind`    | `"booleanValueNode"` | The node discriminator. |
 | `boolean` | `boolean`            | The boolean value.      |
 
-### Children
+## Examples
 
-_This node has no children._
+### Create a boolean value node from a boolean
 
-## Functions
-
-### `booleanValueNode(items)`
-
-Helper function that creates a `BooleanValueNode` object from a boolean.
-
-```ts
+```typescript
 const node = booleanValueNode(true);
 ```

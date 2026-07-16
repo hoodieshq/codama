@@ -1,6 +1,6 @@
 # `SetValueNode`
 
-A node that represents a set of values — e.g. `{1, 2, 3}`.
+A concrete set value: a list of unique value nodes.
 
 ## Attributes
 
@@ -12,16 +12,14 @@ A node that represents a set of values — e.g. `{1, 2, 3}`.
 
 ### Children
 
-| Attribute | Type                         | Description                        |
-| --------- | ---------------------------- | ---------------------------------- |
-| `items`   | [`ValueNode`](./README.md)[] | The value of all items in the set. |
+| Attribute | Type                            | Description           |
+| --------- | ------------------------------- | --------------------- |
+| `items`   | [`ValueNode`](./ValueNode.md)[] | The items of the set. |
 
-## Functions
+## Examples
 
-### `setValueNode(items)`
+### Create a set value node from value nodes
 
-Helper function that creates a `SetValueNode` object from an array of value nodes.
-
-```ts
+```typescript
 const node = setValueNode([numberValueNode(1), numberValueNode(2), numberValueNode(3)]);
 ```

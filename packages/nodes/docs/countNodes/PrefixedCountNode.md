@@ -1,6 +1,6 @@
 # `PrefixedCountNode`
 
-A node that represents a count strategy where **the number of items is stored as a number prefix**. This enables nodes such as [`ArrayTypeNode`](../typeNodes/ArrayTypeNode.md) to represent arrays such that their length is stored as a prefix.
+A count strategy where the number of items is read from a numeric prefix.
 
 ## Attributes
 
@@ -12,24 +12,20 @@ A node that represents a count strategy where **the number of items is stored as
 
 ### Children
 
-| Attribute | Type                                                                                                   | Description                                   |
-| --------- | ------------------------------------------------------------------------------------------------------ | --------------------------------------------- |
-| `prefix`  | [`NestedTypeNode`](../typeNodes/NestedTypeNode.md)<[`NumberTypeNode`](../typeNodes/NumberTypeNode.md)> | The node that determines the number of items. |
-
-## Functions
-
-### `prefixedCountNode(prefix)`
-
-Helper function that creates a `PrefixedCountNode` object from a number node.
-
-```ts
-const node = prefixedCountNode(numberTypeNode(u32));
-```
+| Attribute | Type                                                                                                   | Description                                |
+| --------- | ------------------------------------------------------------------------------------------------------ | ------------------------------------------ |
+| `prefix`  | [`NestedTypeNode`](../typeNodes/NestedTypeNode.md)<[`NumberTypeNode`](../typeNodes/NumberTypeNode.md)> | The numeric type used as the count prefix. |
 
 ## Examples
 
+### Create a prefixed count node from a number node
+
+```typescript
+const node = prefixedCountNode(numberTypeNode('u32'));
+```
+
 ### An variable array of public keys prefixed with a u32
 
-```ts
+```typescript
 arrayTypeNode(publicKeyTypeNode(), prefixedCountNode(numberTypeNode(u32)));
 ```

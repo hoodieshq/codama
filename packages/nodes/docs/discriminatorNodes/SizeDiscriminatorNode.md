@@ -1,35 +1,27 @@
 # `SizeDiscriminatorNode`
 
-This node represents a byte discrimination strategy where the data is **identified by being equal to a given size**. Discriminator nodes are used to distinguish between different types of accounts or instructions in a program.
+Identifies a node by its expected total byte size.
 
 ## Attributes
 
 ### Data
 
-| Attribute | Type                      | Description                        |
-| --------- | ------------------------- | ---------------------------------- |
-| `kind`    | `"sizeDiscriminatorNode"` | The node discriminator.            |
-| `size`    | `number`                  | The size that identifies the data. |
-
-### Children
-
-_This node has no children._
-
-## Functions
-
-### `sizeDiscriminatorNode(size)`
-
-Helper function that creates a `SizeDiscriminatorNode` object from a size.
-
-```ts
-const node = sizeDiscriminatorNode(165);
-```
+| Attribute | Type                      | Description             |
+| --------- | ------------------------- | ----------------------- |
+| `kind`    | `"sizeDiscriminatorNode"` | The node discriminator. |
+| `size`    | `u64`                     | The expected byte size. |
 
 ## Examples
 
+### Create a size discriminator node from a size
+
+```typescript
+const node = sizeDiscriminatorNode(165);
+```
+
 ### An account distinguished by its size being equal to 42
 
-```ts
+```typescript
 accountNode({
     discriminators: [sizeDiscriminatorNode(42)],
     // ...
@@ -38,7 +30,7 @@ accountNode({
 
 ### An instruction disctinguished by its size being equal to 42
 
-```ts
+```typescript
 instructionNode({
     discriminators: [sizeDiscriminatorNode(42)],
     // ...

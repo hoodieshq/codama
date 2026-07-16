@@ -1,26 +1,20 @@
 # `ProgramLinkNode`
 
-This node represents a reference to an existing [`ProgramNode`](../ProgramNode.md) in the Codama IDL.
+A reference to a program by name.
 
 ## Attributes
 
 ### Data
 
-| Attribute | Type                | Description                                                             |
-| --------- | ------------------- | ----------------------------------------------------------------------- |
-| `kind`    | `"programLinkNode"` | The node discriminator.                                                 |
-| `name`    | `CamelCaseString`   | The name of the [`ProgramNode`](../ProgramNode.md) we are referring to. |
+| Attribute | Type                | Description                         |
+| --------- | ------------------- | ----------------------------------- |
+| `kind`    | `"programLinkNode"` | The node discriminator.             |
+| `name`    | `CamelCaseString`   | The name of the referenced program. |
 
-### Children
+## Examples
 
-_This node has no children._
+### Create a program link node from a program name
 
-## Functions
-
-### `programLinkNode(name)`
-
-Helper function that creates a `ProgramLinkNode` object from the name of the `ProgramNode` we are referring to.
-
-```ts
+```typescript
 const node = programLinkNode('myProgram');
 ```

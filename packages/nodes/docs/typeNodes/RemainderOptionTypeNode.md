@@ -1,6 +1,6 @@
 # `RemainderOptionTypeNode`
 
-A node that represents an optional item using a child `TypeNode`. The item can either be present — i.e. `Some<T>` — or absent — i.e. `None` — depending on whether or not there are remaining bytes in the buffer. If there are remaining bytes, the item is present and the child node should be encoded/decoded accordingly. However, if there are no remaining bytes, the item is absent and no further encoding/decoding should be performed.
+A value that may be present or absent. Presence is signalled by whether any bytes remain to be read, with no explicit prefix.
 
 ## Attributes
 
@@ -12,25 +12,15 @@ A node that represents an optional item using a child `TypeNode`. The item can e
 
 ### Children
 
-| Attribute | Type                      | Description              |
-| --------- | ------------------------- | ------------------------ |
-| `item`    | [`TypeNode`](./README.md) | The item that may exist. |
-
-## Functions
-
-### `remainderOptionTypeNode(item)`
-
-Helper function that creates a `RemainderOptionTypeNode` object from the item `TypeNode`.
-
-```ts
-const node = remainderOptionTypeNode(publicKeyTypeNode());
-```
+| Attribute | Type                        | Description                                  |
+| --------- | --------------------------- | -------------------------------------------- |
+| `item`    | [`TypeNode`](./TypeNode.md) | The type carried by the option when present. |
 
 ## Examples
 
 ### An optional UTF-8 string using remaining bytes
 
-```ts
+```typescript
 remainderOptionTypeNode(stringTypeNode('UTF-8'));
 
 // None          => 0x

@@ -1,6 +1,6 @@
 # `InstructionArgumentNode`
 
-This node defines an argument that is passed to an instruction. When all arguments are combined and serialized next to each other, they form the instruction's data.
+A named argument of an instruction, with its type and an optional default value.
 
 ![Diagram](https://github.com/codama-idl/codama/assets/3642397/7e2def82-949a-4663-bdc3-ac599d39d2d2)
 
@@ -8,39 +8,53 @@ This node defines an argument that is passed to an instruction. When all argumen
 
 ### Data
 
-| Attribute              | Type                        | Description                                                                                                                                                                                                                                                                                                                        |
-| ---------------------- | --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `kind`                 | `"instructionArgumentNode"` | The node discriminator.                                                                                                                                                                                                                                                                                                            |
-| `name`                 | `CamelCaseString`           | The name of the instruction argument.                                                                                                                                                                                                                                                                                              |
-| `docs`                 | `string[]`                  | Markdown documentation for the instruction argument.                                                                                                                                                                                                                                                                               |
-| `defaultValueStrategy` | `"optional"` \| `"omitted"` | (Optional) The strategy to use when a default value is provided for the argument. `"optional"` means that the argument's default value may be overriden by a provided argument, while `"omitted"` means that no argument should be provided and the default value should always be the argument's value. Defaults to `"optional"`. |
+| Attribute | Type                        | Description                              |
+| --------- | --------------------------- | ---------------------------------------- |
+| `kind`    | `"instructionArgumentNode"` | The node discriminator.                  |
+| `name`    | `CamelCaseString`           | The name of the argument.                |
+| `docs`    | `string[]` _(optional)_     | Markdown documentation for the argument. |
 
 ### Children
 
-| Attribute      | Type                                                                               | Description                                                                                                         |
-| -------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| `type`         | [`TypeNode`](./typeNodes/README.md)                                                | The `TypeNode` that describes the argument's data.                                                                  |
-| `defaultValue` | [`InstructionInputValueNode`](./contextualValueNodes/InstructionInputValueNode.md) | (Optional) A default value for the argument should this argument not be provided when constructing the instruction. |
+| Attribute              | Type                                                                                            | Description                                                                                       |
+| ---------------------- | ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `defaultValueStrategy` | [`DefaultValueStrategy`](./sharedNodes/DefaultValueStrategy.md) _(optional)_                    | How a configured default value is exposed in generated APIs. Required when `defaultValue` is set. |
+| `type`                 | [`TypeNode`](./typeNodes/TypeNode.md)                                                           | The type of the argument.                                                                         |
+| `defaultValue`         | [`InstructionInputValueNode`](./contextualValueNodes/InstructionInputValueNode.md) _(optional)_ | A default value used when the argument is omitted by callers.                                     |
+| `display`              | [`StructFieldDisplayNode`](./displayNodes/StructFieldDisplayNode.md) _(optional)_               | Display metadata describing how the argument is presented.                                        |
 
 ## Functions
 
-### `instructionArgumentNode(input)`
+### structFieldTypeNodeFromInstructionArgumentNode()
 
-Helper function that creates a `InstructionArgumentNode` object from an input object.
+> **structFieldTypeNodeFromInstructionArgumentNode**(`node`: `InstructionArgumentNode`): `StructFieldTypeNode<TypeNode, undefined, undefined>`
+
+Converts an instruction argument node into a `StructFieldTypeNode`.
+The default value is kept only when it is a value node, otherwise the field is emitted without a default.
 
 ```ts
-const node = instructionArgumentNode({
-    name: 'amount',
-    type: numberTypeNode('u64'),
-    docs: ['This amount of tokens to transfer.'],
-});
+const field = structFieldTypeNodeFromInstructionArgumentNode(
+    instructionArgumentNode({ name: 'amount', type: numberTypeNode('u64') }),
+);
+```
+
+### structTypeNodeFromInstructionArgumentNodes()
+
+> **structTypeNodeFromInstructionArgumentNodes**(`nodes`: `InstructionArgumentNode[]`): `StructTypeNode<any>`
+
+Builds a `StructTypeNode` from an array of instruction argument nodes by converting each into a struct field.
+
+```ts
+const struct = structTypeNodeFromInstructionArgumentNodes([
+    instructionArgumentNode({ name: 'amount', type: numberTypeNode('u64') }),
+]);
 ```
 
 ## Examples
 
 ### An argument with a default value
 
-```ts
+```typescript
 instructionArgumentNode({
     name: 'amount',
     type: numberTypeNode('u64'),
@@ -50,7 +64,7 @@ instructionArgumentNode({
 
 ### An argument with an omitted default value
 
-```ts
+```typescript
 instructionArgumentNode({
     name: 'instructionDiscriminator',
     type: numberTypeNode('u8'),

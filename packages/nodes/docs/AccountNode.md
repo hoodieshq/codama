@@ -1,6 +1,6 @@
 # `AccountNode`
 
-This node defines an on-chain account. It is characterized by its name, data structure, and optional attributes such as PDA definition and account discriminators.
+An on-chain account: its name, data structure, optional fixed size, optional PDA, and optional discriminators.
 
 ![Diagram](https://github.com/codama-idl/codama/assets/3642397/77974dad-212e-49b1-8e41-5d466c273a02)
 
@@ -8,42 +8,26 @@ This node defines an on-chain account. It is characterized by its name, data str
 
 ### Data
 
-| Attribute | Type              | Description                                                                         |
-| --------- | ----------------- | ----------------------------------------------------------------------------------- |
-| `kind`    | `"accountNode"`   | The node discriminator.                                                             |
-| `name`    | `CamelCaseString` | The name of the account.                                                            |
-| `docs`    | `string[]`        | Markdown documentation for the account.                                             |
-| `size`    | `number`          | (Optional) The size of the account in bytes, if the account's data length is fixed. |
+| Attribute | Type                    | Description                                                      |
+| --------- | ----------------------- | ---------------------------------------------------------------- |
+| `kind`    | `"accountNode"`         | The node discriminator.                                          |
+| `name`    | `CamelCaseString`       | The name of the account.                                         |
+| `size`    | `u64` _(optional)_      | The size of the account in bytes, when the data length is fixed. |
+| `docs`    | `string[]` _(optional)_ | Markdown documentation for the account.                          |
 
 ### Children
 
-| Attribute        | Type                                                                                                 | Description                                                                                                                                                              |
-| ---------------- | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `data`           | [`NestedTypeNode`](./typeNodes/NestedTypeNode.md)<[`StructTypeNode`](./typeNodes/StructTypeNode.md)> | The type node that describes the account's data. Note that it must be a struct so we can access its fields via other nodes.                                              |
-| `pda`            | [`PdaLinkNode`](./linkNodes/PdaLinkNode.md)                                                          | (Optional) The link node that describes the account's PDA, if its address is derived from one.                                                                           |
-| `discriminators` | [`DiscriminatorNode`](./discriminatorNodes/README.md)[]                                              | (Optional) The nodes that distinguish this account from others in the program. If multiple discriminators are provided, they are combined using a logical AND operation. |
-
-## Functions
-
-### `accountNode(input)`
-
-Helper function that creates a `AccountNode` object from an input object.
-
-```ts
-const node = accountNode({
-    name: 'myCounter',
-    data: structTypeNode([
-        structFieldTypeNode({ name: 'authority', type: publicKeyTypeNode() }),
-        structFieldTypeNode({ name: 'value', type: numberTypeNode('u64') }),
-    ]),
-});
-```
+| Attribute        | Type                                                                                                 | Description                                                              |
+| ---------------- | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| `data`           | [`NestedTypeNode`](./typeNodes/NestedTypeNode.md)<[`StructTypeNode`](./typeNodes/StructTypeNode.md)> | The struct describing the account data.                                  |
+| `pda`            | [`PdaLinkNode`](./linkNodes/PdaLinkNode.md) _(optional)_                                             | A link to the PDA the account is derived from, if applicable.            |
+| `discriminators` | [`DiscriminatorNode`](./discriminatorNodes/DiscriminatorNode.md)[] _(optional)_                      | Discriminators that distinguish this account from others in the program. |
 
 ## Examples
 
 ### A fixed-size account
 
-```ts
+```typescript
 const node = accountNode({
     name: 'token',
     data: structTypeNode([
@@ -58,7 +42,7 @@ const node = accountNode({
 
 ### An account with a linked PDA
 
-```ts
+```typescript
 programNode({
     name: 'myProgram',
     accounts: [

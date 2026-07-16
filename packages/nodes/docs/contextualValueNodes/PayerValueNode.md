@@ -1,10 +1,6 @@
 # `PayerValueNode`
 
-A node that represents the main wallet that should **pay for things**.
-
-For instance, in an web application, the payer would be the user's wallet; in a terminal, the payer would be the wallet identitied by `solana address`; etc.
-
-Note that a similar node exists for representing the main wallet that should **own things** — the [`IdentityValueNode`](./IdentityValueNode.md). In practice, the payer and the identity are often the same but allowing the program maintainer to offer this distinction can be useful should they be different.
+Refers to the wallet paying for the surrounding transaction.
 
 ## Attributes
 
@@ -14,25 +10,17 @@ Note that a similar node exists for representing the main wallet that should **o
 | --------- | ------------------ | ----------------------- |
 | `kind`    | `"payerValueNode"` | The node discriminator. |
 
-### Children
+## Examples
 
-_This node has no children._
+### Create a payer value node
 
-## Functions
-
-### `payerValueNode()`
-
-Helper function that creates a `PayerValueNode` object.
-
-```ts
+```typescript
 const node = payerValueNode();
 ```
 
-## Examples
-
 ### An instruction account defaulting to the payer value
 
-```ts
+```typescript
 instructionNode({
     name: 'transfer',
     accounts: [

@@ -1,6 +1,6 @@
 # `NoneValueNode`
 
-A node that represents the absence of a value. For instance, this could be set as a default value for a field of type [`OptionTypeNode`](../typeNodes/OptionTypeNode.md).
+The "absent" value for an optional type.
 
 ## Attributes
 
@@ -10,16 +10,10 @@ A node that represents the absence of a value. For instance, this could be set a
 | --------- | ----------------- | ----------------------- |
 | `kind`    | `"noneValueNode"` | The node discriminator. |
 
-### Children
+## Examples
 
-_This node has no children._
+### Create a none value node
 
-## Functions
-
-### `noneValueNode()`
-
-Helper function that creates a `NoneValueNode` object.
-
-```ts
+```typescript
 const node = noneValueNode();
 ```

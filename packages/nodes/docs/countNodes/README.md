@@ -1,7 +1,14 @@
-# `CountNode` (abstract)
+# Count
 
-The `CountNode` type helper represents all available strategies that determine the size of a collection. Note that `CountNode` is a type alias and cannot be used directly as a node. Instead you may use one of the following nodes:
+Count nodes — strategies for sizing a homogeneous collection in serialized form.
 
-- [`FixedCountNode`](./FixedCountNode.md)
-- [`PrefixedCountNode`](./PrefixedCountNode.md)
-- [`RemainderCountNode`](./RemainderCountNode.md)
+## Nodes
+
+- [`FixedCountNode`](./FixedCountNode.md) - A count strategy that fixes the number of items at a constant value.
+- [`PrefixedCountNode`](./PrefixedCountNode.md) - A count strategy where the number of items is read from a numeric prefix.
+- [`RemainderCountNode`](./RemainderCountNode.md) - A count strategy where items are read until the buffer is exhausted.
+
+## Unions
+
+- [`CountNode`](./CountNode.md) - The composable form: any registered count node.
+- [`RegisteredCountNode`](./RegisteredCountNode.md) - Every node tagged as a count strategy.

@@ -1,6 +1,6 @@
 # `BooleanTypeNode`
 
-A node that represents a boolean value using a `NumberTypeNode`. If the number is `1`, then the boolean is `true`, otherwise it is `false`.
+A boolean serialised as a numeric value. The wrapped number type determines the byte width.
 
 ## Attributes
 
@@ -12,26 +12,15 @@ A node that represents a boolean value using a `NumberTypeNode`. If the number i
 
 ### Children
 
-| Attribute | Type                                                                             | Description                                    |
-| --------- | -------------------------------------------------------------------------------- | ---------------------------------------------- |
-| `size`    | [`NestedTypeNode`](./NestedTypeNode.md)<[`NumberTypeNode`](./NumberTypeNode.md)> | The number node used to represent the boolean. |
-
-## Functions
-
-### `booleanTypeNode(size?)`
-
-Helper function that creates a `BooleanTypeNode` object from a `NumberTypeNode` (defaulting to `u8` if not provided).
-
-```ts
-const node = booleanTypeNode(numberTypeNode('u32'));
-const implicitU8Node = booleanTypeNode(); // u8 by default
-```
+| Attribute | Type                                                                             | Description                                     |
+| --------- | -------------------------------------------------------------------------------- | ----------------------------------------------- |
+| `size`    | [`NestedTypeNode`](./NestedTypeNode.md)<[`NumberTypeNode`](./NumberTypeNode.md)> | The numeric type used to serialise the boolean. |
 
 ## Examples
 
 ### u8 booleans
 
-```ts
+```typescript
 booleanTypeNode();
 
 // true  => 0x01
@@ -40,7 +29,7 @@ booleanTypeNode();
 
 ### u32 booleans
 
-```ts
+```typescript
 booleanTypeNode(numberTypeNode('u32'));
 
 // true  => 0x01000000

@@ -1,6 +1,6 @@
 # `NumberValueNode`
 
-A node that represents a number value — e.g. `42`.
+A concrete numeric value. Stored as a 64-bit float; consumers narrow to a specific integer or float width based on the surrounding type context.
 
 ## Attributes
 
@@ -9,18 +9,12 @@ A node that represents a number value — e.g. `42`.
 | Attribute | Type                | Description             |
 | --------- | ------------------- | ----------------------- |
 | `kind`    | `"numberValueNode"` | The node discriminator. |
-| `number`  | `number`            | The number value.       |
+| `number`  | `f64`               | The numeric value.      |
 
-### Children
+## Examples
 
-_This node has no children._
+### Create a number value node from a number
 
-## Functions
-
-### `numberValueNode(number)`
-
-Helper function that creates a `NumberValueNode` object from any `number`.
-
-```ts
+```typescript
 const node = numberValueNode(42);
 ```

@@ -1,6 +1,6 @@
 # `EnumTypeNode`
 
-A node that can represent data in various states using enum variants. Each variant has a unique name and can have associated data.
+A tagged union: a numeric discriminator followed by one of several variant payloads.
 
 ## Attributes
 
@@ -12,27 +12,40 @@ A node that can represent data in various states using enum variants. Each varia
 
 ### Children
 
-| Attribute  | Type                                                                             | Description                                                                                                                                                                                                                                                                                                                                  |
-| ---------- | -------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `variants` | [`EnumVariantTypeNode`](./EnumVariantTypeNode)[]                                 | All variants the node can represent.                                                                                                                                                                                                                                                                                                         |
-| `size`     | [`NestedTypeNode`](./NestedTypeNode.md)<[`NumberTypeNode`](./NumberTypeNode.md)> | The size of the enum discriminator as a `NumberTypeNode`. This number will prepend the serialised enum variant in order to identify which variant was selected. By default, the index of the variant (starting at 0) is used as a variant discriminator. However, each variant can optionally provide their own custom discriminator number. |
+| Attribute  | Type                                                                             | Description                                           |
+| ---------- | -------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| `variants` | [`EnumVariantTypeNode`](./EnumVariantTypeNode.md)[]                              | The variants of the enum, in declaration order.       |
+| `size`     | [`NestedTypeNode`](./NestedTypeNode.md)<[`NumberTypeNode`](./NumberTypeNode.md)> | The numeric type used to serialise the discriminator. |
 
 ## Functions
 
-### `enumTypeNode(variants, options?)`
+### isDataEnum()
 
-Helper function that creates a `EnumTypeNode` object from an array of `EnumVariantTypeNode` objects and an optional `size` attribute that can be passed in the `options` object as a second argument.
+> **isDataEnum**(`node`: `EnumTypeNode`): `boolean`
+
+Returns true when at least one variant of the enum carries associated data (a tuple or struct variant).
 
 ```ts
-const node = enumTypeNode(variants);
-const nodeWithU32Discriminator = enumTypeNode(variants, { size: numberTypeNode('u32') });
+isDataEnum(enumTypeNode([enumTupleVariantTypeNode('rotate', tupleTypeNode([numberTypeNode('u32')]))])); // true
+isDataEnum(enumTypeNode([enumEmptyVariantTypeNode('flip')])); // false
+```
+
+### isScalarEnum()
+
+> **isScalarEnum**(`node`: `EnumTypeNode`): `boolean`
+
+Returns true when every variant of the enum is empty, meaning the enum carries no associated data.
+
+```ts
+isScalarEnum(enumTypeNode([enumEmptyVariantTypeNode('flip')])); // true
+isScalarEnum(enumTypeNode([enumTupleVariantTypeNode('rotate', tupleTypeNode([numberTypeNode('u32')]))])); // false
 ```
 
 ## Examples
 
 ### Enum with u8 discriminator
 
-```ts
+```typescript
 enumTypeNode([
     enumEmptyVariantTypeNode('flip'),
     enumTupleVariantTypeNode('rotate', tupleTypeNode([numberTypeNode('u32')])),

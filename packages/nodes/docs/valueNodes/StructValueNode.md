@@ -1,6 +1,6 @@
 # `StructValueNode`
 
-A node that represents the value of a struct.
+A concrete struct value: a list of named field values.
 
 ## Attributes
 
@@ -12,17 +12,15 @@ A node that represents the value of a struct.
 
 ### Children
 
-| Attribute | Type                                                  | Description                            |
-| --------- | ----------------------------------------------------- | -------------------------------------- |
-| `fields`  | [`StructFieldValueNode`](./StructFieldValueNode.md)[] | The value of all fields in the struct. |
+| Attribute | Type                                                  | Description                           |
+| --------- | ----------------------------------------------------- | ------------------------------------- |
+| `fields`  | [`StructFieldValueNode`](./StructFieldValueNode.md)[] | The named fields of the struct value. |
 
-## Functions
+## Examples
 
-### `structValueNode(fields)`
+### Create a struct value node from field value nodes
 
-Helper function that creates a `StructValueNode` object from an array of field value nodes.
-
-```ts
+```typescript
 const node = structValueNode([
     structFieldValueNode('name', stringValueNode('Alice')),
     structFieldValueNode('age', numberValueNode(42)),

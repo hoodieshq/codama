@@ -1,6 +1,6 @@
 # `SomeValueNode`
 
-A node that represents the presence of a value. For instance, this could be set as a default value for a field of type [`OptionTypeNode`](../typeNodes/OptionTypeNode.md).
+The "present" value for an optional type, wrapping a concrete value node.
 
 ## Attributes
 
@@ -12,16 +12,14 @@ A node that represents the presence of a value. For instance, this could be set 
 
 ### Children
 
-| Attribute | Type                       | Description                          |
-| --------- | -------------------------- | ------------------------------------ |
-| `value`   | [`ValueNode`](./README.md) | The value that is marked as present. |
+| Attribute | Type                          | Description        |
+| --------- | ----------------------------- | ------------------ |
+| `value`   | [`ValueNode`](./ValueNode.md) | The wrapped value. |
 
-## Functions
+## Examples
 
-### `someValueNode(value)`
+### Create a some value node from a value node
 
-Helper function that creates a `SomeValueNode` object from a value node
-
-```ts
+```typescript
 const node = someValueNode(numberValueNode(42));
 ```

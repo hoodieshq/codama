@@ -1,7 +1,14 @@
-# `DiscriminatorNode` (abstract)
+# Discriminator
 
-The `DiscriminatorNode` type helper represents all available strategies that help distinguish blocks of data — such as accounts and instructions. Note that `DiscriminatorNode` is a type alias and cannot be used directly as a node. Instead you may use one of the following nodes:
+Discriminator nodes — strategies for distinguishing one account or instruction from another.
 
-- [`ConstantDiscriminatorNode`](./ConstantDiscriminatorNode.md)
-- [`FieldDiscriminatorNode`](./FieldDiscriminatorNode.md)
-- [`SizeDiscriminatorNode`](./SizeDiscriminatorNode.md)
+## Nodes
+
+- [`ConstantDiscriminatorNode`](./ConstantDiscriminatorNode.md) - Identifies a node by a constant value at a known byte offset (e.g. a magic header).
+- [`FieldDiscriminatorNode`](./FieldDiscriminatorNode.md) - Identifies a node by the value of a named field at a known byte offset.
+- [`SizeDiscriminatorNode`](./SizeDiscriminatorNode.md) - Identifies a node by its expected total byte size.
+
+## Unions
+
+- [`DiscriminatorNode`](./DiscriminatorNode.md) - The composable form: any registered discriminator node.
+- [`RegisteredDiscriminatorNode`](./RegisteredDiscriminatorNode.md) - Every node tagged as a discriminator strategy.

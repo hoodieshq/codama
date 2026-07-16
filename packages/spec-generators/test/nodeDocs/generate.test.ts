@@ -3,7 +3,9 @@ import { getSpec } from '@codama/spec';
 import { generateDocs as generateSpecDocs, LocalDocsPathConfig, relativeLinks } from '@codama/spec/docs';
 import { describe, expect, it } from 'vitest';
 
-import { getRenderMap, validateRenderOptions } from '../../src/nodeDocs';
+import { extractTsdocDocs, getRenderMap, validateRenderOptions } from '../../src/nodeDocs';
+
+const docs = extractTsdocDocs();
 
 describe('validateRenderOptions', () => {
     it('throws when targetSpecMajor does not match the spec major', () => {
@@ -23,7 +25,7 @@ describe('validateRenderOptions', () => {
 });
 
 describe('getRenderMap', () => {
-    const map = getRenderMap(getSpec(), { targetSpecMajor: 1 });
+    const map = getRenderMap(getSpec(), { targetSpecMajor: 1 }, docs);
 
     it('produces a markdown entry per spec page, including subdir + index pages', () => {
         expect(map.has('AccountNode.md')).toBe(true);

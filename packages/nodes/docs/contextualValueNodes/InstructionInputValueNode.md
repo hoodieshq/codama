@@ -1,7 +1,9 @@
 # `InstructionInputValueNode` (abstract)
 
-The `InstructionInputValueNode` type helper represents all values that can be used as a default value for an instruction account or an instruction argument. Note that `InstructionInputValueNode` is a type alias and cannot be used directly as a node. Instead you may use one of the following nodes:
+Anything that can be used as the input value for an instruction account or argument default. Covers concrete values, contextual references, and program links.
 
-- [`ContextualValueNode`](./README.md) (abstract)
+One of the following:
+
+- [`ContextualValueNode`](./ContextualValueNode.md)
 - [`ProgramLinkNode`](../linkNodes/ProgramLinkNode.md)
-- [`ValueNode`](../valueNodes/README.md) (abstract)
+- [`ValueNode`](../valueNodes/ValueNode.md)

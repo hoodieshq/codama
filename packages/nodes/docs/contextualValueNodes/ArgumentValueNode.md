@@ -1,35 +1,27 @@
 # `ArgumentValueNode`
 
-A node that refers to an argument — e.g. an instruction argument in the context of an instruction.
+Refers to a named argument of the surrounding instruction.
 
 ## Attributes
 
 ### Data
 
-| Attribute | Type                  | Description               |
-| --------- | --------------------- | ------------------------- |
-| `kind`    | `"argumentValueNode"` | The node discriminator.   |
-| `name`    | `CamelCaseString`     | The name of the argument. |
-
-### Children
-
-_This node has no children._
-
-## Functions
-
-### `argumentValueNode(name)`
-
-Helper function that creates a `ArgumentValueNode` object from the argument name.
-
-```ts
-const node = argumentValueNode('amount');
-```
+| Attribute | Type                  | Description                          |
+| --------- | --------------------- | ------------------------------------ |
+| `kind`    | `"argumentValueNode"` | The node discriminator.              |
+| `name`    | `CamelCaseString`     | The name of the referenced argument. |
 
 ## Examples
 
+### Create an argument value node from an argument name
+
+```typescript
+const node = argumentValueNode('amount');
+```
+
 ### An instruction argument defaulting to another argument
 
-```ts
+```typescript
 instructionNode({
     name: 'mint',
     arguments: [

@@ -1,6 +1,6 @@
 # `ConditionalValueNode`
 
-A value node that differs based on a condition.
+A branching contextual value. The condition resolves to a value at instruction time; that result selects between `ifTrue` and `ifFalse`.
 
 ## Attributes
 
@@ -12,20 +12,18 @@ A value node that differs based on a condition.
 
 ### Children
 
-| Attribute   | Type                                                                                                                                          | Description                                                                                                                          |
-| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| `condition` | [`AccountValueNode`](./AccountValueNode.md) \| [`ArgumentValueNode`](./ArgumentValueNode.md) \| [`ResolverValueNode`](./ResolverValueNode.md) | The condition that must be met. If it is an argument or value node, the `value` attribute may be used to assert on a specific value. |
-| `value`     | [`ValueNode`](../valueNodes/README.md)                                                                                                        | (Optional) If provided, the `condition` must be equal to this value. Otherwise, the `condition` must simply exist.                   |
-| `ifTrue`    | [`InstructionInputValueNode`](./InstructionInputValueNode.md)                                                                                 | (Optional) The value to use if the condition is true.                                                                                |
-| `ifFalse`   | [`InstructionInputValueNode`](./InstructionInputValueNode.md)                                                                                 | (Optional) The value to use if the condition is false.                                                                               |
+| Attribute   | Type                                                                       | Description                                                                     |
+| ----------- | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| `condition` | [`ConditionalValueCondition`](./ConditionalValueCondition.md)              | The value whose evaluation drives the branch.                                   |
+| `value`     | [`ValueNode`](../valueNodes/ValueNode.md) _(optional)_                     | When present, the condition result is compared for equality against this value. |
+| `ifTrue`    | [`InstructionInputValueNode`](./InstructionInputValueNode.md) _(optional)_ | The value used when the condition resolves truthy (or matches `value`).         |
+| `ifFalse`   | [`InstructionInputValueNode`](./InstructionInputValueNode.md) _(optional)_ | The value used when the condition resolves falsy (or does not match `value`).   |
 
-## Functions
+## Examples
 
-### `conditionalValueNode(input)`
+### Create a conditional value node from an input object
 
-Helper function that creates a `ConditionalValueNode` object from an input object.
-
-```ts
+```typescript
 const node = conditionalValueNode({
     condition: argumentValueNode('amount'),
     value: numberValueNode(0),
@@ -34,11 +32,9 @@ const node = conditionalValueNode({
 });
 ```
 
-## Examples
-
 ### An instruction account that defaults to another account if a condition is met
 
-```ts
+```typescript
 instructionNode({
     name: 'transfer',
     accounts: [

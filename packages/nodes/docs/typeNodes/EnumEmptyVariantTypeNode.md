@@ -1,27 +1,27 @@
 # `EnumEmptyVariantTypeNode`
 
-A node that defines an enum variant with no data.
+A unit-style variant of an enum that carries no payload.
 
 ## Attributes
 
 ### Data
 
-| Attribute       | Type                         | Description                                                                                                     |
-| --------------- | ---------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `kind`          | `"enumEmptyVariantTypeNode"` | The node discriminator.                                                                                         |
-| `name`          | `CamelCaseString`            | The name of the enum variant.                                                                                   |
-| `discriminator` | `number`                     | (Optional) The variant's discriminator value. Defaults to the index of the variant in the enum (starting at 0). |
+| Attribute       | Type                         | Description                                                                                          |
+| --------------- | ---------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `kind`          | `"enumEmptyVariantTypeNode"` | The node discriminator.                                                                              |
+| `name`          | `CamelCaseString`            | The name of the variant.                                                                             |
+| `discriminator` | `u32` _(optional)_           | Explicit discriminator value. When omitted, the discriminator is inferred from the variant position. |
 
 ### Children
 
-_This node has no children._
+| Attribute | Type                                                                               | Description                                               |
+| --------- | ---------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| `display` | [`EnumVariantDisplayNode`](../displayNodes/EnumVariantDisplayNode.md) _(optional)_ | Display metadata describing how the variant is presented. |
 
-## Functions
+## Examples
 
-### `enumEmptyVariantTypeNode(name)`
+### Create an empty enum variant type node from a name
 
-Helper function that creates a `EnumEmptyVariantTypeNode` object from its name.
-
-```ts
+```typescript
 const node = enumEmptyVariantTypeNode('myVariantName');
 ```

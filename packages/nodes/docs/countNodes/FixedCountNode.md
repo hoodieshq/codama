@@ -1,34 +1,26 @@
 # `FixedCountNode`
 
-A node that represents a count strategy where **the number of items is known and fixed**. This enables nodes such as [`ArrayTypeNode`](../typeNodes/ArrayTypeNode.md) to represent arrays of a fixed length.
+A count strategy that fixes the number of items at a constant value.
 
 ## Attributes
 
 ### Data
 
-| Attribute | Type               | Description               |
-| --------- | ------------------ | ------------------------- |
-| `kind`    | `"fixedCountNode"` | The node discriminator.   |
-| `value`   | `number`           | The fixed count of items. |
-
-### Children
-
-_This node has no children._
-
-## Functions
-
-### `fixedCountNode(value)`
-
-Helper function that creates a `FixedCountNode` object from a number.
-
-```ts
-const node = fixedCountNode(42);
-```
+| Attribute | Type               | Description                |
+| --------- | ------------------ | -------------------------- |
+| `kind`    | `"fixedCountNode"` | The node discriminator.    |
+| `value`   | `u64`              | The fixed number of items. |
 
 ## Examples
 
+### Create a fixed count node from a number
+
+```typescript
+const node = fixedCountNode(42);
+```
+
 ### An array of three public keys
 
-```ts
+```typescript
 arrayTypeNode(publicKeyTypeNode(), fixedCountNode(3));
 ```

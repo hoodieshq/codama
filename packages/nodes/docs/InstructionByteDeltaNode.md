@@ -1,49 +1,39 @@
 # `InstructionByteDeltaNode`
 
-This node represents a difference in bytes stored on-chain from executing an instruction. For instance, if an instruction creates a new account of 42 bytes, this node can provide this information. This enables clients to allocate the right amount of lamports to cover the cost of executing the instruction.
+A byte-size delta applied when computing rent or buffer size — typically used by instructions that resize accounts.
 
 ## Attributes
 
 ### Data
 
-| Attribute    | Type                         | Description                                                                                                                                                                       |
-| ------------ | ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `kind`       | `"instructionByteDeltaNode"` | The node discriminator.                                                                                                                                                           |
-| `withHeader` | `boolean`                    | (Optional) Whether or not we should add the account header size — i.e. 128 bytes — to the value. Default to `false` when the value is a `ResolverValueNode` and `true` otherwise. |
-| `subtract`   | `boolean`                    | (Optional) Whether or not the provided value should be subtracted from the total byte delta. Defaults to `false`.                                                                 |
+| Attribute    | Type                         | Description                                                                                       |
+| ------------ | ---------------------------- | ------------------------------------------------------------------------------------------------- |
+| `kind`       | `"instructionByteDeltaNode"` | The node discriminator.                                                                           |
+| `withHeader` | `boolean`                    | Whether the delta includes the account header overhead.                                           |
+| `subtract`   | `boolean` _(optional)_       | When `true`, the delta is subtracted from the running size instead of added. Defaults to `false`. |
 
 ### Children
 
-| Attribute | Type                                                                                                                                                                                                                                                    | Description                                                                                                                                                                                                                                                                                                                                                        |
-| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `value`   | [`AccountLinkNode`](./linkNodes/AccountLinkNode.md) \| [`ArgumentValueNode`](./contextualValueNodes/ArgumentValueNode.md) \| [`NumberValueNode`](./valueNodes/NumberValueNode.md) \| [`ResolverValueNode`](./contextualValueNodes/ResolverValueNode.md) | The value representing the byte delta. If an `AccountLinkNode` is used, the size of the linked account will be used. If an `ArgumentValueNode` is used, the value of the instruction argument will be used. If a `NumberValueNode` is used, that explicit number will be used. Otherwise, a `ResolverValueNode` can be used as a fallback for more complex values. |
-
-## Functions
-
-### `instructionByteDeltaNode(value, options?)`
-
-Helper function that creates a `InstructionByteDeltaNode` object from a value node and some options.
-
-```ts
-const node = instructionByteDeltaNode(numberValueNode(42), { withHeader: false });
-```
+| Attribute | Type                                                          | Description                                                                                        |
+| --------- | ------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `value`   | [`InstructionByteDeltaValue`](./InstructionByteDeltaValue.md) | The source of the delta value — a literal number, a referenced account or argument, or a resolver. |
 
 ## Examples
 
 ### A byte delta that represents a new account
 
-```ts
+```typescript
 instructionByteDeltaNode(accountLinkNode('token'));
 ```
 
 ### A byte delta that represents an account deletion
 
-```ts
+```typescript
 instructionByteDeltaNode(accountLinkNode('token'), { subtract: true });
 ```
 
 ### A byte delta that uses an argument value to increase the space of an account
 
-```ts
+```typescript
 instructionByteDeltaNode(argumentValueNode('additionalSpace'), { withHeader: false });
 ```

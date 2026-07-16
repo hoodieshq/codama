@@ -1,29 +1,27 @@
 # `InstructionAccountLinkNode`
 
-This node represents a reference to an existing [`InstructionAccountNode`](../InstructionAccountNode.md) in the Codama IDL.
+A reference to an account of another instruction.
 
 ## Attributes
 
 ### Data
 
-| Attribute | Type                           | Description                                                                                   |
-| --------- | ------------------------------ | --------------------------------------------------------------------------------------------- |
-| `kind`    | `"instructionAccountLinkNode"` | The node discriminator.                                                                       |
-| `name`    | `CamelCaseString`              | The name of the [`InstructionAccountNode`](../InstructionAccountNode.md) we are referring to. |
+| Attribute | Type                           | Description                                     |
+| --------- | ------------------------------ | ----------------------------------------------- |
+| `kind`    | `"instructionAccountLinkNode"` | The node discriminator.                         |
+| `name`    | `CamelCaseString`              | The name of the referenced instruction account. |
 
 ### Children
 
-| Attribute     | Type                                              | Description                                                                                                                                                                                          |
-| ------------- | ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `instruction` | [`InstructionLinkNode`](./InstructionLinkNode.md) | (Optional) The instruction associated with the linked account. Default to using the instruction we are currently under. Note that the instruction itself can point to a different program is needed. |
+| Attribute     | Type                                                           | Description                                                                                              |
+| ------------- | -------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `instruction` | [`InstructionLinkNode`](./InstructionLinkNode.md) _(optional)_ | The instruction the referenced account belongs to. When omitted, the surrounding instruction is assumed. |
 
-## Functions
+## Examples
 
-### `instructionAccountLinkNode(name, instruction?)`
+### Create an instruction account link node from an account name
 
-Helper function that creates an `InstructionAccountLinkNode` object from the name of the `InstructionAccountNode` we are referring to. If the account is from another instruction, the `instruction` parameter must be provided as either a `string` or a `InstructionLinkNode`. When providing an `InstructionLinkNode`, we can also provide a `ProgramLinkNode` to point to a different program.
-
-```ts
+```typescript
 // Links to an account in the current instruction.
 const node = instructionAccountLinkNode('myAccount');
 

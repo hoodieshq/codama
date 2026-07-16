@@ -1,6 +1,6 @@
 # `ArrayValueNode`
 
-A node that represents an array of values — e.g. `[1, 2, 3]`.
+A concrete array value: a list of value nodes.
 
 ## Attributes
 
@@ -12,16 +12,14 @@ A node that represents an array of values — e.g. `[1, 2, 3]`.
 
 ### Children
 
-| Attribute | Type                         | Description                      |
-| --------- | ---------------------------- | -------------------------------- |
-| `items`   | [`ValueNode`](./README.md)[] | The value of all items in array. |
+| Attribute | Type                            | Description                       |
+| --------- | ------------------------------- | --------------------------------- |
+| `items`   | [`ValueNode`](./ValueNode.md)[] | The items of the array, in order. |
 
-## Functions
+## Examples
 
-### `arrayValueNode(items)`
+### Create an array value node from value nodes
 
-Helper function that creates a `ArrayValueNode` object from an array of value nodes.
-
-```ts
+```typescript
 const node = arrayValueNode([numberValueNode(1), numberValueNode(2), numberValueNode(3)]);
 ```

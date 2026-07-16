@@ -1,6 +1,6 @@
 # `MapEntryValueNode`
 
-A node that represents the concrete value of a map entry. For example, the map `{ total: 42 }` has only one entry such that its key is a `"total"` string and its value is a `42` number.
+A single (key, value) pair inside a `mapValueNode`.
 
 ## Attributes
 
@@ -12,17 +12,15 @@ A node that represents the concrete value of a map entry. For example, the map `
 
 ### Children
 
-| Attribute | Type                       | Description             |
-| --------- | -------------------------- | ----------------------- |
-| `key`     | [`ValueNode`](./README.md) | The key of the entry.   |
-| `value`   | [`ValueNode`](./README.md) | The value of the entry. |
+| Attribute | Type                          | Description      |
+| --------- | ----------------------------- | ---------------- |
+| `key`     | [`ValueNode`](./ValueNode.md) | The entry key.   |
+| `value`   | [`ValueNode`](./ValueNode.md) | The entry value. |
 
-## Functions
+## Examples
 
-### `mapEntryValueNode(key, value)`
+### Create a map entry value node from a key and a value
 
-Helper function that creates a `MapEntryValueNode` object from two `ValueNode` objects. The first one represents the key of the entry, and the second one represents the value of the entry.
-
-```ts
+```typescript
 const node = mapEntryValueNode(stringValueNode('total'), numberValueNode(42));
 ```

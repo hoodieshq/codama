@@ -1,42 +1,31 @@
 # `InstructionRemainingAccountsNode`
 
-This node represents a list of remaining accounts for an instruction. It can be used to represent a dynamic list of accounts that are not explicitly defined in the instruction but may be required for the instruction to execute.
+A "remaining accounts" slot in an instruction — a variable-length tail of accounts derived from a value.
 
 ## Attributes
 
 ### Data
 
-| Attribute    | Type                                 | Description                                                                                                                                                                   |
-| ------------ | ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `kind`       | `"instructionRemainingAccountsNode"` | The node discriminator.                                                                                                                                                       |
-| `docs`       | `string[]`                           | Markdown documentation explaining the remaining accounts of an instruction.                                                                                                   |
-| `isOptional` | `boolean`                            | (Optional) Whether the remaining accounts are optional. Defaults to `false`.                                                                                                  |
-| `isSigner`   | `boolean` \| `"either"`              | (Optional) Whether the remaining accounts are signers. If `true`, all are. If `false`, none are. If `"either"`, they may each either be a signer or not. Defaults to `false`. |
+| Attribute    | Type                                     | Description                                                  |
+| ------------ | ---------------------------------------- | ------------------------------------------------------------ |
+| `kind`       | `"instructionRemainingAccountsNode"`     | The node discriminator.                                      |
+| `isOptional` | `boolean` _(optional)_                   | Whether the remaining-accounts tail may be empty.            |
+| `isSigner`   | `true \| false \| "either"` _(optional)_ | Whether each remaining account must sign the transaction.    |
+| `isWritable` | `boolean` _(optional)_                   | Whether the instruction may write to each remaining account. |
+| `docs`       | `string[]` _(optional)_                  | Markdown documentation for the remaining-accounts slot.      |
 
 ### Children
 
-| Attribute | Type                                                                                                                                     | Description                                                                                                                                                                                                                                                                                    |
-| --------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `value`   | [`ArgumentValueNode`](./contextualValueNodes/ArgumentValueNode.md) \| [`ResolverValueNode`](./contextualValueNodes/ResolverValueNode.md) | The node representing how these remaining accounts are gathered. If a `ArgumentValueNode` is provided, a new argument will be used to represent this array of accounts from the provided name. Otherwise, a `ResolverValueNode` can be used as a fallback to represent more complex scenarios. |
-
-## Functions
-
-### `instructionRemainingAccountsNode(value, options?)`
-
-Helper function that creates a `InstructionRemainingAccountsNode` object from a value node and some options.
-
-```ts
-const node = instructionRemainingAccountsNode(argumentValueNode('signers'), {
-    isSigner: true,
-    isOptional: true,
-});
-```
+| Attribute | Type                                                                                            | Description                                                                           |
+| --------- | ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| `value`   | [`InstructionRemainingAccountsValue`](./InstructionRemainingAccountsValue.md)                   | The source of the remaining-accounts list — a referenced argument or a resolver.      |
+| `display` | [`InstructionAccountDisplayNode`](./displayNodes/InstructionAccountDisplayNode.md) _(optional)_ | Display metadata describing how the remaining-accounts group is presented as a whole. |
 
 ## Examples
 
 ### Optional remaining signers
 
-```ts
+```typescript
 instructionRemainingAccountsNode(argumentValueNode('authorities'), {
     isSigner: true,
     isOptional: true,
@@ -45,7 +34,7 @@ instructionRemainingAccountsNode(argumentValueNode('authorities'), {
 
 ### Remaining accounts that may or may not be signers
 
-```ts
+```typescript
 instructionRemainingAccountsNode(argumentValueNode('authorities'), {
     isSigner: 'either',
 });
@@ -53,7 +42,7 @@ instructionRemainingAccountsNode(argumentValueNode('authorities'), {
 
 ### Remaining accounts using a resolver
 
-```ts
+```typescript
 instructionRemainingAccountsNode(
     resolverValueNode('resolveTransferRemainingAccounts', {
         docs: ['Provide authorities as remaining accounts if and only if the asset has a multisig set up.'],

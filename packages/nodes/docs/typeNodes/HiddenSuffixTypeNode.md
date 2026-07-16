@@ -1,10 +1,6 @@
 # `HiddenSuffixTypeNode`
 
-A node that wraps a type node and whilst silently consuming a suffix of constant values.
-
-When encoding, the constant values are written after the child node. When decoding, the suffixed constant values are consumed and checked against the expected values before being discarded.
-
-This node can be used to create [`NestedTypeNodes`](./NestedTypeNode.md).
+Suffixes another type with a list of constant values that are written and read but not surfaced as fields to consumers.
 
 ## Attributes
 
@@ -16,28 +12,24 @@ This node can be used to create [`NestedTypeNodes`](./NestedTypeNode.md).
 
 ### Children
 
-| Attribute | Type                                                       | Description                                |
-| --------- | ---------------------------------------------------------- | ------------------------------------------ |
-| `type`    | [`TypeNode`](./README.md)                                  | The type node to wrap.                     |
-| `suffix`  | [`ConstantValueNode`](./valueNodes/ConstantValueNode.md)[] | The array of constant suffixes to consume. |
+| Attribute | Type                                                        | Description                                                            |
+| --------- | ----------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `type`    | [`TypeNode`](./TypeNode.md)                                 | The wrapped type whose serialisation is followed by the hidden suffix. |
+| `suffix`  | [`ConstantValueNode`](../valueNodes/ConstantValueNode.md)[] | The constant values written after the wrapped type, in order.          |
 
-## Functions
+## Examples
 
-### `hiddenSuffixTypeNode(type, suffix)`
+### Create a hidden suffix type node from a type node and constant value nodes
 
-Helper function that creates a `HiddenSuffixTypeNode` object from a type node and an array of constant value nodes.
-
-```ts
+```typescript
 const node = hiddenSuffixTypeNode(numberTypeNode('u32'), [
     constantValueNode(bytesTypeNode(), bytesValueNode('base16', 'ffff')),
 ]);
 ```
 
-## Examples
-
 ### A number suffixed with 0xFFFF
 
-```ts
+```typescript
 hiddenSuffixTypeNode(numberTypeNode('u32'), [constantValueNode(bytesTypeNode(), bytesValueNode('base16', 'ffff'))]);
 
 // 42 => 0x2A000000FFFF
@@ -45,7 +37,7 @@ hiddenSuffixTypeNode(numberTypeNode('u32'), [constantValueNode(bytesTypeNode(), 
 
 ### A fixed UTF-8 string suffixed with "Hello"
 
-```ts
+```typescript
 hiddenSuffixTypeNode(fixedSizeTypeNode(stringTypeNode('utf8'), 10), [
     constantValueNode(stringTypeNode('utf8'), stringValueNode('Hello')),
 ]);

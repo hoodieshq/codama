@@ -1,51 +1,41 @@
 # `ConstantNode`
 
-This node represents a program-level constant with a name, type, and value.
+A named constant exposed by the program: a typed value associated with a name.
 
 ## Attributes
 
 ### Data
 
-| Attribute | Type              | Description                              |
-| --------- | ----------------- | ---------------------------------------- |
-| `kind`    | `"constantNode"`  | The node discriminator.                  |
-| `name`    | `CamelCaseString` | The name of the constant.                |
-| `docs`    | `string[]`        | Markdown documentation for the constant. |
+| Attribute | Type                    | Description                              |
+| --------- | ----------------------- | ---------------------------------------- |
+| `kind`    | `"constantNode"`        | The node discriminator.                  |
+| `name`    | `CamelCaseString`       | The name of the constant.                |
+| `docs`    | `string[]` _(optional)_ | Markdown documentation for the constant. |
 
 ### Children
 
-| Attribute | Type                                  | Description                     |
-| --------- | ------------------------------------- | ------------------------------- |
-| `type`    | [`TypeNode`](./typeNodes/README.md)   | The type of the constant value. |
-| `value`   | [`ValueNode`](./valueNodes/README.md) | The constant value.             |
-
-## Functions
-
-### `constantNode(name, type, value, docs?)`
-
-Helper function that creates a `ConstantNode` object from its attributes.
-
-```ts
-const node = constantNode('maxSize', numberTypeNode('u64'), numberValueNode(1000));
-```
+| Attribute | Type                                     | Description                         |
+| --------- | ---------------------------------------- | ----------------------------------- |
+| `type`    | [`TypeNode`](./typeNodes/TypeNode.md)    | The type of the constant.           |
+| `value`   | [`ValueNode`](./valueNodes/ValueNode.md) | The concrete value of the constant. |
 
 ## Examples
 
 ### Numeric Constant
 
-```ts
+```typescript
 const node = constantNode('maxSize', numberTypeNode('u32'), numberValueNode(100));
 ```
 
 ### Bytes Constant
 
-```ts
+```typescript
 const node = constantNode('seedPrefix', bytesTypeNode(), bytesValueNode('base16', '74657374'));
 ```
 
 ### With Documentation
 
-```ts
+```typescript
 const node = constantNode('maxItems', numberTypeNode('u64'), numberValueNode(1000), [
     'The maximum number of items allowed.',
 ]);

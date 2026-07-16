@@ -1,6 +1,6 @@
 # `TupleValueNode`
 
-A node that represents the value of a tuple — e.g. `("Alice", 42)`.
+A concrete tuple value: a fixed-length sequence of positional value nodes.
 
 ## Attributes
 
@@ -12,16 +12,14 @@ A node that represents the value of a tuple — e.g. `("Alice", 42)`.
 
 ### Children
 
-| Attribute | Type                         | Description                          |
-| --------- | ---------------------------- | ------------------------------------ |
-| `items`   | [`ValueNode`](./README.md)[] | The value of all items in the tuple. |
+| Attribute | Type                            | Description                                  |
+| --------- | ------------------------------- | -------------------------------------------- |
+| `items`   | [`ValueNode`](./ValueNode.md)[] | The positional items of the tuple, in order. |
 
-## Functions
+## Examples
 
-### `tupleValueNode(items)`
+### Create a tuple value node from value nodes
 
-Helper function that creates a `TupleValueNode` object from an array of value nodes.
-
-```ts
+```typescript
 const node = tupleValueNode([stringValueNode('Alice'), numberValueNode(42)]);
 ```

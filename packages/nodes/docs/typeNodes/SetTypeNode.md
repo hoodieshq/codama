@@ -1,6 +1,6 @@
 # `SetTypeNode`
 
-A node that represents a set of unique items. The type of each item is defined by the `item` child node and the length of the set is determined by the `count` child node.
+A unique-valued collection. The item type is defined by `item`; the size is determined by the `count` strategy.
 
 ## Attributes
 
@@ -12,26 +12,16 @@ A node that represents a set of unique items. The type of each item is defined b
 
 ### Children
 
-| Attribute | Type                                   | Description                                    |
-| --------- | -------------------------------------- | ---------------------------------------------- |
-| `item`    | [`TypeNode`](./README.md)              | The type of each item in the set.              |
-| `count`   | [`CountNode`](../countNodes/README.md) | The strategy to determine the size of the set. |
-
-## Functions
-
-### `setTypeNode(item, count)`
-
-Helper function that creates a `SetTypeNode` object from a `TypeNode` and a `CountNode`.
-
-```ts
-const node = setTypeNode(publicKeyTypeNode(), prefixedCountNode(numberTypeNode('u32')));
-```
+| Attribute | Type                                      | Description                                         |
+| --------- | ----------------------------------------- | --------------------------------------------------- |
+| `item`    | [`TypeNode`](./TypeNode.md)               | The type of each item in the set.                   |
+| `count`   | [`CountNode`](../countNodes/CountNode.md) | The strategy used to determine the number of items. |
 
 ## Examples
 
 ### u32 prefixed array of u8 numbers
 
-```ts
+```typescript
 setTypeNode(numberTypeNode('u8'), prefixedCountNode(numberTypeNode('u32')));
 
 // Set (1, 2, 3) => 0x03000000010203

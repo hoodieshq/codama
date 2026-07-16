@@ -1,6 +1,6 @@
 # `ErrorNode`
 
-This node defines an error that can be returned by a program.
+A program error — a numeric code paired with a name and human-readable message.
 
 ![Diagram](https://github.com/codama-idl/codama/assets/3642397/0bde98ea-0327-404b-bf38-137d105826b0)
 
@@ -8,25 +8,19 @@ This node defines an error that can be returned by a program.
 
 ### Data
 
-| Attribute | Type              | Description                                      |
-| --------- | ----------------- | ------------------------------------------------ |
-| `kind`    | `"errorNode"`     | The node discriminator.                          |
-| `name`    | `CamelCaseString` | The name of the error.                           |
-| `code`    | `number`          | The error code.                                  |
-| `message` | `string`          | A human-friendly message describing the error.   |
-| `docs`    | `string[]`        | Additional Markdown documentation for the error. |
+| Attribute | Type                    | Description                                     |
+| --------- | ----------------------- | ----------------------------------------------- |
+| `kind`    | `"errorNode"`           | The node discriminator.                         |
+| `name`    | `CamelCaseString`       | The name of the error.                          |
+| `code`    | `u32`                   | The numeric error code returned by the program. |
+| `message` | `string`                | A human-readable description of the error.      |
+| `docs`    | `string[]` _(optional)_ | Markdown documentation for the error.           |
 
-### Children
+## Examples
 
-_This node has no children._
+### Create an error node from an input object
 
-## Functions
-
-### `errorNode(input)`
-
-Helper function that creates a `ErrorNode` object from an input object.
-
-```ts
+```typescript
 const node = errorNode({
     name: 'invalidAmountArgument',
     code: 1,

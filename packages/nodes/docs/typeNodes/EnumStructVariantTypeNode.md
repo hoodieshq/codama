@@ -1,30 +1,29 @@
 # `EnumStructVariantTypeNode`
 
-A node that defines an enum variant with a struct data type.
+A variant of an enum that carries a struct payload (named fields).
 
 ## Attributes
 
 ### Data
 
-| Attribute       | Type                          | Description                                                                                                     |
-| --------------- | ----------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `kind`          | `"enumStructVariantTypeNode"` | The node discriminator.                                                                                         |
-| `name`          | `CamelCaseString`             | The name of the enum variant.                                                                                   |
-| `discriminator` | `number`                      | (Optional) The variant's discriminator value. Defaults to the index of the variant in the enum (starting at 0). |
+| Attribute       | Type                          | Description                                                                                          |
+| --------------- | ----------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `kind`          | `"enumStructVariantTypeNode"` | The node discriminator.                                                                              |
+| `name`          | `CamelCaseString`             | The name of the variant.                                                                             |
+| `discriminator` | `u32` _(optional)_            | Explicit discriminator value. When omitted, the discriminator is inferred from the variant position. |
 
 ### Children
 
-| Attribute | Type                                                                             | Description                           |
-| --------- | -------------------------------------------------------------------------------- | ------------------------------------- |
-| `struct`  | [`NestedTypeNode`](./NestedTypeNode.md)<[`StructTypeNode`](./StructTypeNode.md)> | The struct data type for the variant. |
+| Attribute | Type                                                                               | Description                                               |
+| --------- | ---------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| `struct`  | [`NestedTypeNode`](./NestedTypeNode.md)<[`StructTypeNode`](./StructTypeNode.md)>   | The struct of named fields carried by the variant.        |
+| `display` | [`EnumVariantDisplayNode`](../displayNodes/EnumVariantDisplayNode.md) _(optional)_ | Display metadata describing how the variant is presented. |
 
-## Functions
+## Examples
 
-### `enumStructVariantTypeNode(name, struct, discriminator?)`
+### Create a struct enum variant type node from a name and a struct
 
-Helper function that creates a `EnumStructVariantTypeNode` object from its name and data.
-
-```ts
+```typescript
 const node = enumStructVariantTypeNode(
     'coordinates',
     structTypeNode([

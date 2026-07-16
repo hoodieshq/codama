@@ -1,6 +1,6 @@
 # `StringValueNode`
 
-A node that represents a string value — e.g. `"Hello"`.
+A concrete string value.
 
 ## Attributes
 
@@ -11,16 +11,10 @@ A node that represents a string value — e.g. `"Hello"`.
 | `kind`    | `"stringValueNode"` | The node discriminator. |
 | `string`  | `string`            | The string value.       |
 
-### Children
+## Examples
 
-_This node has no children._
+### Create a string value node from a string
 
-## Functions
-
-### `stringValueNode(string)`
-
-Helper function that creates a `StringValueNode` object from a string value.
-
-```ts
+```typescript
 const node = stringValueNode('Hello');
 ```

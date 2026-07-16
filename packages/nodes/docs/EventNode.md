@@ -1,45 +1,29 @@
 # `EventNode`
 
-This node represents an event emitted by a program.
+A program event: its data shape and optional discriminators used to identify it on the wire.
 
 ## Attributes
 
 ### Data
 
-| Attribute | Type              | Description                                      |
-| --------- | ----------------- | ------------------------------------------------ |
-| `kind`    | `"eventNode"`     | The node discriminator.                          |
-| `name`    | `CamelCaseString` | The name of the event.                           |
-| `docs`    | `string[]`        | Additional Markdown documentation for the event. |
+| Attribute | Type                    | Description                           |
+| --------- | ----------------------- | ------------------------------------- |
+| `kind`    | `"eventNode"`           | The node discriminator.               |
+| `name`    | `CamelCaseString`       | The name of the event.                |
+| `docs`    | `string[]` _(optional)_ | Markdown documentation for the event. |
 
 ### Children
 
-| Attribute        | Type                                                    | Description                                                                                                                                                            |
-| ---------------- | ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `data`           | [`TypeNode`](./typeNodes/README.md)                     | The type node that describes the event payload.                                                                                                                        |
-| `discriminators` | [`DiscriminatorNode`](./discriminatorNodes/README.md)[] | (Optional) The nodes that distinguish this event from others in the program. If multiple discriminators are provided, they are combined using a logical AND operation. |
-
-## Functions
-
-### `eventNode(input)`
-
-Helper function that creates an `EventNode` object from an input object.
-
-```ts
-const node = eventNode({
-    name: 'transferEvent',
-    data: structTypeNode([
-        structFieldTypeNode({ name: 'authority', type: publicKeyTypeNode() }),
-        structFieldTypeNode({ name: 'amount', type: numberTypeNode('u64') }),
-    ]),
-});
-```
+| Attribute        | Type                                                                            | Description                                                                                                             |
+| ---------------- | ------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `data`           | [`TypeNode`](./typeNodes/TypeNode.md)                                           | The type describing the event payload.                                                                                  |
+| `discriminators` | [`DiscriminatorNode`](./discriminatorNodes/DiscriminatorNode.md)[] _(optional)_ | Discriminators that distinguish this event from others. When multiple are listed, they are combined with a logical AND. |
 
 ## Examples
 
 ### An event with a struct payload
 
-```ts
+```typescript
 eventNode({
     name: 'transferEvent',
     data: structTypeNode([
@@ -51,7 +35,7 @@ eventNode({
 
 ### An event with a hidden prefix discriminator
 
-```ts
+```typescript
 eventNode({
     name: 'transferEvent',
     data: hiddenPrefixTypeNode(structTypeNode([structFieldTypeNode({ name: 'amount', type: numberTypeNode('u64') })]), [

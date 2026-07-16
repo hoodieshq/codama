@@ -1,6 +1,6 @@
 # `DateTimeTypeNode`
 
-A node that wraps a [`NumberTypeNode`](./NumberTypeNode.md) to make it a datetime such that the number represents the number of seconds since the Unix epoch.
+A timestamp encoded as a number, typically seconds since the Unix epoch. The wrapped number type determines the byte width.
 
 ## Attributes
 
@@ -12,25 +12,21 @@ A node that wraps a [`NumberTypeNode`](./NumberTypeNode.md) to make it a datetim
 
 ### Children
 
-| Attribute | Type                                                                             | Description              |
-| --------- | -------------------------------------------------------------------------------- | ------------------------ |
-| `number`  | [`NestedTypeNode`](./NestedTypeNode.md)<[`NumberTypeNode`](./NumberTypeNode.md)> | The number node to wrap. |
-
-## Functions
-
-### `dateTimeTypeNode(number)`
-
-Helper function that creates a `DateTimeTypeNode` object from a `NumberTypeNode`.
-
-```ts
-const node = dateTimeTypeNode(numberTypeNode('u64'));
-```
+| Attribute | Type                                                                             | Description                                       |
+| --------- | -------------------------------------------------------------------------------- | ------------------------------------------------- |
+| `number`  | [`NestedTypeNode`](./NestedTypeNode.md)<[`NumberTypeNode`](./NumberTypeNode.md)> | The numeric type used to serialise the timestamp. |
 
 ## Examples
 
+### Create a date time type node from a number type node
+
+```typescript
+const node = dateTimeTypeNode(numberTypeNode('u64'));
+```
+
 ### u64 unix datetime
 
-```ts
+```typescript
 dateTimeTypeNode(numberTypeNode('u64'));
 
 // 2024-06-27T14:57:56Z => 0x667D7DF400000000

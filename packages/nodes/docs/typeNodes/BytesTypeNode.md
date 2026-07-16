@@ -1,6 +1,6 @@
 # `BytesTypeNode`
 
-A node that represents data as raw bytes. This can be useful for representing data that doesn't have a specific type or structure. It can also be shaped in size using nodes such as the [`SizePrefixTypeNode`](./SizePrefixTypeNode.md) or the [`FixedSizeTypeNode`](./FixedSizeTypeNode.md).
+A raw sequence of bytes. Typically used inside a fixed-size, size-prefixed, or sentinel-terminated wrapper.
 
 ## Attributes
 
@@ -10,16 +10,10 @@ A node that represents data as raw bytes. This can be useful for representing da
 | --------- | ----------------- | ----------------------- |
 | `kind`    | `"bytesTypeNode"` | The node discriminator. |
 
-### Children
+## Examples
 
-_This node has no children._
+### Create a bytes type node
 
-## Functions
-
-### `bytesTypeNode()`
-
-Helper function that creates a `BytesTypeNode` object.
-
-```ts
+```typescript
 const node = bytesTypeNode();
 ```

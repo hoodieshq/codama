@@ -1,29 +1,27 @@
 # `PdaLinkNode`
 
-This node represents a reference to an existing [`PdaNode`](../PdaNode.md) in the Codama IDL.
+A reference to a PDA defined elsewhere — possibly in a different program.
 
 ## Attributes
 
 ### Data
 
-| Attribute | Type              | Description                                                     |
-| --------- | ----------------- | --------------------------------------------------------------- |
-| `kind`    | `"pdaLinkNode"`   | The node discriminator.                                         |
-| `name`    | `CamelCaseString` | The name of the [`PdaNode`](../PdaNode.md) we are referring to. |
+| Attribute | Type              | Description                     |
+| --------- | ----------------- | ------------------------------- |
+| `kind`    | `"pdaLinkNode"`   | The node discriminator.         |
+| `name`    | `CamelCaseString` | The name of the referenced PDA. |
 
 ### Children
 
-| Attribute | Type                                      | Description                                                                                                 |
-| --------- | ----------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| `program` | [`ProgramLinkNode`](./ProgramLinkNode.md) | (Optional) The program associated with the linked PDA. Default to using the program we are currently under. |
+| Attribute | Type                                                   | Description                                                                                  |
+| --------- | ------------------------------------------------------ | -------------------------------------------------------------------------------------------- |
+| `program` | [`ProgramLinkNode`](./ProgramLinkNode.md) _(optional)_ | The program the referenced PDA belongs to. When omitted, the surrounding program is assumed. |
 
-## Functions
+## Examples
 
-### `pdaLinkNode(name, program?)`
+### Create a PDA link node from a PDA name
 
-Helper function that creates a `PdaLinkNode` object from the name of the `PdaNode` we are referring to. If the PDA is from another program, the `program` parameter must be provided as either a `string` or a `ProgramLinkNode`.
-
-```ts
+```typescript
 const node = pdaLinkNode('myPda');
 const nodeFromAnotherProgram = pdaLinkNode('myPda', 'myOtherProgram');
 ```

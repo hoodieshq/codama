@@ -1,32 +1,28 @@
 # `ResolverValueNode`
 
-A node that represents any custom value or logic described by some documentation.
-
-This node acts as a fallback node for any value or logic that cannot easily be described by the other nodes. Instead, the program maintainer can use this node to describe the value or logic in detail. Visitors that render code from Codama IDLs will treat these `ResolverValueNodes` as functions that can be injected into the generated code.
+A custom resolver: a named function provided by the consumer that produces a value. May optionally depend on other accounts and arguments resolved at instruction-build time.
 
 ## Attributes
 
 ### Data
 
-| Attribute | Type                  | Description                                                                                                            |
-| --------- | --------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `kind`    | `"resolverValueNode"` | The node discriminator.                                                                                                |
-| `name`    | `CamelCaseString`     | A unique name for the resolver. This will typically be the name of the function that the renderers will try to invoke. |
-| `docs`    | `string[]`            | Detailed Markdown documentation for the resolver.                                                                      |
+| Attribute | Type                    | Description                              |
+| --------- | ----------------------- | ---------------------------------------- |
+| `kind`    | `"resolverValueNode"`   | The node discriminator.                  |
+| `name`    | `CamelCaseString`       | The name of the resolver function.       |
+| `docs`    | `string[]` _(optional)_ | Markdown documentation for the resolver. |
 
 ### Children
 
-| Attribute   | Type                                                                                             | Description                                                                                                                                                                  |
-| ----------- | ------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `dependsOn` | ([`AccountValueNode`](./AccountValueNode.md) \| [`ArgumentValueNode`](./ArgumentValueNode.md))[] | (Optional) The list of accounts or arguments that this custom value depends on. This is useful for code renderers to know in which order they should resolve default values. |
+| Attribute   | Type                                                           | Description                                                                                                        |
+| ----------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `dependsOn` | [`ResolverDependency`](./ResolverDependency.md)[] _(optional)_ | The accounts and arguments the resolver depends on. Used by clients to ensure the dependencies are resolved first. |
 
-## Functions
+## Examples
 
-### `resolverValueNode(name, options)`
+### Create a resolver value node from a name and options
 
-Helper function that creates a `ResolverValueNode` object from the resolver name and some options.
-
-```ts
+```typescript
 const node = resolverValueNode('resolveCustomTokenProgram', {
     docs: [
         'If the mint account has more than 0 decimals and the ',

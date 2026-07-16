@@ -1,6 +1,6 @@
 # `StructFieldValueNode`
 
-A node that represents a field value in a struct — e.g. `age: 42`.
+A named field of a `structValueNode`.
 
 ## Attributes
 
@@ -13,16 +13,14 @@ A node that represents a field value in a struct — e.g. `age: 42`.
 
 ### Children
 
-| Attribute | Type                       | Description             |
-| --------- | -------------------------- | ----------------------- |
-| `value`   | [`ValueNode`](./README.md) | The value of the field. |
+| Attribute | Type                          | Description                      |
+| --------- | ----------------------------- | -------------------------------- |
+| `value`   | [`ValueNode`](./ValueNode.md) | The concrete value of the field. |
 
-## Functions
+## Examples
 
-### `structFieldValueNode(name, value)`
+### Create a struct field value node from a name and a value
 
-Helper function that creates a `StructFieldValueNode` object from a field name and a value node.
-
-```ts
+```typescript
 const node = structFieldValueNode('age', numberValueNode(42));
 ```

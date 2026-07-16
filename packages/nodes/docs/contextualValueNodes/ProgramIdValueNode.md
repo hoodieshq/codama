@@ -1,6 +1,6 @@
 # `ProgramIdValueNode`
 
-A node that represents the public key of the current program. That is, the address of the `ProgramNode` from which this node descends.
+Refers to the program ID of the surrounding instruction.
 
 ## Attributes
 
@@ -10,16 +10,10 @@ A node that represents the public key of the current program. That is, the addre
 | --------- | ---------------------- | ----------------------- |
 | `kind`    | `"programIdValueNode"` | The node discriminator. |
 
-### Children
+## Examples
 
-_This node has no children._
+### Create a program id value node
 
-## Functions
-
-### `programIdValueNode()`
-
-Helper function that creates a `ProgramIdValueNode` object.
-
-```ts
+```typescript
 const node = programIdValueNode();
 ```

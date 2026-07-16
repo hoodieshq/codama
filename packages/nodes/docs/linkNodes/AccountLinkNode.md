@@ -1,29 +1,27 @@
 # `AccountLinkNode`
 
-This node represents a reference to an existing [`AccountNode`](../AccountNode.md) in the Codama IDL.
+A reference to an account defined elsewhere — possibly in a different program.
 
 ## Attributes
 
 ### Data
 
-| Attribute | Type                | Description                                                             |
-| --------- | ------------------- | ----------------------------------------------------------------------- |
-| `kind`    | `"accountLinkNode"` | The node discriminator.                                                 |
-| `name`    | `CamelCaseString`   | The name of the [`AccountNode`](../AccountNode.md) we are referring to. |
+| Attribute | Type                | Description                         |
+| --------- | ------------------- | ----------------------------------- |
+| `kind`    | `"accountLinkNode"` | The node discriminator.             |
+| `name`    | `CamelCaseString`   | The name of the referenced account. |
 
 ### Children
 
-| Attribute | Type                                      | Description                                                                                                     |
-| --------- | ----------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `program` | [`ProgramLinkNode`](./ProgramLinkNode.md) | (Optional) The program associated with the linked account. Default to using the program we are currently under. |
+| Attribute | Type                                                   | Description                                                                                      |
+| --------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| `program` | [`ProgramLinkNode`](./ProgramLinkNode.md) _(optional)_ | The program the referenced account belongs to. When omitted, the surrounding program is assumed. |
 
-## Functions
+## Examples
 
-### `accountLinkNode(name, program?)`
+### Create an account link node from an account name
 
-Helper function that creates an `AccountLinkNode` object from the name of the `AccountNode` we are referring to. If the account is from another program, the `program` parameter must be provided as either a `string` or a `ProgramLinkNode`.
-
-```ts
+```typescript
 const node = accountLinkNode('myAccount');
 const nodeFromAnotherProgram = accountLinkNode('myAccount', 'myOtherProgram');
 ```

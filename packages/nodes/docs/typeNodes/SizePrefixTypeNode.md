@@ -1,10 +1,6 @@
 # `SizePrefixTypeNode`
 
-A node that limits the size of a child node using a size prefix that stores the size of the child node in bytes.
-
-When encoding, the size of the child node is written before the child node itself. When decoding, the size is read first and used to determine the length of the child node.
-
-This node can be used to create [`NestedTypeNodes`](./NestedTypeNode.md).
+Wraps another type with a numeric prefix indicating the byte length of the wrapped type.
 
 ## Attributes
 
@@ -16,26 +12,16 @@ This node can be used to create [`NestedTypeNodes`](./NestedTypeNode.md).
 
 ### Children
 
-| Attribute | Type                                                                             | Description                                            |
-| --------- | -------------------------------------------------------------------------------- | ------------------------------------------------------ |
-| `type`    | [`TypeNode`](./README.md)                                                        | The child node to size.                                |
-| `prefix`  | [`NestedTypeNode`](./NestedTypeNode.md)<[`NumberTypeNode`](./NumberTypeNode.md)> | The node used to determine the size of the child node. |
-
-## Functions
-
-### `sizePrefixTypeNode(type, prefix)`
-
-Helper function that creates a `SizePrefixTypeNode` object from a type node and a `NumberTypeNode` prefix.
-
-```ts
-const node = sizePrefixTypeNode(stringTypeNode('utf8'), numberTypeNode('u32'));
-```
+| Attribute | Type                                                                             | Description                                                   |
+| --------- | -------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| `type`    | [`TypeNode`](./TypeNode.md)                                                      | The wrapped type whose serialisation is preceded by its size. |
+| `prefix`  | [`NestedTypeNode`](./NestedTypeNode.md)<[`NumberTypeNode`](./NumberTypeNode.md)> | The numeric type used as the size prefix.                     |
 
 ## Examples
 
 ### A UTF-8 string prefixed with a u16 size
 
-```ts
+```typescript
 sizePrefixTypeNode(stringTypeNode('utf8'), numberTypeNode('u16'));
 
 // ""      => 0x0000

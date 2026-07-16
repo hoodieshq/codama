@@ -1,28 +1,26 @@
 # `PdaSeedValueNode`
 
-A node that represents the value of a variable PDA seed.
+Pairs a PDA seed name with the value to substitute when deriving the PDA.
 
 ## Attributes
 
 ### Data
 
-| Attribute | Type                 | Description                    |
-| --------- | -------------------- | ------------------------------ |
-| `kind`    | `"pdaSeedValueNode"` | The node discriminator.        |
-| `name`    | `CamelCaseString`    | The name of the variable seed. |
+| Attribute | Type                 | Description                           |
+| --------- | -------------------- | ------------------------------------- |
+| `kind`    | `"pdaSeedValueNode"` | The node discriminator.               |
+| `name`    | `CamelCaseString`    | The name of the seed being filled in. |
 
 ### Children
 
-| Attribute | Type                                                                                                                                   | Description                                                                                                                         |
-| --------- | -------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `value`   | [`AccountValueNode`](./AccountValueNode.md) \| [`ArgumentValueNode`](./ArgumentValueNode.md) \| [`ValueNode`](../valueNodes/README.md) | The value of the variable PDA seed. This can be a simple `ValueNode` or a contextual value pointing to another account or argument. |
+| Attribute | Type                                          | Description                           |
+| --------- | --------------------------------------------- | ------------------------------------- |
+| `value`   | [`PdaSeedValueValue`](./PdaSeedValueValue.md) | The value to substitute for the seed. |
 
-## Functions
+## Examples
 
-### `pdaSeedValueNode(name, value)`
+### Create a PDA seed value node from a name and a value
 
-Helper function that creates a `PdaSeedValueNode` object from the name of the variable seed and its value.
-
-```ts
+```typescript
 const node = pdaSeedValueNode('mint', accountValueNode('mint'));
 ```

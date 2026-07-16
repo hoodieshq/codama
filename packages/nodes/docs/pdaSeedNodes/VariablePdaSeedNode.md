@@ -1,6 +1,6 @@
 # `VariablePdaSeedNode`
 
-This node represents a variable seed for a program-derived address (PDA). It is characterized by a name and a type.
+A PDA seed whose value is provided at derivation time, identified by name.
 
 ## Attributes
 
@@ -9,30 +9,26 @@ This node represents a variable seed for a program-derived address (PDA). It is 
 | Attribute | Type                    | Description                                   |
 | --------- | ----------------------- | --------------------------------------------- |
 | `kind`    | `"variablePdaSeedNode"` | The node discriminator.                       |
-| `name`    | `CamelCaseString`       | The name of the variable seed.                |
-| `docs`    | `string[]`              | Markdown documentation for the variable seed. |
+| `name`    | `CamelCaseString`       | The name of the seed variable.                |
+| `docs`    | `string[]` _(optional)_ | Markdown documentation for the seed variable. |
 
 ### Children
 
-| Attribute | Type                                 | Description                    |
-| --------- | ------------------------------------ | ------------------------------ |
-| `type`    | [`TypeNode`](../typeNodes/README.md) | The type of the variable seed. |
-
-## Functions
-
-### `variablePdaSeedNode(name, type, docs?)`
-
-Helper function that creates a `VariablePdaSeedNode` object from a name, a type node and optional documentation.
-
-```ts
-const node = variablePdaSeedNode('amount', numberTypeNode('u32'));
-```
+| Attribute | Type                                   | Description                          |
+| --------- | -------------------------------------- | ------------------------------------ |
+| `type`    | [`TypeNode`](../typeNodes/TypeNode.md) | The expected type of the seed value. |
 
 ## Examples
 
+### Create a variable PDA seed node from a name and a type node
+
+```typescript
+const node = variablePdaSeedNode('amount', numberTypeNode('u32'));
+```
+
 ### A PDA node with a public key variable seed
 
-```ts
+```typescript
 pdaNode({
     name: 'ticket',
     seeds: [variablePdaSeedNode('authority', publicKeyTypeNode())],

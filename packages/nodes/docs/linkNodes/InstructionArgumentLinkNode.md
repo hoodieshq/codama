@@ -1,29 +1,27 @@
 # `InstructionArgumentLinkNode`
 
-This node represents a reference to an existing [`InstructionArgumentNode`](../InstructionArgumentNode.md) in the Codama IDL.
+A reference to an argument of another instruction.
 
 ## Attributes
 
 ### Data
 
-| Attribute | Type                            | Description                                                                                     |
-| --------- | ------------------------------- | ----------------------------------------------------------------------------------------------- |
-| `kind`    | `"instructionArgumentLinkNode"` | The node discriminator.                                                                         |
-| `name`    | `CamelCaseString`               | The name of the [`InstructionArgumentNode`](../InstructionArgumentNode.md) we are referring to. |
+| Attribute | Type                            | Description                                      |
+| --------- | ------------------------------- | ------------------------------------------------ |
+| `kind`    | `"instructionArgumentLinkNode"` | The node discriminator.                          |
+| `name`    | `CamelCaseString`               | The name of the referenced instruction argument. |
 
 ### Children
 
-| Attribute     | Type                                              | Description                                                                                                                                                                                           |
-| ------------- | ------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `instruction` | [`InstructionLinkNode`](./InstructionLinkNode.md) | (Optional) The instruction associated with the linked argument. Default to using the instruction we are currently under. Note that the instruction itself can point to a different program is needed. |
+| Attribute     | Type                                                           | Description                                                                                               |
+| ------------- | -------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `instruction` | [`InstructionLinkNode`](./InstructionLinkNode.md) _(optional)_ | The instruction the referenced argument belongs to. When omitted, the surrounding instruction is assumed. |
 
-## Functions
+## Examples
 
-### `instructionArgumentLinkNode(name, instruction?)`
+### Create an instruction argument link node from an argument name
 
-Helper function that creates an `InstructionArgumentLinkNode` object from the name of the `InstructionArgumentNode` we are referring to. If the argument is from another instruction, the `instruction` parameter must be provided as either a `string` or a `InstructionLinkNode`. When providing an `InstructionLinkNode`, we can also provide a `ProgramLinkNode` to point to a different program.
-
-```ts
+```typescript
 // Links to an argument in the current instruction.
 const node = instructionArgumentLinkNode('myArgument');
 

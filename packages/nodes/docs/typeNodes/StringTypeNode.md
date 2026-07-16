@@ -1,26 +1,26 @@
 # `StringTypeNode`
 
-A node that represents an unbounded string from a given encoding. It can be shaped in size using nodes such as the [`SizePrefixTypeNode`](./SizePrefixTypeNode.md) or the [`FixedSizeTypeNode`](./FixedSizeTypeNode.md).
+A string value. The encoding describes how its bytes are written. The byte length is determined by an enclosing wrapper such as `sizePrefixTypeNode` or `fixedSizeTypeNode`.
 
 ## Attributes
 
 ### Data
 
-| Attribute  | Type                                         | Description                 |
-| ---------- | -------------------------------------------- | --------------------------- |
-| `kind`     | `"stringTypeNode"`                           | The node discriminator.     |
-| `encoding` | `"base16" \| "base58" \| "base64" \| "utf8"` | The encoding of the string. |
+| Attribute | Type               | Description             |
+| --------- | ------------------ | ----------------------- |
+| `kind`    | `"stringTypeNode"` | The node discriminator. |
 
 ### Children
 
-_This node has no children._
+| Attribute  | Type                                                                     | Description                                              |
+| ---------- | ------------------------------------------------------------------------ | -------------------------------------------------------- |
+| `encoding` | [`BytesEncoding`](../sharedNodes/BytesEncoding.md)                       | The byte encoding used to serialise the string.          |
+| `display`  | [`StringDisplayNode`](../displayNodes/StringDisplayNode.md) _(optional)_ | Display metadata describing how the string is presented. |
 
-## Functions
+## Examples
 
-### `stringTypeNode(encoding)`
+### Create a string type node from an encoding
 
-Helper function that creates a `StringTypeNode` object from an encoding.
-
-```ts
+```typescript
 const node = stringTypeNode('utf8');
 ```

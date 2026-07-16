@@ -1,10 +1,6 @@
 # `IdentityValueNode`
 
-A node that represents the main wallet that should **own things**.
-
-For instance, in an web application, the identity would be the user's wallet; in a terminal, the identity would be the wallet identitied by `solana address`; etc.
-
-Note that a similar node exists for representing the main wallet that should **pay for things** — the [`PayerValueNode`](./PayerValueNode.md). In practice, the identity and the payer are often the same but allowing the program maintainer to offer this distinction can be useful should they be different.
+Refers to the wallet identity providing the instruction context.
 
 ## Attributes
 
@@ -14,25 +10,17 @@ Note that a similar node exists for representing the main wallet that should **p
 | --------- | --------------------- | ----------------------- |
 | `kind`    | `"identityValueNode"` | The node discriminator. |
 
-### Children
+## Examples
 
-_This node has no children._
+### Create an identity value node
 
-## Functions
-
-### `identityValueNode()`
-
-Helper function that creates a `IdentityValueNode` object.
-
-```ts
+```typescript
 const node = identityValueNode();
 ```
 
-## Examples
-
 ### An instruction account defaulting to the identity value
 
-```ts
+```typescript
 instructionNode({
     name: 'transfer',
     accounts: [

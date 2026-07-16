@@ -1,10 +1,6 @@
 # `HiddenPrefixTypeNode`
 
-A node that wraps a type node and whilst silently consuming a prefix of constant values.
-
-When encoding, the constant values are written before the child node. When decoding, the prefixed constant values are consumed and checked against the expected values before being discarded.
-
-This node can be used to create [`NestedTypeNodes`](./NestedTypeNode.md).
+Prefixes another type with a list of constant values that are written and read but not surfaced as fields to consumers.
 
 ## Attributes
 
@@ -16,28 +12,24 @@ This node can be used to create [`NestedTypeNodes`](./NestedTypeNode.md).
 
 ### Children
 
-| Attribute | Type                                                       | Description                                |
-| --------- | ---------------------------------------------------------- | ------------------------------------------ |
-| `type`    | [`TypeNode`](./README.md)                                  | The type node to wrap.                     |
-| `prefix`  | [`ConstantValueNode`](./valueNodes/ConstantValueNode.md)[] | The array of constant prefixes to consume. |
+| Attribute | Type                                                        | Description                                                            |
+| --------- | ----------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `type`    | [`TypeNode`](./TypeNode.md)                                 | The wrapped type whose serialisation is preceded by the hidden prefix. |
+| `prefix`  | [`ConstantValueNode`](../valueNodes/ConstantValueNode.md)[] | The constant values written before the wrapped type, in order.         |
 
-## Functions
+## Examples
 
-### `hiddenPrefixTypeNode(type, prefix)`
+### Create a hidden prefix type node from a type node and constant value nodes
 
-Helper function that creates a `HiddenPrefixTypeNode` object from a type node and an array of constant value nodes.
-
-```ts
+```typescript
 const node = hiddenPrefixTypeNode(numberTypeNode('u32'), [
     constantValueNode(bytesTypeNode(), bytesValueNode('base16', 'ffff')),
 ]);
 ```
 
-## Examples
-
 ### A number prefixed with 0xFFFF
 
-```ts
+```typescript
 hiddenPrefixTypeNode(numberTypeNode('u32'), [constantValueNode(bytesTypeNode(), bytesValueNode('base16', 'ffff'))]);
 
 // 42 => 0xFFFF2A000000
@@ -45,7 +37,7 @@ hiddenPrefixTypeNode(numberTypeNode('u32'), [constantValueNode(bytesTypeNode(), 
 
 ### A fixed UTF-8 string prefixed with "Hello"
 
-```ts
+```typescript
 hiddenPrefixTypeNode(fixedSizeTypeNode(stringTypeNode('utf8'), 10), [
     constantValueNode(stringTypeNode('utf8'), stringValueNode('Hello')),
 ]);

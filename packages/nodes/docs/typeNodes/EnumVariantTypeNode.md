@@ -1,6 +1,8 @@
 # `EnumVariantTypeNode` (abstract)
 
-The `EnumVariantTypeNode` type helper represents any of the available enum variant types. Note that it cannot be used directly as a node. Instead you may use one of the following types:
+The variant flavours of an `enumTypeNode`.
+
+One of the following:
 
 - [`EnumEmptyVariantTypeNode`](./EnumEmptyVariantTypeNode.md)
 - [`EnumStructVariantTypeNode`](./EnumStructVariantTypeNode.md)
