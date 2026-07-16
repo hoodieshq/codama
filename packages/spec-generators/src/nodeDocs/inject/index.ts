@@ -1,9 +1,9 @@
 /**
  * Per-node documentation additions for the spec-generated pages.
  * The spec docs generator owns each page title, description, Attributes table and Examples section.
- * TS-specific content lives here: diagrams now, plus a Functions section (empty until TSDoc extraction lands).
+ * TS-specific content lives here: diagrams now, plus the Functions section filled by TSDoc.
  * `buildContentInjection` returns the inject hook that places them into the page slots.
- * Diagrams go to the `afterDescription` slot. Functions go to the `afterAttributes` slot.
+ * Diagrams go to the `afterDescription` slot. Functions to the `afterAttributes` slot.
  * `validateInjectKeys` fails the run when an overlay is keyed by an unknown node kind.
  */
 
