@@ -9,14 +9,18 @@ import {
 import type { Spec } from '@codama/spec';
 import { generateDocs as generateSpecDocs, LocalDocsPathConfig, relativeLinks } from '@codama/spec/docs';
 
+import { buildContentInjection, defaultInjectDeps, validateInjectKeys } from './inject';
 import { type GenerateOptions, type RenderOptions, validateRenderOptions } from './options';
 
+export { buildContentInjection, validateInjectKeys } from './inject';
 export { type GenerateOptions, type RenderOptions, validateRenderOptions } from './options';
 
 /** Pure, sync render-map entry point. Tests call this directly without touching the filesystem. */
 export function getRenderMap(spec: Spec, options: RenderOptions): RenderMap<BaseFragment> {
     validateRenderOptions(spec, options);
+    validateInjectKeys(spec, defaultInjectDeps);
     const model = generateSpecDocs(spec, {
+        inject: buildContentInjection(defaultInjectDeps),
         linkStrategy: relativeLinks('md'),
         pathConfig: LocalDocsPathConfig,
     });
