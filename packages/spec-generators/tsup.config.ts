@@ -18,9 +18,10 @@ export default defineConfig({
         generate: './bin/generate.ts',
         index: './src/index.ts',
     },
-    // ts-morph bundles the whole TypeScript compiler and relies on dynamic `require`, which breaks in an
-    // esbuild ESM bundle. Keep it external so it loads from node_modules at runtime.
-    external: ['ts-morph'],
+    // `typescript` relies on dynamic `require`, which esbuild cannot express in an ESM bundle. TypeDoc
+    // resolves its plugins by module name at runtime, so it must stay resolvable from node_modules too.
+    // Keep all three external so they load at runtime instead of being inlined.
+    external: ['typedoc', 'typedoc-plugin-markdown', 'typescript'],
     format: 'esm',
     outExtension() {
         return { js: '.mjs' };

@@ -14,7 +14,7 @@ import { type GenerateOptions, type RenderOptions, resolveCategoryDirectories, v
 import { buildPageInventory } from './pages';
 import { renderCategoryIndex, renderEntityPage, renderRootIndex } from './render';
 
-export { extractTsdocDocs } from './extractTsdoc';
+export { type ExtractedDocs, extractTsdocDocs } from './extractTsdoc';
 export { type GenerateOptions, type RenderOptions, validateRenderOptions } from './options';
 
 /** Docs-root-relative file path for a page's extension-less segments. */
@@ -72,9 +72,11 @@ export function getRenderMap(spec: Spec, options: RenderOptions, extracted: Extr
 /**
  * Generate the node docs and write them to `options.outputDir`.
  * Build the map before touching disk so a validation failure throws before `deleteDirectory` wipes existing docs.
+ * Async because TypeDoc's converter is: everything downstream of the extractor stays synchronous.
  */
-export function generateNodeDocs(spec: Spec, options: GenerateOptions): void {
-    const renderMap = getRenderMap(spec, options, extractTsdocDocs());
+export async function generateNodeDocs(spec: Spec, options: GenerateOptions): Promise<void> {
+    const extractedDoc = await extractTsdocDocs();
+    const renderMap = getRenderMap(spec, options, extractedDoc);
     deleteDirectory(options.outputDir);
     writeRenderMap(renderMap, options.outputDir);
 }

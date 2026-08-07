@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { extractTsdocDocs, getRenderMap, validateRenderOptions } from '../../src/nodeDocs';
 
 const spec = getSpec();
-const docs = extractTsdocDocs();
+const docs = await extractTsdocDocs();
 
 describe('validateRenderOptions', () => {
     it('throws when targetSpecMajor does not match the spec major', () => {

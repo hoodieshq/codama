@@ -1,16 +1,22 @@
 /**
- * ts-morph docs extraction. Instead of shelling out to a doc generator and stripping its markdown, this:
- * - reads the helper source directly.
- * - renders each exported function / type alias to the `### name()` block shape.
- * - inlines the routing config and page assembly so the whole flow lives in one file.
+ * TypeDoc-driven extraction of the `## Functions` blocks and utility pages the node docs inject.
+ *
+ * TypeDoc runs in-process (no CLI subprocess) with `typedoc-plugin-markdown`, and each rendered page is
+ * captured as a string via `MarkdownPageEvent.END`. Two options make that output a drop-in for the docs
+ * contract, so the markdown is used verbatim - no heading demotion, no section stripping, no regex:
+ * - `outputFileStrategy: 'modules'` emits one page per source module rather than one per exported member.
+ * - `hidePageTitle: true` drops TypeDoc's own H1, so each page begins directly at `## Functions`.
  */
 
-import { existsSync } from 'node:fs';
-import { dirname, join, relative } from 'node:path';
+import { existsSync, mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import type { Path } from '@codama/fragments';
-import { type FunctionDeclaration, type JSDoc, Project, type TypeAliasDeclaration } from 'ts-morph';
+import { Application, Converter, TSConfigReader, type TypeDocOptions } from 'typedoc';
+import { MarkdownPageEvent, type PluginOptions } from 'typedoc-plugin-markdown';
+import { isJSDocSignature, type TypeNode } from 'typescript';
 
 import { BLOCK_SEPARATOR } from './constants';
 
@@ -18,9 +24,9 @@ import { BLOCK_SEPARATOR } from './constants';
 const UTILITIES_DIR = 'utilities';
 
 /** Standalone utility pages emitted under `utilities/`, keyed by page id. */
-type UtilityId = 'NestedTypeNode' | 'Node' | 'Shared';
+export type UtilityId = 'NestedTypeNode' | 'Node' | 'Shared';
 
-/** H1 title (and root-index link label) for each utility page - one entry per page. */
+/** H1 title (and root-index link label) for each utility page. TypeDoc emits no page title of its own. */
 const UTILITY_TITLES: Record<UtilityId, string> = {
     NestedTypeNode: 'Nested type node helpers',
     Node: 'Node type guards',
@@ -31,8 +37,8 @@ const UTILITY_TITLES: Record<UtilityId, string> = {
  * Route a source module's helpers into a
  * - node kind's `## Functions`
  * - or a standalone utility page.
- * */
-type Target =
+ */
+export type Target =
     | { readonly kind: string; readonly type: 'kind' }
     | { readonly type: 'utility'; readonly utility: UtilityId };
 
@@ -51,26 +57,9 @@ export interface ExtractedDocs {
 }
 
 /**
- * One rendered helper block bound to the page it belongs to. Many of these are produced (one per exported
- * function / type alias) and those sharing a `target` are later merged onto the same page by `buildDocs`.
- * - `markdown` is the rendered `### name()` block (heading, signature, description, example).
- * - `name` is the export name, used only to sort blocks alphabetically within a page.
- * - `target` routes the block: `{ kind }` into a node page's `## Functions`, `{ utility }` onto a utility page.
- *
- * @example
- * { name: 'isDecimal', target: { kind: 'numberTypeNode', type: 'kind' }, markdown: '### isDecimal()\n\n> ...' }
- */
-interface CodeBlockSection {
-    readonly markdown: string;
-    readonly name: string;
-    readonly target: Target;
-}
-
-/**
- * Source modules (relative to `packages/nodes/src`) whose exported helpers we document.
- * Each paired with its routing target:
- * - A `kind` target injects the helpers into that node's page.
- * - A `utility` target collects them into the standalone `utilities/` page.
+ * Source modules (relative to `packages/nodes/src`) whose exported helpers we document, each paired with its
+ * routing target. A `kind` target injects the helpers into that node's page; a `utility` target collects them
+ * onto the matching standalone `utilities/` page.
  */
 export const ENTRY_MODULES = [
     { file: 'ConstantPdaSeedNode.ts', target: { kind: 'constantPdaSeedNode', type: 'kind' } },
@@ -82,196 +71,138 @@ export const ENTRY_MODULES = [
     { file: 'ProgramNode.ts', target: { kind: 'programNode', type: 'kind' } },
     { file: 'NestedTypeNode.ts', target: { type: 'utility', utility: 'NestedTypeNode' } },
     { file: 'Node.ts', target: { type: 'utility', utility: 'Node' } },
-    { file: 'shared/docs.ts', target: { type: 'utility', utility: 'Shared' } },
-    { file: 'shared/stringCases.ts', target: { type: 'utility', utility: 'Shared' } },
+    // The barrel, not the two leaf modules it re-exports: one entry point means one TypeDoc page, so the
+    // Shared helpers land under a single set of group headings instead of one per source file.
+    { file: 'shared/index.ts', target: { type: 'utility', utility: 'Shared' } },
 ] as const satisfies readonly { file: string; target: Target }[];
 
-export function extractTsdocDocs(): ExtractedDocs {
-    const repoRoot = findRepoRoot();
-    const nodesRoot = join(repoRoot, 'packages', 'nodes');
-    const project = new Project({
-        skipAddingFilesFromTsConfig: true,
-        tsConfigFilePath: join(nodesRoot, 'tsconfig.json'),
-    });
+/**
+ * TypeDoc names each page after its entry point relative to the common source root, so `src/ProgramNode.ts`
+ * renders to `ProgramNode.md`. A barrel collapses to its directory: `src/shared/index.ts` becomes `shared.md`.
+ * Normalising both sides the same way makes the extension-less page URL the join key back to `ENTRY_MODULES`.
+ */
+const pageKey = (path: string): string => path.replace(/\.(ts|md)$/, '').replace(/\/index$/, '');
 
-    const sections = collectCodeBlockSections(project, nodesRoot);
-    return buildDocs(sections);
+const TARGET_BY_PAGE = new Map(ENTRY_MODULES.map(m => [pageKey(m.file), m.target]));
+
+export async function extractTsdocDocs(): Promise<ExtractedDocs> {
+    const nodesRoot = join(findRepoRoot(), 'packages', 'nodes');
+    // TypeDoc only fires page events while rendering, so it needs somewhere to write. We read the pages out of
+    // memory and drop the directory; nothing downstream reads it.
+    const outputDir = mkdtempSync(join(tmpdir(), 'codama-typedoc-'));
+
+    // The `hide*` and `outputFileStrategy` keys are declared by typedoc-plugin-markdown, which does not augment
+    // TypeDoc's own option type, so the literal is typed as the intersection and widened at the call site.
+    const options: Partial<TypeDocOptions> & PluginOptions = {
+        disableSources: true,
+        entryPoints: ENTRY_MODULES.map(m => join(nodesRoot, 'src', m.file)),
+        hideBreadcrumbs: true,
+        hidePageHeader: true,
+        hidePageTitle: true,
+        logLevel: 'Warn',
+        out: outputDir,
+        outputFileStrategy: 'modules',
+        plugin: ['typedoc-plugin-markdown'],
+        readme: 'none',
+        tsconfig: join(nodesRoot, 'tsconfig.json'),
+    };
+
+    try {
+        const app = await Application.bootstrapWithPlugins(options as Partial<TypeDocOptions>, [new TSConfigReader()]);
+        useAuthoredTypeAnnotations(app);
+
+        const pages = new Map<string, string>();
+        app.renderer.on(MarkdownPageEvent.END, page => {
+            if (page.contents) pages.set(page.url, page.contents);
+        });
+
+        const project = await app.convert();
+        if (!project) throw new Error('TypeDoc failed to convert the nodes helper sources.');
+        await app.generateOutputs(project);
+
+        return buildDocs(pages);
+    } finally {
+        rmSync(outputDir, { force: true, recursive: true });
+    }
 }
 
 /**
- * Render every exported helper across the entry modules into a flat list of blocks, sorted by name.
- * We intentionally scan only functions and type aliases: it is the full surface these helper files export.
+ * Render signatures from the type annotation the author wrote rather than the type the checker resolves.
+ *
+ * TypeDoc already does this for a bare annotation, but only at the top level: its array and union converters
+ * recurse without the source node, so a nested reference falls back to the resolved type and every defaulted
+ * type argument is printed. On Codama's node types that turns `: ProgramNode[]` into thousands of characters.
+ * Re-converting from the declaration's own AST node routes through the node-based converters all the way down.
+ *
+ * Covers the return type, the parameter types, and the type-parameter constraints - the last matters because
+ * `TKind extends NodeKind` otherwise prints as all ninety-odd node-kind string literals.
+ *
+ * Anything without an annotation (an inferred return, say) keeps TypeDoc's default behaviour.
  */
-function collectCodeBlockSections(project: Project, nodesRoot: string): CodeBlockSection[] {
-    const sections: CodeBlockSection[] = [];
-    for (const { file, target } of ENTRY_MODULES) {
-        const sourceFile = project.addSourceFileAtPath(join(nodesRoot, 'src', file));
-        // Functions:
-        for (const fn of sourceFile.getFunctions()) {
-            const name = fn.getName();
-            if (fn.isExported() && name) sections.push({ markdown: renderFunction(name, fn), name, target });
+function useAuthoredTypeAnnotations(app: Application): void {
+    app.converter.on(Converter.EVENT_CREATE_SIGNATURE, (context, reflection, declaration) => {
+        if (!declaration || isJSDocSignature(declaration)) return;
+        const convert = (node: TypeNode) => context.converter.convertType(context, node);
+
+        if (declaration.type) reflection.type = convert(declaration.type);
+
+        // Matched by position: TypeDoc builds parameter reflections in declaration order, and unlike matching
+        // on the name this also covers destructured parameters, which have no identifier to compare against.
+        (reflection.parameters ?? []).forEach((parameter, index) => {
+            const declared = declaration.parameters?.[index];
+            if (declared?.type) parameter.type = convert(declared.type);
+        });
+
+        for (const typeParameter of reflection.typeParameters ?? []) {
+            const declared = declaration.typeParameters?.find(p => p.name.text === typeParameter.name);
+            if (declared?.constraint) typeParameter.type = convert(declared.constraint);
         }
-        // Type aliases:
-        // TODO: `getFunctions()` misses arrow-function helpers (`export const foo = () => {}`). None exist yet;
-        // if one is added, also scan exported variable declarations with a function initializer.
-        for (const alias of sourceFile.getTypeAliases()) {
-            if (alias.isExported()) sections.push({ markdown: renderTypeAlias(alias), name: alias.getName(), target });
-        }
-    }
-    return sections.sort((a, b) => a.name.localeCompare(b.name));
+    });
 }
 
-/** Group rendered sections into per-kind `## Functions` blocks and standalone utility pages. */
-function buildDocs(sections: CodeBlockSection[]): ExtractedDocs {
+/** Route each rendered page to a node kind's `## Functions` block or onto a standalone utility page. */
+function buildDocs(pages: ReadonlyMap<string, string>): ExtractedDocs {
     const functions: Record<string, string> = {};
-    const utilityMap = new Map<UtilityId, string[]>();
+    const utilityMap = new Map<UtilityId, string>();
 
-    for (const { markdown, target } of sections) {
-        if (target.type === 'kind') {
-            functions[target.kind] = functions[target.kind]
-                ? `${functions[target.kind]}${BLOCK_SEPARATOR}${markdown}`
-                : `## Functions${BLOCK_SEPARATOR}${markdown}`;
-        } else {
-            const parts = utilityMap.get(target.utility) ?? [];
-            parts.push(markdown);
-            utilityMap.set(target.utility, parts);
+    const matched = new Set<string>();
+    for (const [url, contents] of pages) {
+        const key = pageKey(url);
+        const target = TARGET_BY_PAGE.get(key);
+        // TypeDoc also emits a project-level README that has no entry-point counterpart.
+        if (!target) continue;
+        matched.add(key);
+        switch (target.type) {
+            case 'kind':
+                functions[target.kind] = contents.trim();
+                break;
+            case 'utility':
+                utilityMap.set(target.utility, contents.trim());
+                break;
+            default:
+                throw new Error(`Unexpected target type ${JSON.stringify(target)} for page ${url}.`);
         }
     }
 
+    // A page URL that stops matching its entry module would otherwise drop that module's helpers silently.
+    const unmatched = [...TARGET_BY_PAGE.keys()].filter(key => !matched.has(key));
+    if (unmatched.length > 0) {
+        throw new Error(
+            `TypeDoc emitted no page for entry module(s) ${JSON.stringify(unmatched)}. ` +
+                `Pages seen: ${JSON.stringify([...pages.keys()])}.`,
+        );
+    }
+
+    // TypeDoc emits no page title, so each utility page gets its H1 here.
     const utilityPages: UtilityPage[] = [...utilityMap.entries()]
-        .map(([utility, parts]) => ({
-            content: `# ${UTILITY_TITLES[utility]}${BLOCK_SEPARATOR}${parts.join(BLOCK_SEPARATOR)}`,
+        .map(([utility, body]) => ({
+            content: `# ${UTILITY_TITLES[utility]}${BLOCK_SEPARATOR}${body}`,
             pathSegments: [UTILITIES_DIR, utility],
             title: UTILITY_TITLES[utility],
         }))
         .sort((a, b) => a.pathSegments.join('/').localeCompare(b.pathSegments.join('/')));
 
     return { functions, utilityPages };
-}
-
-/**
- * Render one exported function into its `### name()` markdown block:
- * - build the signature blockquote.
- * - build fn param/return annotations.
- * - append the JSDoc description and any `@example` bodies.
- *
- * @return
- * ### isDecimal()
- *
- * > **isDecimal**(`node`: `NumberTypeNode`): `boolean`
- *
- * Returns true when the number type node encodes a floating-point decimal.
- *
- * ```ts
- * isDecimal(numberTypeNode('f32')); // true
- * ```
- */
-export function renderFunction(name: string, fn: FunctionDeclaration): string {
-    const typeParams = fn.getTypeParameters().map(p => p.getName());
-    const generics = typeParams.length ? `\\<${typeParams.map(p => `\`${p}\``).join(', ')}\\>` : '';
-    // Prefer the authored param annotation (concise source text) over the resolved type, so a nested-guard
-    // param stays `NestedTypeNode<...>` instead of the compiler expanding the full TypeNode union.
-    const params = fn
-        .getParameters()
-        .map(p => {
-            const type = p.getTypeNode()?.getText() ?? p.getType().getText(p);
-            return `\`${p.getName()}\`: ${inlineType(type)}`;
-        })
-        .join(', ');
-    // Prefer the authored return annotation.
-    // For inferred returns, resolve against the function node,
-    // so the compiler prints short imported names instead of absolute `import("/abs/path").Name` forms.
-    const returnType = fn.getReturnTypeNode()?.getText() ?? fn.getReturnType().getText(fn);
-    const signature = `> **${name}**${generics}(${params}): ${inlineType(returnType)}`;
-    const doc = fn.getJsDocs().at(-1);
-    return concatParts(`### ${name}()`, signature, description(doc), examples(doc));
-}
-
-/**
- * Render one exported type alias into its `### name` markdown block:
- * - build the signature blockquote as `name = <aliased type>` from the source.
- * - append the JSDoc description and any `@example` bodies.
- *
- * @return
- * ### DocsInput
- *
- * > **DocsInput** = `string[] | string`
- *
- * Documentation input accepted by node helpers: either a single string or an array of strings.
- */
-function renderTypeAlias(alias: TypeAliasDeclaration): string {
-    const name = alias.getName();
-    const signature = `> **${name}** = ${inlineType(alias.getTypeNodeOrThrow().getText())}`;
-    const doc = alias.getJsDocs().at(-1);
-    return concatParts(`### ${name}`, signature, description(doc), examples(doc));
-}
-
-/**
- * Collect the body of every `@example` tag from a JSDoc block and join them with blank lines.
- * Returns an empty string when the block has no `@example` tags.
- *
- * @return
- * ```ts
- * isDecimal(numberTypeNode('f32')); // true
- * ```
- */
-function examples(doc: JSDoc | undefined): string {
-    const parts: string[] = [];
-    for (const tag of doc?.getTags() ?? []) {
-        if (tag.getTagName() !== 'example') continue;
-        const text = tag.getCommentText()?.trim();
-        if (text) parts.push(text);
-    }
-    return parts.join(BLOCK_SEPARATOR);
-}
-
-/**
- * Render description if it exists.
- */
-function description(doc: JSDoc | undefined): string {
-    return doc?.getDescription().trim() ?? '';
-}
-
-/**
- * Assemble a rendered block from its parts (e.g. heading, signature, description, examples).
- * Empty parts are dropped and the rest joined with blank lines.
- */
-function concatParts(...parts: string[]): string {
-    return parts.filter(Boolean).join(BLOCK_SEPARATOR);
-}
-
-/**
- * Render a type as inline code:
- * - strip `import("pkg").` qualifiers the compiler adds for inferred returns (authored annotations never carry them).
- * - collapse whitespace runs, then drop the spaces just inside `<`/`>` so a multi-line generic reads on one line.
- *
- * @example
- * inlineType('import("@codama/node-types").BytesTypeNode') // '`BytesTypeNode`'
- * inlineType('NestedTypeNode<\n  TTo\n>')                   // '`NestedTypeNode<TTo>`'
- */
-export function inlineType(text: string): string {
-    const collapsed = text
-        .replace(/import\("[^"]*"\)\./g, '')
-        .replace(/\s+/g, ' ')
-        .replace(/<\s+/g, '<')
-        .replace(/\s+>/g, '>')
-        .trim();
-    return `\`${collapsed}\``;
-}
-
-/**
- * Discover every hand-written module under `packages/nodes/src` (excluding `generated/`) that exports a
- * function or type alias - the full set of files carrying documentable helpers.
- */
-export function discoverHelperModuleFiles(): string[] {
-    const nodesSrc = join(findRepoRoot(), 'packages', 'nodes', 'src');
-    const project = new Project({ skipAddingFilesFromTsConfig: true });
-    project.addSourceFilesAtPaths([`${nodesSrc}/**/*.ts`, `!${nodesSrc}/generated/**`]);
-    return project
-        .getSourceFiles()
-        .filter(sf => sf.getFunctions().some(f => f.isExported()) || sf.getTypeAliases().some(a => a.isExported()))
-        .map(sf => relative(nodesSrc, sf.getFilePath()))
-        .sort();
 }
 
 /** Walk up from this module until the workspace root (the directory holding `pnpm-workspace.yaml`). */

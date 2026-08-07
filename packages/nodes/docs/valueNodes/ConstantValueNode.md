@@ -6,9 +6,31 @@ See the [`ConstantValueNode` specification](https://github.com/codama-idl/spec/b
 
 ### constantValueNodeFromBytes()
 
-> **constantValueNodeFromBytes**\<`TEncoding`\>(`encoding`: `TEncoding`, `data`: `string`): `ConstantValueNode<BytesTypeNode, BytesValueNode>`
+> **constantValueNodeFromBytes**\<`TEncoding`\>(`encoding`, `data`): `ConstantValueNode`\<`BytesTypeNode`, `BytesValueNode`\>
 
 Creates a `ConstantValueNode` of type `BytesTypeNode` from an encoding and a string of data.
+
+#### Type Parameters
+
+##### TEncoding
+
+`TEncoding` _extends_ `BytesEncoding`
+
+#### Parameters
+
+##### encoding
+
+`TEncoding`
+
+##### data
+
+`string`
+
+#### Returns
+
+`ConstantValueNode`\<`BytesTypeNode`, `BytesValueNode`\>
+
+#### Example
 
 ```ts
 constantValueNodeFromBytes('base16', 'FF99CC');
@@ -16,11 +38,35 @@ constantValueNodeFromBytes('base16', 'FF99CC');
 constantValueNode(bytesTypeNode(), bytesValueNode('base16', 'FF99CC'));
 ```
 
+---
+
 ### constantValueNodeFromString()
 
-> **constantValueNodeFromString**\<`TEncoding`\>(`encoding`: `TEncoding`, `string`: `string`): `ConstantValueNode<StringTypeNode<TEncoding, undefined>, StringValueNode>`
+> **constantValueNodeFromString**\<`TEncoding`\>(`encoding`, `string`): `ConstantValueNode`\<`StringTypeNode`\<`TEncoding`, `undefined`\>, `StringValueNode`\>
 
 Creates a `ConstantValueNode` of type `StringTypeNode` from an encoding and a string of data.
+
+#### Type Parameters
+
+##### TEncoding
+
+`TEncoding` _extends_ `BytesEncoding`
+
+#### Parameters
+
+##### encoding
+
+`TEncoding`
+
+##### string
+
+`string`
+
+#### Returns
+
+`ConstantValueNode`\<`StringTypeNode`\<`TEncoding`, `undefined`\>, `StringValueNode`\>
+
+#### Example
 
 ```ts
 constantValueNodeFromString('utf8', 'Hello');

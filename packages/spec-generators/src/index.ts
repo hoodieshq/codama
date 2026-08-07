@@ -23,7 +23,7 @@ export interface GenerateResult {
  * where the freshly-generated files landed so the bin script can
  * report on the run.
  */
-export function generate(): GenerateResult {
+export async function generate(): Promise<GenerateResult> {
     const outputs: { generator: string; outputDir: string }[] = [];
     const spec = getSpec();
 
@@ -65,7 +65,7 @@ export function generate(): GenerateResult {
 
     {
         const outputDir = joinPath(getRepoDirectory(), 'packages', 'nodes', 'docs');
-        generateNodeDocs(spec, { outputDir, targetSpecMajor: 1 });
+        await generateNodeDocs(spec, { outputDir, targetSpecMajor: 1 });
         outputs.push({ generator: 'nodeDocs', outputDir });
     }
 
