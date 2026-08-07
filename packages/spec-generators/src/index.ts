@@ -1,6 +1,7 @@
 import { joinPath } from '@codama/fragments/javascript';
 import { getSpec } from '@codama/spec';
 
+import { generateNodeDocs } from './nodeDocs';
 import { generateNodes, NODE_CONFIGS } from './nodes';
 import { generateNodeTypes } from './nodeTypes';
 import { CATEGORY_DIRECTORIES, GENERIC_PARAM_ORDER, getRepoDirectory, NARROWABLE_DATA_ATTRIBUTES } from './shared';
@@ -22,7 +23,7 @@ export interface GenerateResult {
  * where the freshly-generated files landed so the bin script can
  * report on the run.
  */
-export function generate(): GenerateResult {
+export async function generate(): Promise<GenerateResult> {
     const outputs: { generator: string; outputDir: string }[] = [];
     const spec = getSpec();
 
@@ -60,6 +61,12 @@ export function generate(): GenerateResult {
             unionAliasNames: UNION_ALIAS_NAMES,
         });
         outputs.push({ generator: 'visitorsCore', outputDir });
+    }
+
+    {
+        const outputDir = joinPath(getRepoDirectory(), 'packages', 'nodes', 'docs');
+        await generateNodeDocs(spec, { outputDir, targetSpecMajor: 1 });
+        outputs.push({ generator: 'nodeDocs', outputDir });
     }
 
     return { outputs };

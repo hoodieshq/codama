@@ -1,50 +1,75 @@
 # `ConstantValueNode`
 
-A node that represents a constant value from a [`TypeNode`](../typeNodes/README.md) and a [`ValueNode`](./README.md).
-
-## Attributes
-
-### Data
-
-| Attribute | Type                  | Description             |
-| --------- | --------------------- | ----------------------- |
-| `kind`    | `"constantValueNode"` | The node discriminator. |
-
-### Children
-
-| Attribute | Type                                 | Description                |
-| --------- | ------------------------------------ | -------------------------- |
-| `type`    | [`TypeNode`](../typeNodes/README.md) | The type of the constant.  |
-| `value`   | [`ValueNode`](./README.md)           | The value of the constant. |
+See the [`ConstantValueNode` specification](https://github.com/codama-idl/spec/blob/main/docs/valueNodes/ConstantValueNode.md).
 
 ## Functions
 
-### `constantValueNode(type, value)`
+### constantValueNodeFromBytes()
 
-Helper function that creates a `ConstantValueNode` object from a type and a value node
+> **constantValueNodeFromBytes**\<`TEncoding`\>(`encoding`, `data`): `ConstantValueNode`\<`BytesTypeNode`, `BytesValueNode`\>
 
-```ts
-const node = constantValueNode(numberTypeNode('u32'), numberValueNode(42));
-```
+Creates a `ConstantValueNode` of type `BytesTypeNode` from an encoding and a string of data.
 
-### `constantValueNodeFromString(encoding, data)`
+#### Type Parameters
 
-Helper function that creates a `ConstantValueNode` object of type `StringTypeNode` from an encoding and a string of data.
+##### TEncoding
 
-```ts
-constantValueNodeFromString('utf8', 'Hello');
+`TEncoding` _extends_ `BytesEncoding`
 
-// Equivalent to:
-constantValueNode(stringTypeNode('utf8'), stringValueNode('Hello'));
-```
+#### Parameters
 
-### `constantValueNodeFromBytes(encoding, data)`
+##### encoding
 
-Helper function that creates a `ConstantValueNode` object of type `BytesTypeNode` from an encoding and a string of data.
+`TEncoding`
+
+##### data
+
+`string`
+
+#### Returns
+
+`ConstantValueNode`\<`BytesTypeNode`, `BytesValueNode`\>
+
+#### Example
 
 ```ts
 constantValueNodeFromBytes('base16', 'FF99CC');
-
 // Equivalent to:
 constantValueNode(bytesTypeNode(), bytesValueNode('base16', 'FF99CC'));
+```
+
+---
+
+### constantValueNodeFromString()
+
+> **constantValueNodeFromString**\<`TEncoding`\>(`encoding`, `string`): `ConstantValueNode`\<`StringTypeNode`\<`TEncoding`, `undefined`\>, `StringValueNode`\>
+
+Creates a `ConstantValueNode` of type `StringTypeNode` from an encoding and a string of data.
+
+#### Type Parameters
+
+##### TEncoding
+
+`TEncoding` _extends_ `BytesEncoding`
+
+#### Parameters
+
+##### encoding
+
+`TEncoding`
+
+##### string
+
+`string`
+
+#### Returns
+
+`ConstantValueNode`\<`StringTypeNode`\<`TEncoding`, `undefined`\>, `StringValueNode`\>
+
+#### Example
+
+```ts
+constantValueNodeFromString('utf8', 'Hello');
+// Equivalent to:
+constantValueNode(stringTypeNode('utf8'), stringValueNode('Hello'));
 ```

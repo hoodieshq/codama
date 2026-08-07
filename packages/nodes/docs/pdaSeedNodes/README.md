@@ -1,6 +1,14 @@
-# `PdaSeedNode` (abstract)
+# PdaSeed
 
-The `PdaSeedNode` type helper represents all ways to define a PDA seed. Note that `PdaSeedNode` is a type alias and cannot be used directly as a node. Instead you may use one of the following nodes:
+## Nodes
 
 - [`ConstantPdaSeedNode`](./ConstantPdaSeedNode.md)
 - [`VariablePdaSeedNode`](./VariablePdaSeedNode.md)
+
+## Unions
+
+- [`ConstantPdaSeedValue`](./ConstantPdaSeedValue.md)
+- [`PdaSeedNode`](./PdaSeedNode.md)
+- [`RegisteredPdaSeedNode`](./RegisteredPdaSeedNode.md)
+
+See the [PdaSeed specification](https://github.com/codama-idl/spec/blob/main/docs/pdaSeedNodes/README.md).

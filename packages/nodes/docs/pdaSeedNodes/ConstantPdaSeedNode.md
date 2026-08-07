@@ -1,61 +1,95 @@
 # `ConstantPdaSeedNode`
 
-This node represents a constant seed for a program-derived address (PDA).
-
-## Attributes
-
-### Data
-
-| Attribute | Type                    | Description             |
-| --------- | ----------------------- | ----------------------- |
-| `kind`    | `"constantPdaSeedNode"` | The node discriminator. |
-
-### Children
-
-| Attribute | Type                                                                                                            | Description                     |
-| --------- | --------------------------------------------------------------------------------------------------------------- | ------------------------------- |
-| `type`    | [`TypeNode`](../typeNodes/README.md)                                                                            | The type of the constant seed.  |
-| `value`   | [`ValueNode`](../valueNodes/README.md) \| [`ProgramIdValueNode`](../contextualValueNodes/ProgramIdValueNode.md) | The value of the constant seed. |
+See the [`ConstantPdaSeedNode` specification](https://github.com/codama-idl/spec/blob/main/docs/pdaSeedNodes/ConstantPdaSeedNode.md).
 
 ## Functions
 
-### `constantPdaSeedNode(type, value)`
+### constantPdaSeedNodeFromBytes()
 
-Helper function that creates a `ConstantPdaSeedNode` object from a type node and a value node.
+> **constantPdaSeedNodeFromBytes**\<`TEncoding`\>(`encoding`, `data`): `ConstantPdaSeedNode`\<`BytesTypeNode`, `BytesValueNode`\>
+
+Creates a `ConstantPdaSeedNode` of type `BytesTypeNode` from an encoding and a string of data.
+
+#### Type Parameters
+
+##### TEncoding
+
+`TEncoding` _extends_ `BytesEncoding`
+
+#### Parameters
+
+##### encoding
+
+`TEncoding`
+
+##### data
+
+`string`
+
+#### Returns
+
+`ConstantPdaSeedNode`\<`BytesTypeNode`, `BytesValueNode`\>
+
+#### Example
 
 ```ts
-const node = constantPdaSeedNode(numberTypeNode('u32'), numberValueNode(42));
-```
-
-### `constantPdaSeedNodeFromString(encoding, data)`
-
-Helper function that creates a `ConstantPdaSeedNode` object of type `StringTypeNode` from an encoding and a string of data.
-
-```ts
-constantPdaSeedNodeFromString('utf8', 'Hello');
-
+constantPdaSeedNodeFromBytes('base16', 'FF99CC');
 // Equivalent to:
-constantPdaSeedNode(stringTypeNode('utf8'), stringValueNode('Hello'));
+constantPdaSeedNode(bytesTypeNode(), bytesValueNode('base16', 'FF99CC'));
 ```
 
-### `constantValueNodeFromBytes(encoding, data)`
+---
 
-Helper function that creates a `ConstantValueNode` object of type `BytesTypeNode` from an encoding and a string of data.
+### constantPdaSeedNodeFromProgramId()
+
+> **constantPdaSeedNodeFromProgramId**(): `ConstantPdaSeedNode`\<`PublicKeyTypeNode`, `ProgramIdValueNode`\>
+
+Creates a `ConstantPdaSeedNode` whose value is the program id, of type `PublicKeyTypeNode`.
+
+#### Returns
+
+`ConstantPdaSeedNode`\<`PublicKeyTypeNode`, `ProgramIdValueNode`\>
+
+#### Example
 
 ```ts
-constantValueNodeFromBytes('base16', 'FF99CC');
-
+constantPdaSeedNodeFromProgramId();
 // Equivalent to:
-constantValueNode(bytesTypeNode(), bytesValueNode('base16', 'FF99CC'));
+constantPdaSeedNode(publicKeyTypeNode(), programIdValueNode());
 ```
 
-## Examples
+---
 
-### A PDA node with a UTF-8 constant seed
+### constantPdaSeedNodeFromString()
+
+> **constantPdaSeedNodeFromString**\<`TEncoding`\>(`encoding`, `string`): `ConstantPdaSeedNode`\<`StringTypeNode`\<`TEncoding`, `undefined`\>, `StringValueNode`\>
+
+Creates a `ConstantPdaSeedNode` of type `StringTypeNode` from an encoding and a string of data.
+
+#### Type Parameters
+
+##### TEncoding
+
+`TEncoding` _extends_ `BytesEncoding`
+
+#### Parameters
+
+##### encoding
+
+`TEncoding`
+
+##### string
+
+`string`
+
+#### Returns
+
+`ConstantPdaSeedNode`\<`StringTypeNode`\<`TEncoding`, `undefined`\>, `StringValueNode`\>
+
+#### Example
 
 ```ts
-pdaNode({
-    name: 'tickets',
-    seeds: [constantPdaSeedNodeFromString('utf8', 'tickets')],
-});
+constantPdaSeedNodeFromString('utf8', 'tickets');
+// Equivalent to:
+constantPdaSeedNode(stringTypeNode('utf8'), stringValueNode('tickets'));
 ```

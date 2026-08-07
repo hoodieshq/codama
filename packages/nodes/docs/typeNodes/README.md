@@ -1,13 +1,15 @@
-# `TypeNode` (abstract)
+# Type
 
-The `TypeNode` type helper represents all the available type nodes as well as the `DefinedTypeLinkNode` which allows us to reuse a pre-defined type node. Note that `TypeNode` is a type alias and cannot be used directly as a node. Instead you may use one of the following nodes:
+## Nodes
 
 - [`AmountTypeNode`](./AmountTypeNode.md)
 - [`ArrayTypeNode`](./ArrayTypeNode.md)
 - [`BooleanTypeNode`](./BooleanTypeNode.md)
 - [`BytesTypeNode`](./BytesTypeNode.md)
 - [`DateTimeTypeNode`](./DateTimeTypeNode.md)
-- [`DefinedTypeLinkNode`](../linkNodes/DefinedTypeLinkNode.md)
+- [`EnumEmptyVariantTypeNode`](./EnumEmptyVariantTypeNode.md)
+- [`EnumStructVariantTypeNode`](./EnumStructVariantTypeNode.md)
+- [`EnumTupleVariantTypeNode`](./EnumTupleVariantTypeNode.md)
 - [`EnumTypeNode`](./EnumTypeNode.md)
 - [`FixedSizeTypeNode`](./FixedSizeTypeNode.md)
 - [`HiddenPrefixTypeNode`](./HiddenPrefixTypeNode.md)
@@ -24,6 +26,20 @@ The `TypeNode` type helper represents all the available type nodes as well as th
 - [`SizePrefixTypeNode`](./SizePrefixTypeNode.md)
 - [`SolAmountTypeNode`](./SolAmountTypeNode.md)
 - [`StringTypeNode`](./StringTypeNode.md)
+- [`StructFieldTypeNode`](./StructFieldTypeNode.md)
 - [`StructTypeNode`](./StructTypeNode.md)
 - [`TupleTypeNode`](./TupleTypeNode.md)
 - [`ZeroableOptionTypeNode`](./ZeroableOptionTypeNode.md)
+
+## Unions
+
+- [`EnumVariantTypeNode`](./EnumVariantTypeNode.md)
+- [`RegisteredTypeNode`](./RegisteredTypeNode.md)
+- [`StandaloneTypeNode`](./StandaloneTypeNode.md)
+- [`TypeNode`](./TypeNode.md)
+
+## Nested unions
+
+- [`NestedTypeNode`](./NestedTypeNode.md)
+
+See the [Type specification](https://github.com/codama-idl/spec/blob/main/docs/typeNodes/README.md).

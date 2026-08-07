@@ -1,7 +1,14 @@
-# `CountNode` (abstract)
+# Count
 
-The `CountNode` type helper represents all available strategies that determine the size of a collection. Note that `CountNode` is a type alias and cannot be used directly as a node. Instead you may use one of the following nodes:
+## Nodes
 
 - [`FixedCountNode`](./FixedCountNode.md)
 - [`PrefixedCountNode`](./PrefixedCountNode.md)
 - [`RemainderCountNode`](./RemainderCountNode.md)
+
+## Unions
+
+- [`CountNode`](./CountNode.md)
+- [`RegisteredCountNode`](./RegisteredCountNode.md)
+
+See the [Count specification](https://github.com/codama-idl/spec/blob/main/docs/countNodes/README.md).

@@ -18,6 +18,10 @@ export default defineConfig({
         generate: './bin/generate.ts',
         index: './src/index.ts',
     },
+    // `typescript` relies on dynamic `require`, which esbuild cannot express in an ESM bundle. TypeDoc
+    // resolves its plugins by module name at runtime, so it must stay resolvable from node_modules too.
+    // Keep all three external so they load at runtime instead of being inlined.
+    external: ['typedoc', 'typedoc-plugin-markdown', 'typescript'],
     format: 'esm',
     outExtension() {
         return { js: '.mjs' };
