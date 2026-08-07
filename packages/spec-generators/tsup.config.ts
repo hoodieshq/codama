@@ -18,6 +18,9 @@ export default defineConfig({
         generate: './bin/generate.ts',
         index: './src/index.ts',
     },
+    // ts-morph bundles the whole TypeScript compiler and relies on dynamic `require`, which breaks in an
+    // esbuild ESM bundle. Keep it external so it loads from node_modules at runtime.
+    external: ['ts-morph'],
     format: 'esm',
     outExtension() {
         return { js: '.mjs' };

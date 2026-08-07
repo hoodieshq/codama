@@ -1,6 +1,6 @@
-# `LinkNode` (abstract)
+# Link
 
-The `LinkNode` type helper represents all nodes that link to other nodes. Note that `LinkNode` is a type alias and cannot be used directly as a node. Instead you may use one of the following nodes:
+## Nodes
 
 - [`AccountLinkNode`](./AccountLinkNode.md)
 - [`DefinedTypeLinkNode`](./DefinedTypeLinkNode.md)
@@ -9,3 +9,10 @@ The `LinkNode` type helper represents all nodes that link to other nodes. Note t
 - [`InstructionLinkNode`](./InstructionLinkNode.md)
 - [`PdaLinkNode`](./PdaLinkNode.md)
 - [`ProgramLinkNode`](./ProgramLinkNode.md)
+
+## Unions
+
+- [`LinkNode`](./LinkNode.md)
+- [`RegisteredLinkNode`](./RegisteredLinkNode.md)
+
+See the [Link specification](https://github.com/codama-idl/spec/blob/main/docs/linkNodes/README.md).

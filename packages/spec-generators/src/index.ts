@@ -1,6 +1,7 @@
 import { joinPath } from '@codama/fragments/javascript';
 import { getSpec } from '@codama/spec';
 
+import { generateNodeDocs } from './nodeDocs';
 import { generateNodes, NODE_CONFIGS } from './nodes';
 import { generateNodeTypes } from './nodeTypes';
 import { CATEGORY_DIRECTORIES, GENERIC_PARAM_ORDER, getRepoDirectory, NARROWABLE_DATA_ATTRIBUTES } from './shared';
@@ -60,6 +61,12 @@ export function generate(): GenerateResult {
             unionAliasNames: UNION_ALIAS_NAMES,
         });
         outputs.push({ generator: 'visitorsCore', outputDir });
+    }
+
+    {
+        const outputDir = joinPath(getRepoDirectory(), 'packages', 'nodes', 'docs');
+        generateNodeDocs(spec, { outputDir, targetSpecMajor: 1 });
+        outputs.push({ generator: 'nodeDocs', outputDir });
     }
 
     return { outputs };

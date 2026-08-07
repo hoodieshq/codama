@@ -1,105 +1,88 @@
 # `ProgramNode`
 
-This node represents an entire program deployed on-chain. It defines all elements of a program such as accounts, instructions, PDAs, events, errors, etc.
-
-![Diagram](https://github.com/codama-idl/codama/assets/3642397/37ec38ea-66df-4c08-81c3-822ef4388580)
-
-## Attributes
-
-### Data
-
-| Attribute   | Type                    | Description                                                                  |
-| ----------- | ----------------------- | ---------------------------------------------------------------------------- |
-| `kind`      | `"programNode"`         | The node discriminator.                                                      |
-| `name`      | `CamelCaseString`       | The name of the program.                                                     |
-| `publicKey` | `string`                | The 32-bytes address of the program base58 encoded.                          |
-| `version`   | `\d.\d.\d`              | The semantic version of the program being defined.                           |
-| `docs`      | `string[]`              | Markdown documentation for the program.                                      |
-| `origin`    | `"anchor"` \| `"shank"` | (Optional) An optional attribute tells us how this program node was created. |
-
-### Children
-
-| Attribute      | Type                                        | Description                                                   |
-| -------------- | ------------------------------------------- | ------------------------------------------------------------- |
-| `accounts`     | [`AccountNode`](./AccountNode.md)[]         | The accounts created and managed by the program.              |
-| `instructions` | [`InstructionNode`](./InstructionNode.md)[] | The instructions that allows us to interact with the program. |
-| `definedTypes` | [`DefinedTypeNode`](./DefinedTypeNode.md)[] | Some reusable types defined by the program.                   |
-| `pdas`         | [`PdaNode`](./PdaNode.md)[]                 | The Program-Derived Addresses (PDAs) used by the program.     |
-| `events`       | [`EventNode`](./EventNode.md)[]             | The events that can be emitted by the program.                |
-| `errors`       | [`ErrorNode`](./ErrorNode.md)[]             | The errors that can be thrown by the program.                 |
+See the [`ProgramNode` specification](https://github.com/codama-idl/spec/blob/main/docs/ProgramNode.md).
 
 ## Functions
 
-### `programNode(input)`
+### getAllAccounts()
 
-Helper function that creates a `ProgramNode` object from an input object
+> **getAllAccounts**(`node`: `ProgramNode | ProgramNode[] | RootNode`): `AccountNode[]`
 
-```ts
-const node = programNode({
-    name: 'counter',
-    publicKey: '7ovtg4pFqjQdSwFAUCu8gTnh5thZHzAyJFXy3Ssnj3yK',
-    version: '1.42.6',
-    accounts: [],
-    instructions: [],
-    definedTypes: [],
-    pdas: [],
-    events: [],
-    errors: [],
-});
-```
-
-### `getAllPrograms(node)`
-
-Helper function that returns all `ProgramNodes` under a given node. This can be a `RootNode`, a `ProgramNode` — returning itself in an array — or an array of `ProgramNode`.
-
-```ts
-const allPrograms = getAllPrograms(rootNode);
-```
-
-### `getAllPdas(node)`
-
-Helper function that returns all `PdaNodes` under a given node. This can be a `RootNode`, a `ProgramNode` or an array of `ProgramNode`.
-
-```ts
-const allPdas = getAllPdas(rootNode);
-```
-
-### `getAllAccounts(node)`
-
-Helper function that returns all `AccountNodes` under a given node. This can be a `RootNode`, a `ProgramNode` or an array of `ProgramNode`.
+Returns all `AccountNodes` under a given node. Accepts a `RootNode`, a `ProgramNode` or an array of `ProgramNode`.
 
 ```ts
 const allAccounts = getAllAccounts(rootNode);
 ```
 
-### `getAllEvents(node)`
+### getAllConstants()
 
-Helper function that returns all `EventNodes` under a given node. This can be a `RootNode`, a `ProgramNode` or an array of `ProgramNode`.
+> **getAllConstants**(`node`: `ProgramNode | ProgramNode[] | RootNode`): `ConstantNode[]`
+
+Returns all `ConstantNodes` under a given node. Accepts a `RootNode`, a `ProgramNode` or an array of `ProgramNode`.
 
 ```ts
-const allEvents = getAllEvents(rootNode);
+const allConstants = getAllConstants(rootNode);
 ```
 
-### `getAllDefinedTypes(node)`
+### getAllDefinedTypes()
 
-Helper function that returns all `DefinedTypeNodes` under a given node. This can be a `RootNode`, a `ProgramNode` or an array of `ProgramNode`.
+> **getAllDefinedTypes**(`node`: `ProgramNode | ProgramNode[] | RootNode`): `DefinedTypeNode[]`
+
+Returns all `DefinedTypeNodes` under a given node. Accepts a `RootNode`, a `ProgramNode` or an array of
+`ProgramNode`.
 
 ```ts
 const allDefinedTypes = getAllDefinedTypes(rootNode);
 ```
 
-### `getAllInstructions(node)`
+### getAllErrors()
 
-Helper function that returns all `InstructionNodes` under a given node. This can be a `RootNode`, a `ProgramNode` or an array of `ProgramNode`.
+> **getAllErrors**(`node`: `ProgramNode | ProgramNode[] | RootNode`): `ErrorNode[]`
+
+Returns all `ErrorNodes` under a given node. Accepts a `RootNode`, a `ProgramNode` or an array of `ProgramNode`.
+
+```ts
+const allErrors = getAllErrors(rootNode);
+```
+
+### getAllEvents()
+
+> **getAllEvents**(`node`: `ProgramNode | ProgramNode[] | RootNode`): `EventNode[]`
+
+Returns all `EventNodes` under a given node. Accepts a `RootNode`, a `ProgramNode` or an array of `ProgramNode`.
+
+```ts
+const allEvents = getAllEvents(rootNode);
+```
+
+### getAllInstructions()
+
+> **getAllInstructions**(`node`: `ProgramNode | ProgramNode[] | RootNode`): `InstructionNode[]`
+
+Returns all `InstructionNodes` under a given node. Accepts a `RootNode`, a `ProgramNode` or an array of
+`ProgramNode`.
 
 ```ts
 const allInstructions = getAllInstructions(rootNode);
 ```
 
-### `getAllErrors(node)`
+### getAllPdas()
 
-Helper function that returns all `ErrorNodes` under a given node. This can be a `RootNode`, a `ProgramNode` or an array of `ProgramNode`.
+> **getAllPdas**(`node`: `ProgramNode | ProgramNode[] | RootNode`): `PdaNode[]`
+
+Returns all `PdaNodes` under a given node. Accepts a `RootNode`, a `ProgramNode` or an array of `ProgramNode`.
 
 ```ts
-const allErrors = getAllErrors(rootNode);
+const allPdas = getAllPdas(rootNode);
+```
+
+### getAllPrograms()
+
+> **getAllPrograms**(`node`: `ProgramNode | ProgramNode[] | RootNode`): `ProgramNode[]`
+
+Returns all `ProgramNodes` under a given node. Accepts a `RootNode`, a `ProgramNode` (returned as a
+single-element array) or an array of `ProgramNode`.
+
+```ts
+const allPrograms = getAllPrograms(rootNode);
 ```

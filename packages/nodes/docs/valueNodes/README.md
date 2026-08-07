@@ -1,12 +1,14 @@
-# `ValueNode` (abstract)
+# Value
 
-The `ValueNode` type helper represents all the available value nodes. Note that `ValueNode` is a type alias and cannot be used directly as a node. Instead you may use one of the following nodes:
+## Nodes
 
 - [`ArrayValueNode`](./ArrayValueNode.md)
-- [`BytesValueNode`](./BytesValueNode.md)
 - [`BooleanValueNode`](./BooleanValueNode.md)
+- [`BytesValueNode`](./BytesValueNode.md)
 - [`ConstantValueNode`](./ConstantValueNode.md)
 - [`EnumValueNode`](./EnumValueNode.md)
+- [`InjectedValueNode`](./InjectedValueNode.md)
+- [`MapEntryValueNode`](./MapEntryValueNode.md)
 - [`MapValueNode`](./MapValueNode.md)
 - [`NoneValueNode`](./NoneValueNode.md)
 - [`NumberValueNode`](./NumberValueNode.md)
@@ -14,5 +16,17 @@ The `ValueNode` type helper represents all the available value nodes. Note that 
 - [`SetValueNode`](./SetValueNode.md)
 - [`SomeValueNode`](./SomeValueNode.md)
 - [`StringValueNode`](./StringValueNode.md)
+- [`StructFieldValueNode`](./StructFieldValueNode.md)
 - [`StructValueNode`](./StructValueNode.md)
 - [`TupleValueNode`](./TupleValueNode.md)
+
+## Unions
+
+- [`EnumValuePayload`](./EnumValuePayload.md)
+- [`InjectableNumberValueNode`](./InjectableNumberValueNode.md)
+- [`InjectableStringValueNode`](./InjectableStringValueNode.md)
+- [`RegisteredValueNode`](./RegisteredValueNode.md)
+- [`StandaloneValueNode`](./StandaloneValueNode.md)
+- [`ValueNode`](./ValueNode.md)
+
+See the [Value specification](https://github.com/codama-idl/spec/blob/main/docs/valueNodes/README.md).
